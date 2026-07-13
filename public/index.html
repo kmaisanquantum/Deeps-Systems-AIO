@@ -79,40 +79,7 @@
             background: #334155;
         }
 
-        /* Orange/Blue Glowing Border Button Toggle */
-        .glowing-btn-toggle {
-            position: relative;
-            background: #0f172a;
-            color: #ffffff;
-            border: 1px solid transparent;
-            border-radius: 0.375rem;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        .glowing-btn-toggle::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: 0.375rem;
-            padding: 1px;
-            background: linear-gradient(135deg, #f97316, #3b82f6);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            -webkit-mask-composite: exclude;
-            mask-composite: exclude;
-            pointer-events: none;
-            opacity: 0.8;
-            transition: opacity 0.3s ease;
-        }
-        .glowing-btn-toggle:hover::before {
-            opacity: 1;
-            background: linear-gradient(135deg, #3b82f6, #f97316);
-        }
-        .glowing-btn-toggle:hover {
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5), 0 0 5px rgba(249, 115, 22, 0.5);
-        }
-
-        /* ROUTING SPA TRANSITION SYSTEM - CRITICAL CSS */
+        /* ROUTING SPA TRANSITION SYSTEM */
         .view-section {
             display: none;
         }
@@ -200,56 +167,56 @@
             </div>
 
             <!-- CARD MATRIX GRID -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
 
                 <!-- Card 1: Omnichannel Comms -->
-                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-8 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:border-cyan-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between" onclick="routeToModule('comms')">
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:border-cyan-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('comms')">
                     <div>
                         <div class="text-3xl mb-4">💬</div>
                         <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Omnichannel Comms</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed mb-6">Connect to customers via omnichannel communications, community channels, and fallback alerts.</p>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-6">Connect to customers via omnichannel communications, community channels, and fallback alerts.</p>
                     </div>
-                    <button class="glowing-btn-toggle w-full py-2.5 font-bold tracking-wide transition-all duration-300">Launch</button>
+                    <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
                 </div>
 
                 <!-- Card 2: HR & Talent Profiles -->
-                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-8 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(59,130,246,0.3)] hover:border-blue-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between" onclick="routeToModule('hr')">
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(59,130,246,0.3)] hover:border-blue-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('hr')">
                     <div>
                         <div class="text-3xl mb-4">👥</div>
                         <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">HR & Talent Profiles</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed mb-6">Automated management of company structures, staff node registries, and team workflows.</p>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-6">Automated management of company structures, staff node registries, and team workflows.</p>
                     </div>
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-md tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(59,130,246,0.4)]">Launch</button>
+                    <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
                 </div>
 
                 <!-- Card 3: Ledger & Finance -->
-                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-8 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(20,184,166,0.3)] hover:border-teal-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between" onclick="routeToModule('finance')">
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(20,184,166,0.3)] hover:border-teal-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('finance')">
                     <div>
                         <div class="text-3xl mb-4">📊</div>
                         <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Ledger & Finance</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed mb-6">Automated bookkeeping, ledger management, financial pipeline automation, and multi-tenant billing logs.</p>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-6">Automated bookkeeping, ledger management, financial pipeline automation, and multi-tenant billing logs.</p>
                     </div>
-                    <button class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-4 rounded-md tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(20,184,166,0.4)]">Launch</button>
+                    <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
                 </div>
 
-                <!-- Card 4: Website & Online Store (Slightly Centered Row on Desktops) -->
-                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-8 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(249,115,22,0.3)] hover:border-orange-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between lg:col-start-1 lg:col-end-2 md:col-span-1" onclick="routeToModule('store')">
+                <!-- Card 4: Website & Online Store -->
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(249,115,22,0.3)] hover:border-orange-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('store')">
                     <div>
                         <div class="text-3xl mb-4">🏪</div>
                         <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Website & Online Store</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed mb-6">Deploy live customer portals, sync product catalogs, inventory triggers, and public-facing content arrays.</p>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-6">Deploy live customer portals, sync product catalogs, inventory triggers, and public-facing content arrays.</p>
                     </div>
-                    <button class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2.5 px-4 rounded-md tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(249,115,22,0.4)]">Launch Storefront</button>
+                    <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch Storefront</button>
                 </div>
 
                 <!-- Card 5: Logistics Integration -->
-                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-8 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(236,72,153,0.3)] hover:border-pink-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between lg:col-start-3 lg:col-end-4 md:col-span-1" onclick="routeToModule('logistics')">
+                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(236,72,153,0.3)] hover:border-pink-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('logistics')">
                     <div>
                         <div class="text-3xl mb-4">📦</div>
                         <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Logistics Integration</h3>
-                        <p class="text-slate-400 text-sm leading-relaxed mb-6">Orchestrate automated supply chains, dispatch coordination, waybill tracking, and hardware shipping arrays.</p>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-6">Orchestrate automated supply chains, dispatch coordination, waybill tracking, and hardware shipping arrays.</p>
                     </div>
-                    <button class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2.5 px-4 rounded-md tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(236,72,153,0.4)]">Launch</button>
+                    <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
                 </div>
             </div>
 
@@ -262,7 +229,7 @@
             <div class="max-w-md mx-auto my-16 bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
                 <div id="auth-login-box">
                     <h2 class="text-2xl font-extrabold text-white mb-2 text-center">Welcome Back</h2>
-                    <p class="text-slate-400 text-sm text-center mb-8">Sign in to your secure operational environment</p>
+                    <p class="text-slate-300 text-sm text-center mb-8">Sign in to your secure operational environment</p>
                     <form id="form-login" onsubmit="handleLogin(event)" class="space-y-5">
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
@@ -274,14 +241,14 @@
                         </div>
                         <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200 shadow-[0_0_15px_rgba(6,182,212,0.4)]">Sign In</button>
                     </form>
-                    <div class="text-center text-xs text-slate-400 mt-6">
+                    <div class="text-center text-xs text-slate-300 mt-6">
                         Don't have an account? <a href="#" onclick="toggleAuthBox('signup')" class="text-cyan-400 font-bold hover:underline ml-1">Create one now</a>
                     </div>
                 </div>
 
                 <div id="auth-signup-box" style="display: none;">
                     <h2 class="text-2xl font-extrabold text-white mb-2 text-center">Create Account</h2>
-                    <p class="text-slate-400 text-sm text-center mb-8">Register a new profile under your organization</p>
+                    <p class="text-slate-300 text-sm text-center mb-8">Register a new profile under your organization</p>
                     <form id="form-signup" onsubmit="handleSignup(event)" class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Full Name</label>
@@ -305,7 +272,7 @@
                         </div>
                         <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200 shadow-[0_0_15px_rgba(6,182,212,0.4)]">Register</button>
                     </form>
-                    <div class="text-center text-xs text-slate-400 mt-6">
+                    <div class="text-center text-xs text-slate-300 mt-6">
                         Already have an account? <a href="#" onclick="toggleAuthBox('login')" class="text-cyan-400 font-bold hover:underline ml-1">Sign In instead</a>
                     </div>
                 </div>
@@ -321,7 +288,7 @@
                 <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
                     <div>
                         <h2 class="text-2xl font-extrabold text-white">💬 Omnichannel Comms Dashboard</h2>
-                        <p class="text-slate-400 text-sm mt-1">Dispatch real-time communication across multiple messaging channels</p>
+                        <p class="text-slate-300 text-sm mt-1">Dispatch real-time communication across multiple messaging channels</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -354,7 +321,7 @@
                     <div>
                         <div class="text-lg font-bold text-white mb-6">Inbound / Outbound Logs</div>
                         <div class="space-y-4" id="comms-log-list">
-                            <p class="text-slate-400 text-sm italic">No communication records available.</p>
+                            <p class="text-slate-300 text-sm italic">No communication records available.</p>
                         </div>
                     </div>
                 </div>
@@ -370,7 +337,7 @@
                 <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
                     <div>
                         <h2 class="text-2xl font-extrabold text-white">👥 HR & Staff Directory</h2>
-                        <p class="text-slate-400 text-sm mt-1">Manage and track employee operational files and employment parameters</p>
+                        <p class="text-slate-300 text-sm mt-1">Manage and track employee operational files and employment parameters</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -407,7 +374,7 @@
                     <div>
                         <div class="text-lg font-bold text-white mb-6">Staff Records</div>
                         <div class="space-y-4" id="hr-profile-list">
-                            <p class="text-slate-400 text-sm italic">No employee records available.</p>
+                            <p class="text-slate-300 text-sm italic">No employee records available.</p>
                         </div>
                     </div>
                 </div>
@@ -423,7 +390,7 @@
                 <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
                     <div>
                         <h2 class="text-2xl font-extrabold text-white">📊 General Ledger & Transactions</h2>
-                        <p class="text-slate-400 text-sm mt-1">Log incomes, expenses, checkout events, and view transaction history</p>
+                        <p class="text-slate-300 text-sm mt-1">Log incomes, expenses, checkout events, and view transaction history</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -461,7 +428,7 @@
                     <div>
                         <div class="text-lg font-bold text-white mb-6">Double-Entry Ledger Books</div>
                         <div class="space-y-4" id="finance-tx-list">
-                            <p class="text-slate-400 text-sm italic">No transaction logs available.</p>
+                            <p class="text-slate-300 text-sm italic">No transaction logs available.</p>
                         </div>
                     </div>
                 </div>
@@ -477,7 +444,7 @@
                 <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
                     <div>
                         <h2 class="text-2xl font-extrabold text-white">🏪 Website & Online Storefront</h2>
-                        <p class="text-slate-400 text-sm mt-1">Add products, manage online listings, sync e-commerce catalogs and track customer checkouts</p>
+                        <p class="text-slate-300 text-sm mt-1">Add products, manage online listings, sync e-commerce catalogs and track customer checkouts</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -506,7 +473,7 @@
                     <div>
                         <div class="text-lg font-bold text-white mb-6">Product Catalog & Inventory</div>
                         <div class="space-y-4" id="store-items-list">
-                            <p class="text-slate-400 text-sm italic">No products cataloged yet.</p>
+                            <p class="text-slate-300 text-sm italic">No products cataloged yet.</p>
                         </div>
                     </div>
                 </div>
@@ -522,7 +489,7 @@
                 <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
                     <div>
                         <h2 class="text-2xl font-extrabold text-white">📦 Logistics & Waybills</h2>
-                        <p class="text-slate-400 text-sm mt-1">Generate, issue, and trace shipments via integrated regional logistics networks</p>
+                        <p class="text-slate-300 text-sm mt-1">Generate, issue, and trace shipments via integrated regional logistics networks</p>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -554,7 +521,7 @@
                     <div>
                         <div class="text-lg font-bold text-white mb-6">Waybills & Shipments</div>
                         <div class="space-y-4" id="logistics-ship-list">
-                            <p class="text-slate-400 text-sm italic">No active shipment tracking logs available.</p>
+                            <p class="text-slate-300 text-sm italic">No active shipment tracking logs available.</p>
                         </div>
                     </div>
                 </div>
@@ -802,7 +769,7 @@
                 }
 
                 if (data.length === 0) {
-                    list.innerHTML = `<p class="text-slate-400 text-sm italic">No employee records available.</p>`;
+                    list.innerHTML = `<p class="text-slate-300 text-sm italic">No employee records available.</p>`;
                     return;
                 }
 
@@ -873,7 +840,7 @@
                 }
 
                 if (data.length === 0) {
-                    list.innerHTML = `<p class="text-slate-400 text-sm italic">No transaction logs available.</p>`;
+                    list.innerHTML = `<p class="text-slate-300 text-sm italic">No transaction logs available.</p>`;
                     return;
                 }
 
@@ -943,7 +910,7 @@
                 }
 
                 if (data.length === 0) {
-                    list.innerHTML = `<p class="text-slate-400 text-sm italic">No products cataloged yet.</p>`;
+                    list.innerHTML = `<p class="text-slate-300 text-sm italic">No products cataloged yet.</p>`;
                     return;
                 }
 

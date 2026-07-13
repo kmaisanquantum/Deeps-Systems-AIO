@@ -9,7 +9,10 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
+const fs = require('fs');
+const path = require('path');
 
+const db = require('./db');
 const { tenantResolver } = require('./middleware/tenantResolver');
 const routes = require('./routes/index');
 
@@ -40,10 +43,31 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found.' });
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`[deeps-systems-aio] listening on port ${PORT}`);
-});
+async function startServer() {
+  // Database initialization from init.sql
+  console.log('[app] starting database schema initialization...');
+  try {
+    const initSqlPath = path.join(__dirname, 'init.sql');
+    if (fs.existsSync(initSqlPath)) {
+      const sql = fs.readFileSync(initSqlPath, 'utf8');
+      await db.query(sql);
+      console.log('[app] database schema initialized successfully.');
+    } else {
+      console.warn('[app] init.sql not found, skipping schema initialization.');
+    }
+  } catch (err) {
+    console.error('[app] critical error: database schema initialization failed:', err);
+    // It's safer to exit the process if critical database migration/setup fails
+    process.exit(1);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`[deeps-systems-aio] listening on port ${PORT}`);
+  });
+}
+
+startServer();
 
 module.exports = app;

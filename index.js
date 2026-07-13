@@ -26,6 +26,10 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static assets from public/ directory before routing or resolving tenants.
+// This allows the frontend landing page and assets to render cleanly and quickly.
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Resolve tenant/branch context on every request before hitting routes.
 app.use(tenantResolver);
 

@@ -1,0 +1,24 @@
+# Exclude node_modules
+node_modules/
+
+# Exclude Git files
+.git/
+.gitignore
+
+# Exclude environment variables and secrets
+.env
+.env.*
+
+# Exclude npm and yarn debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+
+# Exclude local Docker files and compose files
+docker-compose*.yml
+Dockerfile
+
+# Exclude system/OS files
+.DS_Store
+Thumbs.db

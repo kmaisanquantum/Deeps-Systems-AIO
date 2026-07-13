@@ -9,18 +9,34 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ---------------------------------------------------------------------
 -- ENUM TYPES
 -- ---------------------------------------------------------------------
-CREATE TYPE user_role AS ENUM ('admin', 'manager', 'employee');
-CREATE TYPE verification_state AS ENUM ('PENDING', 'VERIFIED', 'FAILED');
-CREATE TYPE transaction_type AS ENUM ('INCOME', 'EXPENSE', 'PAYROLL');
-CREATE TYPE comm_channel AS ENUM ('WHATSAPP', 'EMAIL', 'SMS');
-CREATE TYPE comm_direction AS ENUM ('INBOUND', 'OUTBOUND');
-CREATE TYPE carrier_name AS ENUM ('DHL', 'POST_PNG');
-CREATE TYPE shipping_status AS ENUM ('PENDING', 'DISPATCHED', 'IN_TRANSIT', 'DELIVERED', 'FAILED');
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        CREATE TYPE user_role AS ENUM ('admin', 'manager', 'employee');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'verification_state') THEN
+        CREATE TYPE verification_state AS ENUM ('PENDING', 'VERIFIED', 'FAILED');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transaction_type') THEN
+        CREATE TYPE transaction_type AS ENUM ('INCOME', 'EXPENSE', 'PAYROLL');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'comm_channel') THEN
+        CREATE TYPE comm_channel AS ENUM ('WHATSAPP', 'EMAIL', 'SMS');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'comm_direction') THEN
+        CREATE TYPE comm_direction AS ENUM ('INBOUND', 'OUTBOUND');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'carrier_name') THEN
+        CREATE TYPE carrier_name AS ENUM ('DHL', 'POST_PNG');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'shipping_status') THEN
+        CREATE TYPE shipping_status AS ENUM ('PENDING', 'DISPATCHED', 'IN_TRANSIT', 'DELIVERED', 'FAILED');
+    END IF;
+END $$;
 
 -- ---------------------------------------------------------------------
 -- TENANTS
 -- ---------------------------------------------------------------------
-CREATE TABLE tenants (
+CREATE TABLE IF NOT EXISTS tenants (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     company_name    VARCHAR(255) NOT NULL,
     subdomain       VARCHAR(100) NOT NULL UNIQUE,
@@ -29,12 +45,12 @@ CREATE TABLE tenants (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE UNIQUE INDEX idx_tenants_subdomain ON tenants (subdomain);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tenants_subdomain ON tenants (subdomain);
 
 -- ---------------------------------------------------------------------
 -- BRANCHES
 -- ---------------------------------------------------------------------
-CREATE TABLE branches (
+CREATE TABLE IF NOT EXISTS branches (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     branch_name     VARCHAR(255) NOT NULL,
@@ -44,12 +60,12 @@ CREATE TABLE branches (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_branches_tenant_id ON branches (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_branches_tenant_id ON branches (tenant_id);
 
 -- ---------------------------------------------------------------------
 -- USERS
 -- ---------------------------------------------------------------------
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     branch_id       UUID REFERENCES branches(id) ON DELETE SET NULL,
@@ -63,13 +79,13 @@ CREATE TABLE users (
     UNIQUE (tenant_id, email)
 );
 
-CREATE INDEX idx_users_tenant_id ON users (tenant_id);
-CREATE INDEX idx_users_branch_id ON users (branch_id);
+CREATE INDEX IF NOT EXISTS idx_users_tenant_id ON users (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_users_branch_id ON users (branch_id);
 
 -- ---------------------------------------------------------------------
 -- FINANCIAL_TRANSACTIONS
 -- ---------------------------------------------------------------------
-CREATE TABLE financial_transactions (
+CREATE TABLE IF NOT EXISTS financial_transactions (
     id                      UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     tenant_id               UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     branch_id               UUID REFERENCES branches(id) ON DELETE SET NULL,
@@ -88,15 +104,15 @@ CREATE TABLE financial_transactions (
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_fin_tx_tenant_id ON financial_transactions (tenant_id);
-CREATE INDEX idx_fin_tx_branch_id ON financial_transactions (branch_id);
-CREATE INDEX idx_fin_tx_verification_status ON financial_transactions (verification_status);
-CREATE INDEX idx_fin_tx_gateway_ref ON financial_transactions (gateway_reference_id);
+CREATE INDEX IF NOT EXISTS idx_fin_tx_tenant_id ON financial_transactions (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_fin_tx_branch_id ON financial_transactions (branch_id);
+CREATE INDEX IF NOT EXISTS idx_fin_tx_verification_status ON financial_transactions (verification_status);
+CREATE INDEX IF NOT EXISTS idx_fin_tx_gateway_ref ON financial_transactions (gateway_reference_id);
 
 -- ---------------------------------------------------------------------
 -- HR_PROFILES
 -- ---------------------------------------------------------------------
-CREATE TABLE hr_profiles (
+CREATE TABLE IF NOT EXISTS hr_profiles (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     branch_id       UUID REFERENCES branches(id) ON DELETE SET NULL,
@@ -112,13 +128,13 @@ CREATE TABLE hr_profiles (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_hr_tenant_id ON hr_profiles (tenant_id);
-CREATE INDEX idx_hr_branch_id ON hr_profiles (branch_id);
+CREATE INDEX IF NOT EXISTS idx_hr_tenant_id ON hr_profiles (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_hr_branch_id ON hr_profiles (branch_id);
 
 -- ---------------------------------------------------------------------
 -- COMMUNICATION_LOGS
 -- ---------------------------------------------------------------------
-CREATE TABLE communication_logs (
+CREATE TABLE IF NOT EXISTS communication_logs (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     branch_id       UUID REFERENCES branches(id) ON DELETE SET NULL,
@@ -132,14 +148,14 @@ CREATE TABLE communication_logs (
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_comm_logs_tenant_id ON communication_logs (tenant_id);
-CREATE INDEX idx_comm_logs_channel ON communication_logs (channel);
-CREATE INDEX idx_comm_logs_created_at ON communication_logs (created_at);
+CREATE INDEX IF NOT EXISTS idx_comm_logs_tenant_id ON communication_logs (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_comm_logs_channel ON communication_logs (channel);
+CREATE INDEX IF NOT EXISTS idx_comm_logs_created_at ON communication_logs (created_at);
 
 -- ---------------------------------------------------------------------
 -- LOGISTICS_SHIPMENTS
 -- ---------------------------------------------------------------------
-CREATE TABLE logistics_shipments (
+CREATE TABLE IF NOT EXISTS logistics_shipments (
     id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     tenant_id           UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     branch_id           UUID REFERENCES branches(id) ON DELETE SET NULL,
@@ -156,9 +172,9 @@ CREATE TABLE logistics_shipments (
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_logistics_tenant_id ON logistics_shipments (tenant_id);
-CREATE INDEX idx_logistics_branch_id ON logistics_shipments (branch_id);
-CREATE INDEX idx_logistics_tracking_number ON logistics_shipments (tracking_number);
+CREATE INDEX IF NOT EXISTS idx_logistics_tenant_id ON logistics_shipments (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_logistics_branch_id ON logistics_shipments (branch_id);
+CREATE INDEX IF NOT EXISTS idx_logistics_tracking_number ON logistics_shipments (tracking_number);
 
 -- ---------------------------------------------------------------------
 -- updated_at auto-touch trigger (applied to all mutable tables)
@@ -171,15 +187,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS set_updated_at_tenants ON tenants;
 CREATE TRIGGER set_updated_at_tenants BEFORE UPDATE ON tenants
     FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_branches ON branches;
 CREATE TRIGGER set_updated_at_branches BEFORE UPDATE ON branches
     FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_users ON users;
 CREATE TRIGGER set_updated_at_users BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_fin_tx ON financial_transactions;
 CREATE TRIGGER set_updated_at_fin_tx BEFORE UPDATE ON financial_transactions
     FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_hr ON hr_profiles;
 CREATE TRIGGER set_updated_at_hr BEFORE UPDATE ON hr_profiles
     FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_logistics ON logistics_shipments;
 CREATE TRIGGER set_updated_at_logistics BEFORE UPDATE ON logistics_shipments
     FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();

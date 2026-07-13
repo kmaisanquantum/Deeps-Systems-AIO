@@ -3,80 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deeps Systems AIO — Operations Hub</title>
+    <title>Deeps Systems AIO — Automation & Orchestration Hub</title>
+    <!-- Tailwind CSS Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            950: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --success: #059669;
-            --success-hover: #047857;
-            --bg: #f3f4f6;
-            --card-bg: #ffffff;
-            --text: #1f2937;
-            --text-muted: #4b5563;
-            --border: #e5e7eb;
-        }
+        /* Custom Animations & Neon Tech Effects */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            background-color: #020617;
+            background-image:
+                radial-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
+                radial-gradient(rgba(139, 92, 246, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            overflow-x: hidden;
         }
-        header {
-            background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+
+        /* Twinkling Sparkling Tech Lights */
+        .sparkle {
+            position: absolute;
+            background: radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: pulse-glow 2s infinite ease-in-out;
         }
-        header h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #111827;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(0.3); opacity: 0.2; }
+            50% { transform: scale(1.2); opacity: 0.9; }
         }
-        .header-nav {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
+
+        /* Glowing text shadow for branding */
+        .neon-glow-cyan {
+            text-shadow: 0 0 10px rgba(34, 211, 238, 0.8), 0 0 20px rgba(34, 211, 238, 0.4);
         }
-        .user-info {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--text-muted);
+
+        /* Laser interconnect track style */
+        .laser-track {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.8), transparent);
+            animation: laser-travel 4s infinite linear;
+            pointer-events: none;
         }
-        .btn-logout {
-            background: none;
-            border: 1px solid var(--border);
-            padding: 0.4rem 0.8rem;
+
+        @keyframes laser-travel {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+
+        /* Custom scrollbar for sci-fi look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+            border: 2px solid #020617;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+
+        /* Orange/Blue Glowing Border Button Toggle */
+        .glowing-btn-toggle {
+            position: relative;
+            background: #0f172a;
+            color: #ffffff;
+            border: 1px solid transparent;
             border-radius: 0.375rem;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.2s;
+            overflow: hidden;
+            transition: all 0.3s ease;
         }
-        .btn-logout:hover {
-            background-color: #f9fafb;
-            color: #ef4444;
-            border-color: #fca5a5;
+        .glowing-btn-toggle::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 0.375rem;
+            padding: 1px;
+            background: linear-gradient(135deg, #f97316, #3b82f6);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            -webkit-mask-composite: exclude;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
         }
-        main {
-            flex: 1;
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
+        .glowing-btn-toggle:hover::before {
+            opacity: 1;
+            background: linear-gradient(135deg, #3b82f6, #f97316);
         }
+        .glowing-btn-toggle:hover {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5), 0 0 5px rgba(249, 115, 22, 0.5);
+        }
+
+        /* ROUTING SPA TRANSITION SYSTEM - CRITICAL CSS */
         .view-section {
             display: none;
         }
@@ -84,264 +120,7 @@
             display: block;
         }
 
-        /* LANDING & DASHBOARD VIEW */
-        .landing-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-        .landing-header h2 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #111827;
-            margin: 0 0 0.5rem 0;
-        }
-        .landing-header p {
-            font-size: 1.125rem;
-            color: var(--text-muted);
-            margin: 0;
-        }
-        .grid-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
-        }
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 2rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            border-color: #bfdbfe;
-        }
-        .card-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #111827;
-            margin: 0 0 0.5rem 0;
-        }
-        .card-description {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-            margin: 0 0 1.5rem 0;
-            flex-grow: 1;
-        }
-        .card-btn {
-            background-color: var(--primary);
-            color: #ffffff;
-            border: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: 0.375rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .card-btn:hover {
-            background-color: var(--primary-hover);
-        }
-
-        /* AUTH VIEW (LOGIN / SIGNUP PORTAL) */
-        .auth-container {
-            max-width: 420px;
-            margin: 4rem auto;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 2.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        .auth-title {
-            font-size: 1.75rem;
-            font-weight: 800;
-            color: #111827;
-            margin: 0 0 0.5rem 0;
-            text-align: center;
-        }
-        .auth-subtitle {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            margin: 0 0 2rem 0;
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-        .form-group label {
-            display: block;
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 0.5rem;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 0.65rem;
-            border: 1px solid var(--border);
-            border-radius: 0.375rem;
-            font-size: 0.95rem;
-            box-sizing: border-box;
-            background-color: #f9fafb;
-            transition: border-color 0.2s, background-color 0.2s;
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: var(--primary);
-            background-color: #ffffff;
-        }
-        .auth-btn {
-            background-color: var(--primary);
-            color: #ffffff;
-            border: none;
-            width: 100%;
-            padding: 0.75rem;
-            border-radius: 0.375rem;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            margin-top: 1rem;
-        }
-        .auth-btn:hover {
-            background-color: var(--primary-hover);
-        }
-        .auth-toggle {
-            text-align: center;
-            font-size: 0.875rem;
-            color: var(--text-muted);
-            margin-top: 1.5rem;
-        }
-        .auth-toggle a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .auth-toggle a:hover {
-            text-decoration: underline;
-        }
-
-        /* BACK BUTTON & NAVIGATION */
-        .back-nav {
-            margin-bottom: 1.5rem;
-        }
-        .btn-back {
-            background: none;
-            border: none;
-            color: var(--primary);
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            padding: 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-        .btn-back:hover {
-            text-decoration: underline;
-        }
-
-        /* INTERACTIVE VIEWS STYLING */
-        .module-container {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 2.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-        .module-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-        }
-        .module-header h2 {
-            font-size: 1.75rem;
-            font-weight: 800;
-            color: #111827;
-            margin: 0 0 0.5rem 0;
-        }
-        .module-header p {
-            font-size: 1rem;
-            color: var(--text-muted);
-            margin: 0;
-        }
-        .module-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2.5rem;
-        }
-        @media (max-width: 768px) {
-            .module-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-        .module-form {
-            background-color: #f9fafb;
-            border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-        }
-        .module-form h3 {
-            margin-top: 0;
-            margin-bottom: 1.25rem;
-            font-size: 1.2rem;
-            color: #111827;
-        }
-        .module-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .list-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            color: #111827;
-        }
-        .list-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            font-size: 0.9rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-        }
-        .list-card-header {
-            display: flex;
-            justify-content: space-between;
-            font-weight: 700;
-            font-size: 0.95rem;
-        }
-        .list-card-footer {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 0.25rem;
-            border-top: 1px solid #f3f4f6;
-            padding-top: 0.35rem;
-        }
-
-        /* NOTIFICATION/ALERT TOASTS */
+        /* TOAST ALERT SYSTEM */
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -360,146 +139,174 @@
             transform: translateY(0);
             opacity: 1;
         }
-        .toast.success { background-color: var(--success); }
+        .toast.success { background-color: #059669; }
         .toast.error { background-color: #ef4444; }
 
-        /* LOADER */
-        .spinner {
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border-left-color: var(--primary);
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 0.5rem;
+        /* BACK BUTTON */
+        .btn-back {
+            background: none;
+            border: none;
+            color: #38bdf8;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: color 0.2s;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .btn-back:hover {
+            color: #7dd3fc;
+            text-decoration: underline;
         }
     </style>
 </head>
-<body>
-    <header>
-        <h1>⚡ Deeps Systems AIO</h1>
-        <div class="header-nav" id="header-nav">
+<body class="text-slate-100 min-h-screen flex flex-col relative">
+
+    <!-- Ambient Glowing Background Blobs -->
+    <div class="absolute top-10 left-10 w-96 h-96 bg-cyan-500/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+    <div class="absolute bottom-20 right-20 w-96 h-96 bg-purple-600/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+    <div class="absolute top-1/2 left-1/3 w-80 h-80 bg-pink-500/5 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+
+    <!-- Sparkle Particles Area -->
+    <div id="sparkle-layer" class="absolute inset-0 pointer-events-none overflow-hidden -z-10"></div>
+
+    <!-- HEADER & BRANDING -->
+    <header class="bg-slate-900/60 backdrop-blur-md border-b border-slate-800/80 px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+        <h1 class="text-xl font-extrabold tracking-wider text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] cursor-pointer" onclick="routeToView('view-landing')">
+            ⚡ DEEPS SYSTEMS AIO
+        </h1>
+        <div class="flex items-center gap-6" id="header-nav">
             <!-- Rendered dynamically -->
         </div>
     </header>
 
-    <main>
-        <!-- LANDING / ANONYMOUS VIEW -->
+    <main class="flex-grow p-8 max-w-7xl mx-auto w-full box-border">
+
+        <!-- LANDING / ANONYMOUS DASHBOARD VIEW -->
         <section id="view-landing" class="view-section active">
-            <div class="landing-header">
-                <h2>Operations Workspace</h2>
-                <p>Orchestrate enterprise communications, finance, HR, logistics, and web e-commerce storefronts within a unified environment.</p>
+            <div class="text-center mb-12 relative py-4">
+                <!-- Decorative Laser Tracker Line -->
+                <div class="w-48 h-[1px] bg-cyan-500/50 mx-auto mb-4 relative overflow-hidden">
+                    <div class="laser-track w-20 h-[1px]"></div>
+                </div>
+                <h2 class="text-4xl font-extrabold text-white tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
+                    Operations Workspace
+                </h2>
+                <p class="text-cyan-400 font-semibold tracking-widest text-sm uppercase mt-1">
+                    Automation and Orchestration
+                </p>
             </div>
 
-            <div class="grid-cards">
-                <!-- Comms -->
-                <div class="card" onclick="routeToModule('comms')">
+            <!-- CARD MATRIX GRID -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center">
+
+                <!-- Card 1: Omnichannel Comms -->
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-8 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:border-cyan-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between" onclick="routeToModule('comms')">
                     <div>
-                        <div class="card-icon">💬</div>
-                        <h3 class="card-title">Omnichannel Comms</h3>
-                        <p class="card-description">Dispatch messages across WhatsApp, Email (HostGator SMTP), and SMS fallback systems securely.</p>
+                        <div class="text-3xl mb-4">💬</div>
+                        <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Omnichannel Comms</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-6">Connect to customers via omnichannel communications, community channels, and fallback alerts.</p>
                     </div>
-                    <button class="card-btn">Launch Comms</button>
+                    <button class="glowing-btn-toggle w-full py-2.5 font-bold tracking-wide transition-all duration-300">Launch</button>
                 </div>
 
-                <!-- HR -->
-                <div class="card" onclick="routeToModule('hr')">
+                <!-- Card 2: HR & Talent Profiles -->
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-8 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(59,130,246,0.3)] hover:border-blue-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between" onclick="routeToModule('hr')">
                     <div>
-                        <div class="card-icon">👥</div>
-                        <h3 class="card-title">HR & Talent Profiles</h3>
-                        <p class="card-description">Manage company organizational structures, add employee profiles, and change staffing statuses.</p>
+                        <div class="text-3xl mb-4">👥</div>
+                        <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">HR & Talent Profiles</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-6">Automated management of company structures, staff node registries, and team workflows.</p>
                     </div>
-                    <button class="card-btn">Launch HR</button>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-md tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(59,130,246,0.4)]">Launch</button>
                 </div>
 
-                <!-- Ledger -->
-                <div class="card" onclick="routeToModule('finance')">
+                <!-- Card 3: Ledger & Finance -->
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-8 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(20,184,166,0.3)] hover:border-teal-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between" onclick="routeToModule('finance')">
                     <div>
-                        <div class="card-icon">📊</div>
-                        <h3 class="card-title">Ledger & Finance</h3>
-                        <p class="card-description">Track multi-tenant income, expenses, checkouts, bank webhook reconciliations, and invoice entries.</p>
+                        <div class="text-3xl mb-4">📊</div>
+                        <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Ledger & Finance</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-6">Automated bookkeeping, ledger management, financial pipeline automation, and multi-tenant billing logs.</p>
                     </div>
-                    <button class="card-btn">Launch Ledger</button>
+                    <button class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-4 rounded-md tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(20,184,166,0.4)]">Launch</button>
                 </div>
 
-                <!-- Storefront -->
-                <div class="card" onclick="routeToModule('store')">
+                <!-- Card 4: Website & Online Store (Slightly Centered Row on Desktops) -->
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-8 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(249,115,22,0.3)] hover:border-orange-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between lg:col-start-1 lg:col-end-2 md:col-span-1" onclick="routeToModule('store')">
                     <div>
-                        <div class="card-icon">🏪</div>
-                        <h3 class="card-title">Website & Online Store</h3>
-                        <p class="card-description">Manage public web content, product catalogs, online checkouts, and e-commerce inventory sync in real-time.</p>
+                        <div class="text-3xl mb-4">🏪</div>
+                        <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Website & Online Store</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-6">Deploy live customer portals, sync product catalogs, inventory triggers, and public-facing content arrays.</p>
                     </div>
-                    <button class="card-btn">Launch Storefront</button>
+                    <button class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2.5 px-4 rounded-md tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(249,115,22,0.4)]">Launch Storefront</button>
                 </div>
 
-                <!-- Logistics -->
-                <div class="card" onclick="routeToModule('logistics')">
+                <!-- Card 5: Logistics Integration -->
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-8 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(236,72,153,0.3)] hover:border-pink-500/50 transition-all duration-300 cursor-pointer flex flex-col justify-between lg:col-start-3 lg:col-end-4 md:col-span-1" onclick="routeToModule('logistics')">
                     <div>
-                        <div class="card-icon">📦</div>
-                        <h3 class="card-title">Logistics Integration</h3>
-                        <p class="card-description">Create shipments with DHL and Post PNG and track transport waybills in real-time.</p>
+                        <div class="text-3xl mb-4">📦</div>
+                        <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Logistics Integration</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-6">Orchestrate automated supply chains, dispatch coordination, waybill tracking, and hardware shipping arrays.</p>
                     </div>
-                    <button class="card-btn">Launch Logistics</button>
+                    <button class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2.5 px-4 rounded-md tracking-wide transition-all duration-300 shadow-[0_0_15px_rgba(236,72,153,0.4)]">Launch</button>
                 </div>
             </div>
+
+            <!-- Laser Interconnect Line Decor -->
+            <div class="max-w-6xl mx-auto h-[1px] bg-gradient-to-r from-cyan-500/10 via-purple-500/40 to-cyan-500/10 mt-16 shadow-[0_0_8px_rgba(34,211,238,0.2)]"></div>
         </section>
 
         <!-- AUTH VIEW (LOGIN / SIGNUP PORTAL) -->
         <section id="view-auth" class="view-section">
-            <div class="auth-container">
+            <div class="max-w-md mx-auto my-16 bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
                 <div id="auth-login-box">
-                    <h2 class="auth-title">Welcome Back</h2>
-                    <p class="auth-subtitle">Sign in to your secure operational environment</p>
-                    <form id="form-login" onsubmit="handleLogin(event)">
-                        <div class="form-group">
-                            <label for="login-email">Email Address</label>
-                            <input type="email" id="login-email" required placeholder="name@company.com">
+                    <h2 class="text-2xl font-extrabold text-white mb-2 text-center">Welcome Back</h2>
+                    <p class="text-slate-400 text-sm text-center mb-8">Sign in to your secure operational environment</p>
+                    <form id="form-login" onsubmit="handleLogin(event)" class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
+                            <input type="email" id="login-email" required class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="name@company.com">
                         </div>
-                        <div class="form-group">
-                            <label for="login-password">Password</label>
-                            <input type="password" id="login-password" required placeholder="••••••••">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Password</label>
+                            <input type="password" id="login-password" required class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="••••••••">
                         </div>
-                        <button type="submit" class="auth-btn">Sign In</button>
+                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200 shadow-[0_0_15px_rgba(6,182,212,0.4)]">Sign In</button>
                     </form>
-                    <div class="auth-toggle">
-                        Don't have an account? <a href="#" onclick="toggleAuthBox('signup')">Create one now</a>
+                    <div class="text-center text-xs text-slate-400 mt-6">
+                        Don't have an account? <a href="#" onclick="toggleAuthBox('signup')" class="text-cyan-400 font-bold hover:underline ml-1">Create one now</a>
                     </div>
                 </div>
 
                 <div id="auth-signup-box" style="display: none;">
-                    <h2 class="auth-title">Create Account</h2>
-                    <p class="auth-subtitle">Register a new profile under your organization</p>
-                    <form id="form-signup" onsubmit="handleSignup(event)">
-                        <div class="form-group">
-                            <label for="signup-name">Full Name</label>
-                            <input type="text" id="signup-name" required placeholder="John Doe">
+                    <h2 class="text-2xl font-extrabold text-white mb-2 text-center">Create Account</h2>
+                    <p class="text-slate-400 text-sm text-center mb-8">Register a new profile under your organization</p>
+                    <form id="form-signup" onsubmit="handleSignup(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Full Name</label>
+                            <input type="text" id="signup-name" required class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="John Doe">
                         </div>
-                        <div class="form-group">
-                            <label for="signup-email">Email Address</label>
-                            <input type="email" id="signup-email" required placeholder="john@yourdomain.com">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</label>
+                            <input type="email" id="signup-email" required class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="john@yourdomain.com">
                         </div>
-                        <div class="form-group">
-                            <label for="signup-password">Password</label>
-                            <input type="password" id="signup-password" required minlength="6" placeholder="••••••••">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Password</label>
+                            <input type="password" id="signup-password" required minlength="6" class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="••••••••">
                         </div>
-                        <div class="form-group">
-                            <label for="signup-company">Company Name</label>
-                            <input type="text" id="signup-company" placeholder="e.g. Acme Corp">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Company Name</label>
+                            <input type="text" id="signup-company" class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Acme Corp">
                         </div>
-                        <div class="form-group">
-                            <label for="signup-subdomain">Subdomain Keyword (for Multi-tenancy)</label>
-                            <input type="text" id="signup-subdomain" placeholder="e.g. acme">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Subdomain Keyword</label>
+                            <input type="text" id="signup-subdomain" class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. acme">
                         </div>
-                        <button type="submit" class="auth-btn">Register</button>
+                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200 shadow-[0_0_15px_rgba(6,182,212,0.4)]">Register</button>
                     </form>
-                    <div class="auth-toggle">
-                        Already have an account? <a href="#" onclick="toggleAuthBox('login')">Sign In instead</a>
+                    <div class="text-center text-xs text-slate-400 mt-6">
+                        Already have an account? <a href="#" onclick="toggleAuthBox('login')" class="text-cyan-400 font-bold hover:underline ml-1">Sign In instead</a>
                     </div>
                 </div>
             </div>
@@ -507,47 +314,47 @@
 
         <!-- OMNICHANNEL COMMS VIEW -->
         <section id="view-comms" class="view-section">
-            <div class="back-nav">
+            <div class="back-nav mb-6">
                 <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
             </div>
-            <div class="module-container">
-                <div class="module-header">
+            <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
                     <div>
-                        <h2>💬 Omnichannel Comms Dashboard</h2>
-                        <p>Dispatch real-time communication across multiple messaging channels</p>
+                        <h2 class="text-2xl font-extrabold text-white">💬 Omnichannel Comms Dashboard</h2>
+                        <p class="text-slate-400 text-sm mt-1">Dispatch real-time communication across multiple messaging channels</p>
                     </div>
                 </div>
-                <div class="module-grid">
-                    <div class="module-form">
-                        <h3>Dispatch New Message</h3>
-                        <form id="form-comms-dispatch" onsubmit="dispatchMessage(event)">
-                            <div class="form-group">
-                                <label for="comm-channel">Channel</label>
-                                <select id="comm-channel" required>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                        <h3 class="text-lg font-bold text-white mb-6">Dispatch New Message</h3>
+                        <form id="form-comms-dispatch" onsubmit="dispatchMessage(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Channel</label>
+                                <select id="comm-channel" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
                                     <option value="EMAIL">Email</option>
                                     <option value="WHATSAPP">WhatsApp</option>
                                     <option value="SMS">SMS (Fallback)</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="comm-to">Recipient (Email Address or Phone Number)</label>
-                                <input type="text" id="comm-to" required placeholder="e.g. user@domain.com or +675...">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Recipient</label>
+                                <input type="text" id="comm-to" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. user@domain.com or +675...">
                             </div>
-                            <div class="form-group">
-                                <label for="comm-subject">Subject (Required for Email only)</label>
-                                <input type="text" id="comm-subject" placeholder="Notification Alert">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Subject (Email Only)</label>
+                                <input type="text" id="comm-subject" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Notification Alert">
                             </div>
-                            <div class="form-group">
-                                <label for="comm-message">Message Body</label>
-                                <textarea id="comm-message" required rows="5" style="width: 100%; border: 1px solid var(--border); border-radius: 0.375rem; padding: 0.65rem; box-sizing: border-box;" placeholder="Type your message details..."></textarea>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Message Body</label>
+                                <textarea id="comm-message" required rows="4" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Type your message details..."></textarea>
                             </div>
-                            <button type="submit" class="auth-btn" style="background-color: var(--success);">Send Dispatch</button>
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Send Dispatch</button>
                         </form>
                     </div>
                     <div>
-                        <div class="list-title">Inbound / Outbound Logs</div>
-                        <div class="module-list" id="comms-log-list">
-                            <p style="color: var(--text-muted); font-style: italic;">No communication records available.</p>
+                        <div class="text-lg font-bold text-white mb-6">Inbound / Outbound Logs</div>
+                        <div class="space-y-4" id="comms-log-list">
+                            <p class="text-slate-400 text-sm italic">No communication records available.</p>
                         </div>
                     </div>
                 </div>
@@ -556,51 +363,51 @@
 
         <!-- HR VIEW -->
         <section id="view-hr" class="view-section">
-            <div class="back-nav">
+            <div class="back-nav mb-6">
                 <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
             </div>
-            <div class="module-container">
-                <div class="module-header">
+            <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
                     <div>
-                        <h2>👥 HR & Staff Directory</h2>
-                        <p>Manage and track employee operational files and employment parameters</p>
+                        <h2 class="text-2xl font-extrabold text-white">👥 HR & Staff Directory</h2>
+                        <p class="text-slate-400 text-sm mt-1">Manage and track employee operational files and employment parameters</p>
                     </div>
                 </div>
-                <div class="module-grid">
-                    <div class="module-form">
-                        <h3>Add Employee Profile</h3>
-                        <form id="form-hr-add" onsubmit="addEmployeeProfile(event)">
-                            <div class="form-group">
-                                <label for="hr-name">Employee Full Name</label>
-                                <input type="text" id="hr-name" required placeholder="Jane Smith">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                        <h3 class="text-lg font-bold text-white mb-6">Add Employee Profile</h3>
+                        <form id="form-hr-add" onsubmit="addEmployeeProfile(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Employee Full Name</label>
+                                <input type="text" id="hr-name" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Jane Smith">
                             </div>
-                            <div class="form-group">
-                                <label for="hr-title">Position Title</label>
-                                <input type="text" id="hr-title" required placeholder="Operations Analyst">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Position Title</label>
+                                <input type="text" id="hr-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Operations Analyst">
                             </div>
-                            <div class="form-group">
-                                <label for="hr-salary">Salary Amount (Annualized)</label>
-                                <input type="number" id="hr-salary" required placeholder="55000">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Salary Amount (Annualized)</label>
+                                <input type="number" id="hr-salary" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="55000">
                             </div>
-                            <div class="form-group">
-                                <label for="hr-currency">Salary Currency</label>
-                                <select id="hr-currency" required>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Salary Currency</label>
+                                <select id="hr-currency" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
                                     <option value="PGK">PGK (Papua New Guinea Kina)</option>
                                     <option value="USD">USD</option>
                                     <option value="AUD">AUD</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="hr-hire-date">Hire Date</label>
-                                <input type="date" id="hr-hire-date" required>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Hire Date</label>
+                                <input type="date" id="hr-hire-date" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
                             </div>
-                            <button type="submit" class="auth-btn" style="background-color: var(--success);">Register Employee</button>
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Register Employee</button>
                         </form>
                     </div>
                     <div>
-                        <div class="list-title">Staff Records</div>
-                        <div class="module-list" id="hr-profile-list">
-                            <p style="color: var(--text-muted); font-style: italic;">No employee records available.</p>
+                        <div class="text-lg font-bold text-white mb-6">Staff Records</div>
+                        <div class="space-y-4" id="hr-profile-list">
+                            <p class="text-slate-400 text-sm italic">No employee records available.</p>
                         </div>
                     </div>
                 </div>
@@ -609,52 +416,52 @@
 
         <!-- LEDGER & FINANCE VIEW -->
         <section id="view-finance" class="view-section">
-            <div class="back-nav">
+            <div class="back-nav mb-6">
                 <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
             </div>
-            <div class="module-container">
-                <div class="module-header">
+            <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
                     <div>
-                        <h2>📊 General Ledger & Transactions</h2>
-                        <p>Log incomes, expenses, checkout events, and view transaction history</p>
+                        <h2 class="text-2xl font-extrabold text-white">📊 General Ledger & Transactions</h2>
+                        <p class="text-slate-400 text-sm mt-1">Log incomes, expenses, checkout events, and view transaction history</p>
                     </div>
                 </div>
-                <div class="module-grid">
-                    <div class="module-form">
-                        <h3>Log New Transaction</h3>
-                        <form id="form-finance-log" onsubmit="logTransaction(event)">
-                            <div class="form-group">
-                                <label for="tx-type">Transaction Type</label>
-                                <select id="tx-type" required>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                        <h3 class="text-lg font-bold text-white mb-6">Log New Transaction</h3>
+                        <form id="form-finance-log" onsubmit="logTransaction(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Transaction Type</label>
+                                <select id="tx-type" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
                                     <option value="INCOME">Income</option>
                                     <option value="EXPENSE">Expense</option>
                                     <option value="PAYROLL">Payroll</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="tx-amount">Amount</label>
-                                <input type="number" step="0.01" id="tx-amount" required placeholder="1250.00">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Amount</label>
+                                <input type="number" step="0.01" id="tx-amount" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="1250.00">
                             </div>
-                            <div class="form-group">
-                                <label for="tx-description">Description</label>
-                                <input type="text" id="tx-description" required placeholder="Client project milestone billing">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Description</label>
+                                <input type="text" id="tx-description" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Client project milestone billing">
                             </div>
-                            <div class="form-group">
-                                <label for="tx-gateway">Payment Gateway</label>
-                                <select id="tx-gateway" required>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Payment Gateway</label>
+                                <select id="tx-gateway" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
                                     <option value="CASH">Cash / Manual</option>
                                     <option value="BSP_PAY">BSP Pay</option>
                                     <option value="KINA_IPG">Kina Bank IPG</option>
                                     <option value="AKAUNTING">Akaunting Bridge</option>
                                 </select>
                             </div>
-                            <button type="submit" class="auth-btn" style="background-color: var(--success);">Commit Transaction</button>
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Commit Transaction</button>
                         </form>
                     </div>
                     <div>
-                        <div class="list-title">Double-Entry Ledger Books</div>
-                        <div class="module-list" id="finance-tx-list">
-                            <p style="color: var(--text-muted); font-style: italic;">No transaction logs available.</p>
+                        <div class="text-lg font-bold text-white mb-6">Double-Entry Ledger Books</div>
+                        <div class="space-y-4" id="finance-tx-list">
+                            <p class="text-slate-400 text-sm italic">No transaction logs available.</p>
                         </div>
                     </div>
                 </div>
@@ -663,43 +470,43 @@
 
         <!-- WEBSITE & ONLINE STORE VIEW -->
         <section id="view-store" class="view-section">
-            <div class="back-nav">
+            <div class="back-nav mb-6">
                 <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
             </div>
-            <div class="module-container">
-                <div class="module-header">
+            <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
                     <div>
-                        <h2>🏪 Website & Online Storefront</h2>
-                        <p>Add products, manage online listings, sync e-commerce catalogs and track customer checkouts</p>
+                        <h2 class="text-2xl font-extrabold text-white">🏪 Website & Online Storefront</h2>
+                        <p class="text-slate-400 text-sm mt-1">Add products, manage online listings, sync e-commerce catalogs and track customer checkouts</p>
                     </div>
                 </div>
-                <div class="module-grid">
-                    <div class="module-form">
-                        <h3>Add Product to Catalog</h3>
-                        <form id="form-store-add" onsubmit="addCatalogItem(event)">
-                            <div class="form-group">
-                                <label for="store-title">Product Title</label>
-                                <input type="text" id="store-title" required placeholder="e.g. Enterprise Operations License">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                        <h3 class="text-lg font-bold text-white mb-6">Add Product to Catalog</h3>
+                        <form id="form-store-add" onsubmit="addCatalogItem(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Product Title</label>
+                                <input type="text" id="store-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Enterprise Operations License">
                             </div>
-                            <div class="form-group">
-                                <label for="store-price">Unit Price (PGK)</label>
-                                <input type="number" step="0.01" id="store-price" required placeholder="250.00">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Unit Price (PGK)</label>
+                                <input type="number" step="0.01" id="store-price" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="250.00">
                             </div>
-                            <div class="form-group">
-                                <label for="store-description">Product Description</label>
-                                <input type="text" id="store-description" required placeholder="Full active platform module seat">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Product Description</label>
+                                <input type="text" id="store-description" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Full active platform module seat">
                             </div>
-                            <div class="form-group">
-                                <label for="store-inventory">Initial Inventory Stock</label>
-                                <input type="number" id="store-inventory" required placeholder="100">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Initial Inventory Stock</label>
+                                <input type="number" id="store-inventory" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="100">
                             </div>
-                            <button type="submit" class="auth-btn" style="background-color: var(--success);">Publish Product</button>
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Publish Product</button>
                         </form>
                     </div>
                     <div>
-                        <div class="list-title">Product Catalog & Inventory</div>
-                        <div class="module-list" id="store-items-list">
-                            <p style="color: var(--text-muted); font-style: italic;">No products cataloged yet.</p>
+                        <div class="text-lg font-bold text-white mb-6">Product Catalog & Inventory</div>
+                        <div class="space-y-4" id="store-items-list">
+                            <p class="text-slate-400 text-sm italic">No products cataloged yet.</p>
                         </div>
                     </div>
                 </div>
@@ -708,46 +515,46 @@
 
         <!-- LOGISTICS VIEW -->
         <section id="view-logistics" class="view-section">
-            <div class="back-nav">
+            <div class="back-nav mb-6">
                 <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
             </div>
-            <div class="module-container">
-                <div class="module-header">
+            <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
                     <div>
-                        <h2>📦 Logistics & Waybills</h2>
-                        <p>Generate, issue, and trace shipments via integrated regional logistics networks</p>
+                        <h2 class="text-2xl font-extrabold text-white">📦 Logistics & Waybills</h2>
+                        <p class="text-slate-400 text-sm mt-1">Generate, issue, and trace shipments via integrated regional logistics networks</p>
                     </div>
                 </div>
-                <div class="module-grid">
-                    <div class="module-form">
-                        <h3>Initiate New Shipment Order</h3>
-                        <form id="form-logistics" onsubmit="createShipment(event)">
-                            <div class="form-group">
-                                <label for="ship-carrier">Carrier Provider</label>
-                                <select id="ship-carrier" required>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                        <h3 class="text-lg font-bold text-white mb-6">Initiate New Shipment Order</h3>
+                        <form id="form-logistics" onsubmit="createShipment(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Carrier Provider</label>
+                                <select id="ship-carrier" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
                                     <option value="DHL">DHL Express</option>
                                     <option value="POST_PNG">Post PNG Express</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="ship-origin">Origin Dispatch Address</label>
-                                <input type="text" id="ship-origin" required placeholder="Port Moresby HQ, Section 32">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Origin Dispatch Address</label>
+                                <input type="text" id="ship-origin" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Port Moresby HQ, Section 32">
                             </div>
-                            <div class="form-group">
-                                <label for="ship-destination">Destination Shipping Address</label>
-                                <input type="text" id="ship-destination" required placeholder="Lae Hub, Suite 10, Markham Rd">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Destination Shipping Address</label>
+                                <input type="text" id="ship-destination" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Lae Hub, Suite 10, Markham Rd">
                             </div>
-                            <div class="form-group">
-                                <label for="ship-weight">Parcel Weight (kg)</label>
-                                <input type="number" step="0.01" id="ship-weight" required placeholder="2.5">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Parcel Weight (kg)</label>
+                                <input type="number" step="0.01" id="ship-weight" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="2.5">
                             </div>
-                            <button type="submit" class="auth-btn" style="background-color: var(--success);">Generate Shipment</button>
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Generate Shipment</button>
                         </form>
                     </div>
                     <div>
-                        <div class="list-title">Waybills & Shipments</div>
-                        <div class="module-list" id="logistics-ship-list">
-                            <p style="color: var(--text-muted); font-style: italic;">No active shipment tracking logs available.</p>
+                        <div class="text-lg font-bold text-white mb-6">Waybills & Shipments</div>
+                        <div class="space-y-4" id="logistics-ship-list">
+                            <p class="text-slate-400 text-sm italic">No active shipment tracking logs available.</p>
                         </div>
                     </div>
                 </div>
@@ -762,12 +569,36 @@
         let currentUser = null;
         let authToken = localStorage.getItem('authToken');
 
+        // Twinkling Tech Lights Micro-animation Generator
+        function makeSparkles() {
+            const container = document.getElementById('sparkle-layer');
+            const particleCount = 45;
+            for (let i = 0; i < particleCount; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+
+                const size = Math.random() * 3 + 2;
+                sparkle.style.width = `${size}px`;
+                sparkle.style.height = `${size}px`;
+
+                sparkle.style.top = `${Math.random() * 100}%`;
+                sparkle.style.left = `${Math.random() * 100}%`;
+
+                sparkle.style.animationDelay = `${Math.random() * 5}s`;
+                sparkle.style.animationDuration = `${Math.random() * 3 + 2}s`;
+
+                container.appendChild(sparkle);
+            }
+        }
+        makeSparkles();
+
         // ROUTING SYSTEM
         function routeToView(viewId) {
             document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
         }
 
+        // Module Routing
         function routeToModule(moduleId) {
             if (!authToken) {
                 // Smoothly route to auth portal
@@ -898,12 +729,12 @@
             const nav = document.getElementById('header-nav');
             if (currentUser) {
                 nav.innerHTML = `
-                    <span class="user-info">👤 ${currentUser.fullName} (${currentUser.role})</span>
-                    <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
+                    <span class="text-xs uppercase tracking-widest text-cyan-400 font-bold bg-cyan-950/40 border border-cyan-800/60 px-3 py-1.5 rounded-full">👤 ${currentUser.fullName}</span>
+                    <button class="text-xs uppercase tracking-widest font-extrabold border border-red-500/40 text-red-400 hover:bg-red-500 hover:text-white px-4 py-1.5 rounded-full transition-all duration-200" onclick="handleLogout()">Sign Out</button>
                 `;
             } else {
                 nav.innerHTML = `
-                    <button class="card-btn" style="padding: 0.4rem 1rem; font-size: 0.85rem;" onclick="routeToView('view-auth')">Sign In</button>
+                    <button class="text-xs uppercase tracking-widest font-extrabold border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500 hover:text-slate-950 px-5 py-2 rounded-full transition-all duration-200 shadow-[0_0_10px_rgba(34,211,238,0.2)]" onclick="routeToView('view-auth')">Sign In</button>
                 `;
             }
         }
@@ -912,14 +743,14 @@
         async function fetchComms() {
             const list = document.getElementById('comms-log-list');
             list.innerHTML = `
-                <div class="list-card">
-                    <div class="list-card-header">
+                <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-2">
+                    <div class="flex justify-between font-bold">
                         <span>WhatsApp Outbound</span>
-                        <span style="color: var(--success);">SENT</span>
+                        <span class="text-emerald-400">SENT</span>
                     </div>
-                    <div>Recipient: +67571234567</div>
-                    <div>Message: BSP Checkout confirmation code.</div>
-                    <div class="list-card-footer">Channel: WHATSAPP | Dec 2, 2024</div>
+                    <div class="text-slate-300">Recipient: +67571234567</div>
+                    <div class="text-slate-300">Message: BSP Checkout confirmation code.</div>
+                    <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">Channel: WHATSAPP | Dec 2, 2024</div>
                 </div>
             `;
         }
@@ -971,26 +802,26 @@
                 }
 
                 if (data.length === 0) {
-                    list.innerHTML = `<p style="color: var(--text-muted); font-style: italic;">No employee records available.</p>`;
+                    list.innerHTML = `<p class="text-slate-400 text-sm italic">No employee records available.</p>`;
                     return;
                 }
 
                 list.innerHTML = data.map(profile => `
-                    <div class="list-card">
-                        <div class="list-card-header">
+                    <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-1.5">
+                        <div class="flex justify-between font-bold">
                             <span>${profile.full_name}</span>
-                            <span style="color: ${profile.is_active ? 'var(--success)' : '#ef4444'}; font-weight: 700;">
+                            <span class="${profile.is_active ? 'text-emerald-400' : 'text-red-400'} font-bold">
                                 ${profile.is_active ? 'ACTIVE' : 'INACTIVE'}
                             </span>
                         </div>
-                        <div>Role: ${profile.position_title}</div>
-                        <div>Salary: ${profile.salary_amount} ${profile.salary_currency}</div>
-                        <div class="list-card-footer">Hire Date: ${profile.hire_date ? new Date(profile.hire_date).toLocaleDateString() : 'N/A'}</div>
+                        <div class="text-slate-300">Role: ${profile.position_title}</div>
+                        <div class="text-slate-300">Salary: ${profile.salary_amount} ${profile.salary_currency}</div>
+                        <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">Hire Date: ${profile.hire_date ? new Date(profile.hire_date).toLocaleDateString() : 'N/A'}</div>
                     </div>
                 `).join('');
             } catch (err) {
                 console.error(err);
-                list.innerHTML = `<p style="color: red;">Failed to retrieve records.</p>`;
+                list.innerHTML = `<p class="text-red-400 text-sm">Failed to retrieve records.</p>`;
             }
         }
 
@@ -1042,26 +873,26 @@
                 }
 
                 if (data.length === 0) {
-                    list.innerHTML = `<p style="color: var(--text-muted); font-style: italic;">No transaction logs available.</p>`;
+                    list.innerHTML = `<p class="text-slate-400 text-sm italic">No transaction logs available.</p>`;
                     return;
                 }
 
                 list.innerHTML = data.map(tx => `
-                    <div class="list-card">
-                        <div class="list-card-header">
+                    <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-1.5">
+                        <div class="flex justify-between font-bold">
                             <span>${tx.description}</span>
-                            <span style="color: ${tx.transaction_type === 'INCOME' ? 'var(--success)' : '#ef4444'}; font-weight: 700;">
+                            <span class="${tx.transaction_type === 'INCOME' ? 'text-emerald-400' : 'text-red-400'} font-bold">
                                 ${tx.transaction_type === 'INCOME' ? '+' : '-'}${tx.amount} ${tx.currency}
                             </span>
                         </div>
-                        <div>Verification: ${tx.verification_status}</div>
-                        <div>Gateway: ${tx.payment_gateway || 'CASH'}</div>
-                        <div class="list-card-footer">Occurred At: ${new Date(tx.occurred_at).toLocaleString()}</div>
+                        <div class="text-slate-300">Verification: ${tx.verification_status}</div>
+                        <div class="text-slate-300">Gateway: ${tx.payment_gateway || 'CASH'}</div>
+                        <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">Occurred At: ${new Date(tx.occurred_at).toLocaleString()}</div>
                     </div>
                 `).join('');
             } catch (err) {
                 console.error(err);
-                list.innerHTML = `<p style="color: red;">Failed to retrieve records.</p>`;
+                list.innerHTML = `<p class="text-red-400 text-sm">Failed to retrieve records.</p>`;
             }
         }
 
@@ -1112,25 +943,25 @@
                 }
 
                 if (data.length === 0) {
-                    list.innerHTML = `<p style="color: var(--text-muted); font-style: italic;">No products cataloged yet.</p>`;
+                    list.innerHTML = `<p class="text-slate-400 text-sm italic">No products cataloged yet.</p>`;
                     return;
                 }
 
                 list.innerHTML = data.map(item => `
-                    <div class="list-card">
-                        <div class="list-card-header">
+                    <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-1.5">
+                        <div class="flex justify-between font-bold">
                             <span>${item.title}</span>
-                            <span style="color: var(--success); font-weight: 700;">
+                            <span class="text-emerald-400 font-bold">
                                 ${item.price} PGK
                             </span>
                         </div>
-                        <div>Description: ${item.description || 'N/A'}</div>
-                        <div class="list-card-footer">Stock Count: ${item.inventory_count} units | ID: ${item.id.slice(0, 8)}...</div>
+                        <div class="text-slate-300">Description: ${item.description || 'N/A'}</div>
+                        <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">Stock Count: ${item.inventory_count} units | ID: ${item.id.slice(0, 8)}...</div>
                     </div>
                 `).join('');
             } catch (err) {
                 console.error(err);
-                list.innerHTML = `<p style="color: red;">Failed to retrieve store items.</p>`;
+                list.innerHTML = `<p class="text-red-400 text-sm">Failed to retrieve store items.</p>`;
             }
         }
 
@@ -1170,14 +1001,14 @@
         async function fetchShipments() {
             const list = document.getElementById('logistics-ship-list');
             list.innerHTML = `
-                <div class="list-card">
-                    <div class="list-card-header">
+                <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-2">
+                    <div class="flex justify-between font-bold">
                         <span>DHL Express</span>
-                        <span style="color: #d97706; font-weight: 700;">IN TRANSIT</span>
+                        <span class="text-amber-400 font-bold">IN TRANSIT</span>
                     </div>
-                    <div>Tracking: DHL-981047192</div>
-                    <div>Route: Port Moresby HQ &rarr; Lae Hub</div>
-                    <div class="list-card-footer">Weight: 2.5 kg | Dec 2, 2024</div>
+                    <div class="text-slate-300">Tracking: DHL-981047192</div>
+                    <div class="text-slate-300">Route: Port Moresby HQ &rarr; Lae Hub</div>
+                    <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">Weight: 2.5 kg | Dec 2, 2024</div>
                 </div>
             `;
         }

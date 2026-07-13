@@ -8,12 +8,20 @@ const router = express.Router();
 
 const { requireTenant } = require('../middleware/tenantResolver');
 
+const authController = require('../controllers/authController');
 const communicationController = require('../controllers/communicationController');
 const financeController = require('../controllers/financeController');
 const bankingController = require('../controllers/bankingController');
 const hrController = require('../controllers/hrController');
 const intentController = require('../controllers/intentController');
 const logisticsService = require('../services/logisticsService');
+
+// -----------------------------------------------------------------
+// Authentication
+// -----------------------------------------------------------------
+router.post('/api/auth/register', authController.register);
+router.post('/api/auth/login', authController.login);
+router.get('/api/auth/me', authController.getMe);
 
 // -----------------------------------------------------------------
 // Omnichannel messaging

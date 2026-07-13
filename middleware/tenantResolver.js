@@ -3,6 +3,8 @@
 // Resolves the tenant (and, where possible, branch) context for every
 // incoming request based on subdomain + auth token, and attaches
 // req.tenantId / req.branchId / req.tenant for downstream isolation.
+// If the domain/subdomain cannot be matched to a database tenant,
+// it falls back to a default active tenant from the database.
 // =====================================================================
 'use strict';
 
@@ -76,6 +78,8 @@ function extractAuthContext(req) {
 /**
  * Express middleware: attaches req.tenantId, req.tenant, req.branchId,
  * and req.authUser (if a valid token was present).
+ * Falls back to the default/main active tenant if the subdomain/domain
+ * cannot be matched to a database tenant.
  */
 async function tenantResolver(req, res, next) {
   try {
@@ -84,42 +88,55 @@ async function tenantResolver(req, res, next) {
 
     req.authUser = authContext;
 
-    // No subdomain resolvable at all (root/management panel/reserved) —
-    // allow the request through unscoped; individual routes decide if
-    // that's acceptable (e.g. a superadmin panel) or should 400.
-    if (!subdomain) {
+    let tenant = null;
+
+    if (subdomain) {
+      const result = await db.query(
+        `SELECT id, company_name, subdomain, is_active
+           FROM tenants
+          WHERE subdomain = $1
+          LIMIT 1`,
+        [subdomain]
+      );
+
+      if (result.rowCount > 0) {
+        tenant = result.rows[0];
+      }
+    }
+
+    // If subdomain is unresolved, unmatched, or apex domain, fall back to default/main active tenant
+    if (!tenant) {
+      const fallbackResult = await db.query(
+        `SELECT id, company_name, subdomain, is_active
+           FROM tenants
+          WHERE is_active = true
+          ORDER BY created_at ASC
+          LIMIT 1`
+      );
+      if (fallbackResult.rowCount > 0) {
+        tenant = fallbackResult.rows[0];
+      }
+    }
+
+    if (tenant) {
+      if (!tenant.is_active) {
+        return res.status(403).json({ error: 'This tenant account is suspended.' });
+      }
+
+      req.tenant = tenant;
+      req.tenantId = tenant.id;
+
+      // Guard against a stale/forged token pointing at a different tenant.
+      if (authContext && authContext.tenantId && authContext.tenantId !== tenant.id) {
+        return res.status(403).json({ error: 'Token/tenant mismatch.' });
+      }
+
+      req.branchId = authContext ? authContext.branchId : null;
+    } else {
+      // No active tenants exist in the database yet (e.g. fresh installation)
       req.tenantId = authContext ? authContext.tenantId : null;
       req.branchId = authContext ? authContext.branchId : null;
-      return next();
     }
-
-    const result = await db.query(
-      `SELECT id, company_name, subdomain, is_active
-         FROM tenants
-        WHERE subdomain = $1
-        LIMIT 1`,
-      [subdomain]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Unknown tenant subdomain.' });
-    }
-
-    const tenant = result.rows[0];
-
-    if (!tenant.is_active) {
-      return res.status(403).json({ error: 'This tenant account is suspended.' });
-    }
-
-    req.tenant = tenant;
-    req.tenantId = tenant.id;
-
-    // Guard against a stale/forged token pointing at a different tenant.
-    if (authContext && authContext.tenantId && authContext.tenantId !== tenant.id) {
-      return res.status(403).json({ error: 'Token/tenant mismatch.' });
-    }
-
-    req.branchId = authContext ? authContext.branchId : null;
 
     return next();
   } catch (err) {

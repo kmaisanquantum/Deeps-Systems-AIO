@@ -177,6 +177,50 @@ CREATE INDEX IF NOT EXISTS idx_logistics_branch_id ON logistics_shipments (branc
 CREATE INDEX IF NOT EXISTS idx_logistics_tracking_number ON logistics_shipments (tracking_number);
 
 -- ---------------------------------------------------------------------
+-- WEBSITE & ONLINE STORE MODULE
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS store_items (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id       UUID REFERENCES branches(id) ON DELETE SET NULL,
+    title           VARCHAR(255) NOT NULL,
+    price           NUMERIC(14, 2) NOT NULL DEFAULT 0.00 CHECK (price >= 0),
+    description     TEXT,
+    inventory_count INTEGER NOT NULL DEFAULT 0 CHECK (inventory_count >= 0),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_store_items_tenant_id ON store_items (tenant_id);
+
+CREATE TABLE IF NOT EXISTS store_pages (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    title           VARCHAR(255) NOT NULL,
+    slug            VARCHAR(255) NOT NULL,
+    content         TEXT,
+    is_published    BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (tenant_id, slug)
+);
+
+CREATE INDEX IF NOT EXISTS idx_store_pages_tenant_id ON store_pages (tenant_id);
+
+CREATE TABLE IF NOT EXISTS store_checkouts (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    amount          NUMERIC(14, 2) NOT NULL CHECK (amount >= 0),
+    currency        VARCHAR(3) NOT NULL DEFAULT 'PGK',
+    email           VARCHAR(255),
+    status          VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_store_checkouts_tenant_id ON store_checkouts (tenant_id);
+
+-- ---------------------------------------------------------------------
 -- updated_at auto-touch trigger (applied to all mutable tables)
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION trigger_set_updated_at()
@@ -209,4 +253,16 @@ CREATE TRIGGER set_updated_at_hr BEFORE UPDATE ON hr_profiles
 
 DROP TRIGGER IF EXISTS set_updated_at_logistics ON logistics_shipments;
 CREATE TRIGGER set_updated_at_logistics BEFORE UPDATE ON logistics_shipments
+    FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_store_items ON store_items;
+CREATE TRIGGER set_updated_at_store_items BEFORE UPDATE ON store_items
+    FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_store_pages ON store_pages;
+CREATE TRIGGER set_updated_at_store_pages BEFORE UPDATE ON store_pages
+    FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_store_checkouts ON store_checkouts;
+CREATE TRIGGER set_updated_at_store_checkouts BEFORE UPDATE ON store_checkouts
     FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();

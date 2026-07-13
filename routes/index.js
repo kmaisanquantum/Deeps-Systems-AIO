@@ -14,6 +14,7 @@ const financeController = require('../controllers/financeController');
 const bankingController = require('../controllers/bankingController');
 const hrController = require('../controllers/hrController');
 const intentController = require('../controllers/intentController');
+const storeController = require('../controllers/storeController');
 const logisticsService = require('../services/logisticsService');
 
 // -----------------------------------------------------------------
@@ -52,6 +53,12 @@ router.post('/banking/manual/reconcile', requireTenant, bankingController.reconc
 router.get('/hr/profiles', requireTenant, hrController.listProfiles);
 router.post('/hr/profiles', requireTenant, hrController.createProfile);
 router.patch('/hr/profiles/:id/status', requireTenant, hrController.updateProfileStatus);
+
+// -----------------------------------------------------------------
+// Website & Online Store
+// -----------------------------------------------------------------
+router.get('/store/items', requireTenant, storeController.listItems);
+router.post('/store/items', requireTenant, storeController.createItem);
 
 // -----------------------------------------------------------------
 // Logistics

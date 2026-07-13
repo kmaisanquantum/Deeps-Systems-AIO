@@ -4,21 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deeps Systems AIO — Automation & Orchestration Hub</title>
-    <!-- Tailwind CSS Play CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        slate: {
-                            950: '#020617',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
         /* Custom Animations & Neon Tech Effects */
         body {
@@ -128,8 +113,10 @@
             text-decoration: underline;
         }
     </style>
+    <!-- Tailwind Play CDN in head right before closing head tag -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col relative">
+<body class="bg-slate-950 text-white font-sans min-h-screen relative">
 
     <!-- Ambient Glowing Background Blobs -->
     <div class="absolute top-10 left-10 w-96 h-96 bg-cyan-500/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
@@ -149,385 +136,388 @@
         </div>
     </header>
 
-    <main class="flex-grow p-8 max-w-7xl mx-auto w-full box-border">
+    <!-- Wrap the core layout inside a fully-styled container block -->
+    <div class="max-w-7xl mx-auto px-4 py-12">
+        <main class="w-full box-border">
 
-        <!-- LANDING / ANONYMOUS DASHBOARD VIEW -->
-        <section id="view-landing" class="view-section active">
-            <div class="text-center mb-12 relative py-4">
-                <!-- Decorative Laser Tracker Line -->
-                <div class="w-48 h-[1px] bg-cyan-500/50 mx-auto mb-4 relative overflow-hidden">
-                    <div class="laser-track w-20 h-[1px]"></div>
-                </div>
-                <h2 class="text-4xl font-extrabold text-white tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
-                    Operations Workspace
-                </h2>
-                <p class="text-cyan-400 font-semibold tracking-widest text-sm uppercase mt-1">
-                    Automation and Orchestration
-                </p>
-            </div>
-
-            <!-- CARD MATRIX GRID -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-
-                <!-- Card 1: Omnichannel Comms -->
-                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:border-cyan-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('comms')">
-                    <div>
-                        <div class="text-3xl mb-4">💬</div>
-                        <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Omnichannel Comms</h3>
-                        <p class="text-slate-300 text-sm leading-relaxed mb-6">Connect to customers via omnichannel communications, community channels, and fallback alerts.</p>
+            <!-- LANDING / ANONYMOUS DASHBOARD VIEW -->
+            <section id="view-landing" class="view-section active">
+                <div class="text-center mb-12 relative py-4">
+                    <!-- Decorative Laser Tracker Line -->
+                    <div class="w-48 h-[1px] bg-cyan-500/50 mx-auto mb-4 relative overflow-hidden">
+                        <div class="laser-track w-20 h-[1px]"></div>
                     </div>
-                    <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
+                    <h2 class="text-4xl font-extrabold text-white tracking-tight drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">
+                        Operations Workspace
+                    </h2>
+                    <p class="text-cyan-400 font-semibold tracking-widest text-sm uppercase mt-1">
+                        Automation and Orchestration
+                    </p>
                 </div>
 
-                <!-- Card 2: HR & Talent Profiles -->
-                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(59,130,246,0.3)] hover:border-blue-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('hr')">
-                    <div>
-                        <div class="text-3xl mb-4">👥</div>
-                        <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">HR & Talent Profiles</h3>
-                        <p class="text-slate-300 text-sm leading-relaxed mb-6">Automated management of company structures, staff node registries, and team workflows.</p>
-                    </div>
-                    <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
-                </div>
+                <!-- CARD MATRIX GRID -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
 
-                <!-- Card 3: Ledger & Finance -->
-                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(20,184,166,0.3)] hover:border-teal-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('finance')">
-                    <div>
-                        <div class="text-3xl mb-4">📊</div>
-                        <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Ledger & Finance</h3>
-                        <p class="text-slate-300 text-sm leading-relaxed mb-6">Automated bookkeeping, ledger management, financial pipeline automation, and multi-tenant billing logs.</p>
-                    </div>
-                    <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
-                </div>
-
-                <!-- Card 4: Website & Online Store -->
-                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(249,115,22,0.3)] hover:border-orange-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('store')">
-                    <div>
-                        <div class="text-3xl mb-4">🏪</div>
-                        <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Website & Online Store</h3>
-                        <p class="text-slate-300 text-sm leading-relaxed mb-6">Deploy live customer portals, sync product catalogs, inventory triggers, and public-facing content arrays.</p>
-                    </div>
-                    <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch Storefront</button>
-                </div>
-
-                <!-- Card 5: Logistics Integration -->
-                <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(236,72,153,0.3)] hover:border-pink-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('logistics')">
-                    <div>
-                        <div class="text-3xl mb-4">📦</div>
-                        <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Logistics Integration</h3>
-                        <p class="text-slate-300 text-sm leading-relaxed mb-6">Orchestrate automated supply chains, dispatch coordination, waybill tracking, and hardware shipping arrays.</p>
-                    </div>
-                    <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
-                </div>
-            </div>
-
-            <!-- Laser Interconnect Line Decor -->
-            <div class="max-w-6xl mx-auto h-[1px] bg-gradient-to-r from-cyan-500/10 via-purple-500/40 to-cyan-500/10 mt-16 shadow-[0_0_8px_rgba(34,211,238,0.2)]"></div>
-        </section>
-
-        <!-- AUTH VIEW (LOGIN / SIGNUP PORTAL) -->
-        <section id="view-auth" class="view-section">
-            <div class="max-w-md mx-auto my-16 bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-                <div id="auth-login-box">
-                    <h2 class="text-2xl font-extrabold text-white mb-2 text-center">Welcome Back</h2>
-                    <p class="text-slate-300 text-sm text-center mb-8">Sign in to your secure operational environment</p>
-                    <form id="form-login" onsubmit="handleLogin(event)" class="space-y-5">
+                    <!-- Card 1: Omnichannel Comms -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:border-cyan-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('comms')">
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
-                            <input type="email" id="login-email" required class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="name@company.com">
+                            <div class="text-3xl mb-4">💬</div>
+                            <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Omnichannel Comms</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed mb-6">Connect to customers via omnichannel communications, community channels, and fallback alerts.</p>
                         </div>
+                        <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
+                    </div>
+
+                    <!-- Card 2: HR & Talent Profiles -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(59,130,246,0.3)] hover:border-blue-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('hr')">
                         <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Password</label>
-                            <input type="password" id="login-password" required class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="••••••••">
+                            <div class="text-3xl mb-4">👥</div>
+                            <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">HR & Talent Profiles</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed mb-6">Automated management of company structures, staff node registries, and team workflows.</p>
                         </div>
-                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200 shadow-[0_0_15px_rgba(6,182,212,0.4)]">Sign In</button>
-                    </form>
-                    <div class="text-center text-xs text-slate-300 mt-6">
-                        Don't have an account? <a href="#" onclick="toggleAuthBox('signup')" class="text-cyan-400 font-bold hover:underline ml-1">Create one now</a>
+                        <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
+                    </div>
+
+                    <!-- Card 3: Ledger & Finance -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(20,184,166,0.3)] hover:border-teal-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('finance')">
+                        <div>
+                            <div class="text-3xl mb-4">📊</div>
+                            <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Ledger & Finance</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed mb-6">Automated bookkeeping, ledger management, financial pipeline automation, and multi-tenant billing logs.</p>
+                        </div>
+                        <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
+                    </div>
+
+                    <!-- Card 4: Website & Online Store -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(249,115,22,0.3)] hover:border-orange-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('store')">
+                        <div>
+                            <div class="text-3xl mb-4">🏪</div>
+                            <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Website & Online Store</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed mb-6">Deploy live customer portals, sync product catalogs, inventory triggers, and public-facing content arrays.</p>
+                        </div>
+                        <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch Storefront</button>
+                    </div>
+
+                    <!-- Card 5: Logistics Integration -->
+                    <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(236,72,153,0.3)] hover:border-pink-500/50 transition-all duration-300 cursor-pointer" onclick="routeToModule('logistics')">
+                        <div>
+                            <div class="text-3xl mb-4">📦</div>
+                            <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Logistics Integration</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed mb-6">Orchestrate automated supply chains, dispatch coordination, waybill tracking, and hardware shipping arrays.</p>
+                        </div>
+                        <button class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
                     </div>
                 </div>
 
-                <div id="auth-signup-box" style="display: none;">
-                    <h2 class="text-2xl font-extrabold text-white mb-2 text-center">Create Account</h2>
-                    <p class="text-slate-300 text-sm text-center mb-8">Register a new profile under your organization</p>
-                    <form id="form-signup" onsubmit="handleSignup(event)" class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Full Name</label>
-                            <input type="text" id="signup-name" required class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="John Doe">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</label>
-                            <input type="email" id="signup-email" required class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="john@yourdomain.com">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Password</label>
-                            <input type="password" id="signup-password" required minlength="6" class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="••••••••">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Company Name</label>
-                            <input type="text" id="signup-company" class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Acme Corp">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Subdomain Keyword</label>
-                            <input type="text" id="signup-subdomain" class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. acme">
-                        </div>
-                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200 shadow-[0_0_15px_rgba(6,182,212,0.4)]">Register</button>
-                    </form>
-                    <div class="text-center text-xs text-slate-300 mt-6">
-                        Already have an account? <a href="#" onclick="toggleAuthBox('login')" class="text-cyan-400 font-bold hover:underline ml-1">Sign In instead</a>
-                    </div>
-                </div>
-            </div>
-        </section>
+                <!-- Laser Interconnect Line Decor -->
+                <div class="max-w-6xl mx-auto h-[1px] bg-gradient-to-r from-cyan-500/10 via-purple-500/40 to-cyan-500/10 mt-16 shadow-[0_0_8px_rgba(34,211,238,0.2)]"></div>
+            </section>
 
-        <!-- OMNICHANNEL COMMS VIEW -->
-        <section id="view-comms" class="view-section">
-            <div class="back-nav mb-6">
-                <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
-            </div>
-            <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
-                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-white">💬 Omnichannel Comms Dashboard</h2>
-                        <p class="text-slate-300 text-sm mt-1">Dispatch real-time communication across multiple messaging channels</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
-                        <h3 class="text-lg font-bold text-white mb-6">Dispatch New Message</h3>
-                        <form id="form-comms-dispatch" onsubmit="dispatchMessage(event)" class="space-y-4">
+            <!-- AUTH VIEW (LOGIN / SIGNUP PORTAL) -->
+            <section id="view-auth" class="view-section">
+                <div class="max-w-md mx-auto my-16 bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+                    <div id="auth-login-box">
+                        <h2 class="text-2xl font-extrabold text-white mb-2 text-center">Welcome Back</h2>
+                        <p class="text-slate-300 text-sm text-center mb-8">Sign in to your secure operational environment</p>
+                        <form id="form-login" onsubmit="handleLogin(event)" class="space-y-5">
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Channel</label>
-                                <select id="comm-channel" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
-                                    <option value="EMAIL">Email</option>
-                                    <option value="WHATSAPP">WhatsApp</option>
-                                    <option value="SMS">SMS (Fallback)</option>
-                                </select>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
+                                <input type="email" id="login-email" required class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="name@company.com">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Recipient</label>
-                                <input type="text" id="comm-to" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. user@domain.com or +675...">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Password</label>
+                                <input type="password" id="login-password" required class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="••••••••">
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Subject (Email Only)</label>
-                                <input type="text" id="comm-subject" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Notification Alert">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Message Body</label>
-                                <textarea id="comm-message" required rows="4" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Type your message details..."></textarea>
-                            </div>
-                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Send Dispatch</button>
+                            <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200 shadow-[0_0_15px_rgba(6,182,212,0.4)]">Sign In</button>
                         </form>
-                    </div>
-                    <div>
-                        <div class="text-lg font-bold text-white mb-6">Inbound / Outbound Logs</div>
-                        <div class="space-y-4" id="comms-log-list">
-                            <p class="text-slate-300 text-sm italic">No communication records available.</p>
+                        <div class="text-center text-xs text-slate-300 mt-6">
+                            Don't have an account? <a href="#" onclick="toggleAuthBox('signup')" class="text-cyan-400 font-bold hover:underline ml-1">Create one now</a>
                         </div>
                     </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- HR VIEW -->
-        <section id="view-hr" class="view-section">
-            <div class="back-nav mb-6">
-                <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
-            </div>
-            <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
-                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-white">👥 HR & Staff Directory</h2>
-                        <p class="text-slate-300 text-sm mt-1">Manage and track employee operational files and employment parameters</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
-                        <h3 class="text-lg font-bold text-white mb-6">Add Employee Profile</h3>
-                        <form id="form-hr-add" onsubmit="addEmployeeProfile(event)" class="space-y-4">
+                    <div id="auth-signup-box" style="display: none;">
+                        <h2 class="text-2xl font-extrabold text-white mb-2 text-center">Create Account</h2>
+                        <p class="text-slate-300 text-sm text-center mb-8">Register a new profile under your organization</p>
+                        <form id="form-signup" onsubmit="handleSignup(event)" class="space-y-4">
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Employee Full Name</label>
-                                <input type="text" id="hr-name" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Jane Smith">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Full Name</label>
+                                <input type="text" id="signup-name" required class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="John Doe">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Position Title</label>
-                                <input type="text" id="hr-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Operations Analyst">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</label>
+                                <input type="email" id="signup-email" required class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="john@yourdomain.com">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Salary Amount (Annualized)</label>
-                                <input type="number" id="hr-salary" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="55000">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Password</label>
+                                <input type="password" id="signup-password" required minlength="6" class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="••••••••">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Salary Currency</label>
-                                <select id="hr-currency" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
-                                    <option value="PGK">PGK (Papua New Guinea Kina)</option>
-                                    <option value="USD">USD</option>
-                                    <option value="AUD">AUD</option>
-                                </select>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Company Name</label>
+                                <input type="text" id="signup-company" class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Acme Corp">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Hire Date</label>
-                                <input type="date" id="hr-hire-date" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Subdomain Keyword</label>
+                                <input type="text" id="signup-subdomain" class="w-full bg-slate-950/60 border border-slate-800 rounded-md p-2.5 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. acme">
                             </div>
-                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Register Employee</button>
+                            <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200 shadow-[0_0_15px_rgba(6,182,212,0.4)]">Register</button>
                         </form>
-                    </div>
-                    <div>
-                        <div class="text-lg font-bold text-white mb-6">Staff Records</div>
-                        <div class="space-y-4" id="hr-profile-list">
-                            <p class="text-slate-300 text-sm italic">No employee records available.</p>
+                        <div class="text-center text-xs text-slate-300 mt-6">
+                            Already have an account? <a href="#" onclick="toggleAuthBox('login')" class="text-cyan-400 font-bold hover:underline ml-1">Sign In instead</a>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- LEDGER & FINANCE VIEW -->
-        <section id="view-finance" class="view-section">
-            <div class="back-nav mb-6">
-                <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
-            </div>
-            <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
-                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-white">📊 General Ledger & Transactions</h2>
-                        <p class="text-slate-300 text-sm mt-1">Log incomes, expenses, checkout events, and view transaction history</p>
-                    </div>
+            <!-- OMNICHANNEL COMMS VIEW -->
+            <section id="view-comms" class="view-section">
+                <div class="back-nav mb-6">
+                    <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
-                        <h3 class="text-lg font-bold text-white mb-6">Log New Transaction</h3>
-                        <form id="form-finance-log" onsubmit="logTransaction(event)" class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Transaction Type</label>
-                                <select id="tx-type" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
-                                    <option value="INCOME">Income</option>
-                                    <option value="EXPENSE">Expense</option>
-                                    <option value="PAYROLL">Payroll</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Amount</label>
-                                <input type="number" step="0.01" id="tx-amount" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="1250.00">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Description</label>
-                                <input type="text" id="tx-description" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Client project milestone billing">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Payment Gateway</label>
-                                <select id="tx-gateway" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
-                                    <option value="CASH">Cash / Manual</option>
-                                    <option value="BSP_PAY">BSP Pay</option>
-                                    <option value="KINA_IPG">Kina Bank IPG</option>
-                                    <option value="AKAUNTING">Akaunting Bridge</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Commit Transaction</button>
-                        </form>
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                    <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-white">💬 Omnichannel Comms Dashboard</h2>
+                            <p class="text-slate-300 text-sm mt-1">Dispatch real-time communication across multiple messaging channels</p>
+                        </div>
                     </div>
-                    <div>
-                        <div class="text-lg font-bold text-white mb-6">Double-Entry Ledger Books</div>
-                        <div class="space-y-4" id="finance-tx-list">
-                            <p class="text-slate-300 text-sm italic">No transaction logs available.</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                            <h3 class="text-lg font-bold text-white mb-6">Dispatch New Message</h3>
+                            <form id="form-comms-dispatch" onsubmit="dispatchMessage(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Channel</label>
+                                    <select id="comm-channel" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                        <option value="EMAIL">Email</option>
+                                        <option value="WHATSAPP">WhatsApp</option>
+                                        <option value="SMS">SMS (Fallback)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Recipient</label>
+                                    <input type="text" id="comm-to" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. user@domain.com or +675...">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Subject (Email Only)</label>
+                                    <input type="text" id="comm-subject" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Notification Alert">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Message Body</label>
+                                    <textarea id="comm-message" required rows="4" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Type your message details..."></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Send Dispatch</button>
+                            </form>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold text-white mb-6">Inbound / Outbound Logs</div>
+                            <div class="space-y-4" id="comms-log-list">
+                                <p class="text-slate-300 text-sm italic">No communication records available.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- WEBSITE & ONLINE STORE VIEW -->
-        <section id="view-store" class="view-section">
-            <div class="back-nav mb-6">
-                <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
-            </div>
-            <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
-                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-white">🏪 Website & Online Storefront</h2>
-                        <p class="text-slate-300 text-sm mt-1">Add products, manage online listings, sync e-commerce catalogs and track customer checkouts</p>
-                    </div>
+            <!-- HR VIEW -->
+            <section id="view-hr" class="view-section">
+                <div class="back-nav mb-6">
+                    <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
-                        <h3 class="text-lg font-bold text-white mb-6">Add Product to Catalog</h3>
-                        <form id="form-store-add" onsubmit="addCatalogItem(event)" class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Product Title</label>
-                                <input type="text" id="store-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Enterprise Operations License">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Unit Price (PGK)</label>
-                                <input type="number" step="0.01" id="store-price" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="250.00">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Product Description</label>
-                                <input type="text" id="store-description" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Full active platform module seat">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Initial Inventory Stock</label>
-                                <input type="number" id="store-inventory" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="100">
-                            </div>
-                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Publish Product</button>
-                        </form>
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                    <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-white">👥 HR & Staff Directory</h2>
+                            <p class="text-slate-300 text-sm mt-1">Manage and track employee operational files and employment parameters</p>
+                        </div>
                     </div>
-                    <div>
-                        <div class="text-lg font-bold text-white mb-6">Product Catalog & Inventory</div>
-                        <div class="space-y-4" id="store-items-list">
-                            <p class="text-slate-300 text-sm italic">No products cataloged yet.</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                            <h3 class="text-lg font-bold text-white mb-6">Add Employee Profile</h3>
+                            <form id="form-hr-add" onsubmit="addEmployeeProfile(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Employee Full Name</label>
+                                    <input type="text" id="hr-name" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Jane Smith">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Position Title</label>
+                                    <input type="text" id="hr-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Operations Analyst">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Salary Amount (Annualized)</label>
+                                    <input type="number" id="hr-salary" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="55000">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Salary Currency</label>
+                                    <select id="hr-currency" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                        <option value="PGK">PGK (Papua New Guinea Kina)</option>
+                                        <option value="USD">USD</option>
+                                        <option value="AUD">AUD</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Hire Date</label>
+                                    <input type="date" id="hr-hire-date" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Register Employee</button>
+                            </form>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold text-white mb-6">Staff Records</div>
+                            <div class="space-y-4" id="hr-profile-list">
+                                <p class="text-slate-300 text-sm italic">No employee records available.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- LOGISTICS VIEW -->
-        <section id="view-logistics" class="view-section">
-            <div class="back-nav mb-6">
-                <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
-            </div>
-            <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
-                <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-white">📦 Logistics & Waybills</h2>
-                        <p class="text-slate-300 text-sm mt-1">Generate, issue, and trace shipments via integrated regional logistics networks</p>
-                    </div>
+            <!-- LEDGER & FINANCE VIEW -->
+            <section id="view-finance" class="view-section">
+                <div class="back-nav mb-6">
+                    <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
                 </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
-                        <h3 class="text-lg font-bold text-white mb-6">Initiate New Shipment Order</h3>
-                        <form id="form-logistics" onsubmit="createShipment(event)" class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Carrier Provider</label>
-                                <select id="ship-carrier" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
-                                    <option value="DHL">DHL Express</option>
-                                    <option value="POST_PNG">Post PNG Express</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Origin Dispatch Address</label>
-                                <input type="text" id="ship-origin" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Port Moresby HQ, Section 32">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Destination Shipping Address</label>
-                                <input type="text" id="ship-destination" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Lae Hub, Suite 10, Markham Rd">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Parcel Weight (kg)</label>
-                                <input type="number" step="0.01" id="ship-weight" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="2.5">
-                            </div>
-                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Generate Shipment</button>
-                        </form>
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                    <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-white">📊 General Ledger & Transactions</h2>
+                            <p class="text-slate-300 text-sm mt-1">Log incomes, expenses, checkout events, and view transaction history</p>
+                        </div>
                     </div>
-                    <div>
-                        <div class="text-lg font-bold text-white mb-6">Waybills & Shipments</div>
-                        <div class="space-y-4" id="logistics-ship-list">
-                            <p class="text-slate-300 text-sm italic">No active shipment tracking logs available.</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                            <h3 class="text-lg font-bold text-white mb-6">Log New Transaction</h3>
+                            <form id="form-finance-log" onsubmit="logTransaction(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Transaction Type</label>
+                                    <select id="tx-type" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                        <option value="INCOME">Income</option>
+                                        <option value="EXPENSE">Expense</option>
+                                        <option value="PAYROLL">Payroll</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Amount</label>
+                                    <input type="number" step="0.01" id="tx-amount" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="1250.00">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Description</label>
+                                    <input type="text" id="tx-description" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Client project milestone billing">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Payment Gateway</label>
+                                    <select id="tx-gateway" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                        <option value="CASH">Cash / Manual</option>
+                                        <option value="BSP_PAY">BSP Pay</option>
+                                        <option value="KINA_IPG">Kina Bank IPG</option>
+                                        <option value="AKAUNTING">Akaunting Bridge</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Commit Transaction</button>
+                            </form>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold text-white mb-6">Double-Entry Ledger Books</div>
+                            <div class="space-y-4" id="finance-tx-list">
+                                <p class="text-slate-300 text-sm italic">No transaction logs available.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </section>
-    </main>
+            </section>
+
+            <!-- WEBSITE & ONLINE STORE VIEW -->
+            <section id="view-store" class="view-section">
+                <div class="back-nav mb-6">
+                    <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
+                </div>
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                    <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-white">🏪 Website & Online Storefront</h2>
+                            <p class="text-slate-300 text-sm mt-1">Add products, manage online listings, sync e-commerce catalogs and track customer checkouts</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                            <h3 class="text-lg font-bold text-white mb-6">Add Product to Catalog</h3>
+                            <form id="form-store-add" onsubmit="addCatalogItem(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Product Title</label>
+                                    <input type="text" id="store-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Enterprise Operations License">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Unit Price (PGK)</label>
+                                    <input type="number" step="0.01" id="store-price" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="250.00">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Product Description</label>
+                                    <input type="text" id="store-description" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Full active platform module seat">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Initial Inventory Stock</label>
+                                    <input type="number" id="store-inventory" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="100">
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Publish Product</button>
+                            </form>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold text-white mb-6">Product Catalog & Inventory</div>
+                            <div class="space-y-4" id="store-items-list">
+                                <p class="text-slate-300 text-sm italic">No products cataloged yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LOGISTICS VIEW -->
+            <section id="view-logistics" class="view-section">
+                <div class="back-nav mb-6">
+                    <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
+                </div>
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                    <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-white">📦 Logistics & Waybills</h2>
+                            <p class="text-slate-300 text-sm mt-1">Generate, issue, and trace shipments via integrated regional logistics networks</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                            <h3 class="text-lg font-bold text-white mb-6">Initiate New Shipment Order</h3>
+                            <form id="form-logistics" onsubmit="createShipment(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Carrier Provider</label>
+                                    <select id="ship-carrier" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                        <option value="DHL">DHL Express</option>
+                                        <option value="POST_PNG">Post PNG Express</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Origin Dispatch Address</label>
+                                    <input type="text" id="ship-origin" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Port Moresby HQ, Section 32">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Destination Shipping Address</label>
+                                    <input type="text" id="ship-destination" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Lae Hub, Suite 10, Markham Rd">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Parcel Weight (kg)</label>
+                                    <input type="number" step="0.01" id="ship-weight" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="2.5">
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Generate Shipment</button>
+                            </form>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold text-white mb-6">Waybills & Shipments</div>
+                            <div class="space-y-4" id="logistics-ship-list">
+                                <p class="text-slate-300 text-sm italic">No active shipment tracking logs available.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
 
     <div class="toast" id="toast-notification"></div>
 
@@ -658,6 +648,7 @@
             }
         }
 
+        // Logout
         function handleLogout() {
             authToken = null;
             currentUser = null;

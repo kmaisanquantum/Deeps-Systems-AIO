@@ -283,6 +283,26 @@
                         </button>
                     </div>
 
+                    <!-- Card 7: Workspace -->
+                    <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.02] transition shadow-cyan-500/10 border-cyan-500/30 cursor-pointer" onclick="routeToModule('workspace')">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-3xl">🗂️</span>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400" id="text-workspace">CHECKING</span>
+                                    <div id="light-workspace" class="status-light pending"></div>
+                                </div>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">Workspace</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                                Run your day-to-day office online. Assign tasks, manage schedules, and coordinate digital files.
+                            </p>
+                        </div>
+                        <button onclick="routeToModule('workspace')" class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center w-full">
+                            Launch Module
+                        </button>
+                    </div>
+
                 </div>
 
                 <!-- Laser Interconnect Line Decor -->
@@ -595,6 +615,157 @@
                 </div>
             </section>
 
+            <!-- WORKSPACE VIEW -->
+            <section id="view-workspace" class="view-section">
+                <div class="back-nav mb-6">
+                    <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
+                </div>
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                    <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-white">🗂️ Virtual Office Workspace</h2>
+                            <p class="text-slate-300 text-sm mt-1">Assign tasks, manage appointments/schedules, and coordinate digital files</p>
+                        </div>
+                    </div>
+
+                    <!-- 3 tabs: Tasks, Events, Documents -->
+                    <div class="flex border-b border-slate-800 mb-8 space-x-4">
+                        <button onclick="switchWorkspaceTab('tasks')" id="tab-btn-tasks" class="px-4 py-2 text-sm font-bold tracking-wider text-cyan-400 border-b-2 border-cyan-500">Tasks</button>
+                        <button onclick="switchWorkspaceTab('events')" id="tab-btn-events" class="px-4 py-2 text-sm font-bold tracking-wider text-slate-400 hover:text-white border-b-2 border-transparent">Events</button>
+                        <button onclick="switchWorkspaceTab('documents')" id="tab-btn-documents" class="px-4 py-2 text-sm font-bold tracking-wider text-slate-400 hover:text-white border-b-2 border-transparent">Documents</button>
+                    </div>
+
+                    <!-- Workspace Tasks Tab Content -->
+                    <div id="workspace-tab-tasks" class="workspace-tab-content">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                                <h3 class="text-lg font-bold text-white mb-6">Delegate New Task</h3>
+                                <form id="form-workspace-task" onsubmit="addWorkspaceTask(event)" class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Title</label>
+                                        <input type="text" id="task-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Task Title">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Description</label>
+                                        <textarea id="task-description" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Provide detailed task requirements..."></textarea>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Priority</label>
+                                            <select id="task-priority" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                                <option value="LOW">Low</option>
+                                                <option value="NORMAL" selected>Normal</option>
+                                                <option value="HIGH">High</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Due Date</label>
+                                            <input type="date" id="task-duedate" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Create Task</button>
+                                </form>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-white mb-6">Task Registry</div>
+                                <div class="space-y-4 max-h-[500px] overflow-y-auto" id="workspace-task-list">
+                                    <p class="text-slate-300 text-sm italic">No tasks assigned yet.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workspace Events Tab Content -->
+                    <div id="workspace-tab-events" class="workspace-tab-content hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                                <h3 class="text-lg font-bold text-white mb-6">Schedule New Event</h3>
+                                <form id="form-workspace-event" onsubmit="addWorkspaceEvent(event)" class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Event Title</label>
+                                        <input type="text" id="event-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Sync Alignment Meeting">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Description</label>
+                                        <textarea id="event-description" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Provide event details, agenda..."></textarea>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Starts At</label>
+                                            <input type="datetime-local" id="event-starts-at" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Ends At</label>
+                                            <input type="datetime-local" id="event-ends-at" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Location / Meet Link</label>
+                                        <input type="text" id="event-location" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Conference Room A, or Teams Link">
+                                    </div>
+                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Schedule Event</button>
+                                </form>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-white mb-6">Schedules & Appointments</div>
+                                <div class="space-y-4 max-h-[500px] overflow-y-auto" id="workspace-event-list">
+                                    <p class="text-slate-300 text-sm italic">No events scheduled yet.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workspace Documents Tab Content -->
+                    <div id="workspace-tab-documents" class="workspace-tab-content hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                                <h3 class="text-lg font-bold text-white mb-6">Archive New Document</h3>
+                                <form id="form-workspace-document" onsubmit="addWorkspaceDocument(event)" class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Title</label>
+                                        <input type="text" id="doc-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Policy Guideline Manual">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Category</label>
+                                            <input type="text" id="doc-category" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. HR, Legal, Tech">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Status</label>
+                                            <select id="doc-status" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                                <option value="DRAFT" selected>Draft</option>
+                                                <option value="FINAL">Final</option>
+                                                <option value="SIGNED">Signed</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">URL / Link</label>
+                                        <input type="url" id="doc-url" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="https://drive.google.com/...">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Content Draft / Summary</label>
+                                        <textarea id="doc-content" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Document body content or summary..."></textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Notes</label>
+                                        <input type="text" id="doc-notes" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Additional notes...">
+                                    </div>
+                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Archive Document</button>
+                                </form>
+                            </div>
+                            <div>
+                                <div class="text-lg font-bold text-white mb-6">Digital Document Library</div>
+                                <div class="space-y-4 max-h-[500px] overflow-y-auto" id="workspace-document-list">
+                                    <p class="text-slate-300 text-sm italic">No documents archived yet.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
             <!-- LOGISTICS VIEW -->
             <section id="view-logistics" class="view-section">
                 <div class="back-nav mb-6">
@@ -696,6 +867,7 @@
                 if (moduleId === 'logistics') fetchShipments();
                 if (moduleId === 'store') fetchStoreItems();
                 if (moduleId === 'sales') fetchSalesLeads();
+                if (moduleId === 'workspace') fetchWorkspaceData();
             }
         }
 
@@ -827,7 +999,7 @@
 
         // DATA ORCHESTRATION STATUS LIGHT UPDATER
         function updateOrchestrationLights() {
-            const modules = ['comms', 'hr', 'finance', 'logistics', 'store', 'sales'];
+            const modules = ['comms', 'hr', 'finance', 'logistics', 'store', 'sales', 'workspace'];
             modules.forEach(mod => {
                 const textEl = document.getElementById(`text-${mod}`);
                 const lightEl = document.getElementById(`light-${mod}`);
@@ -1170,6 +1342,279 @@
             } catch (err) {
                 console.error(err);
                 showToast('Failed to add sales lead.', 'error');
+            }
+        }
+
+        // WORKSPACE MODULE OPERATIONS
+        function switchWorkspaceTab(tabId) {
+            document.querySelectorAll('.workspace-tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`workspace-tab-${tabId}`).classList.remove('hidden');
+
+            const tabs = ['tasks', 'events', 'documents'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (t === tabId) {
+                    btn.className = 'px-4 py-2 text-sm font-bold tracking-wider text-cyan-400 border-b-2 border-cyan-500';
+                } else {
+                    btn.className = 'px-4 py-2 text-sm font-bold tracking-wider text-slate-400 hover:text-white border-b-2 border-transparent';
+                }
+            });
+        }
+
+        async function fetchWorkspaceData() {
+            fetchWorkspaceTasks();
+            fetchWorkspaceEvents();
+            fetchWorkspaceDocuments();
+        }
+
+        async function fetchWorkspaceTasks() {
+            const list = document.getElementById('workspace-task-list');
+            try {
+                const response = await fetch('/workspace/tasks', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    list.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                    return;
+                }
+
+                if (data.length === 0) {
+                    list.innerHTML = `<p class="text-slate-300 text-sm italic">No tasks assigned yet.</p>`;
+                    return;
+                }
+
+                list.innerHTML = data.map(task => `
+                    <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-1.5">
+                        <div class="flex justify-between font-bold">
+                            <span>${task.title}</span>
+                            <span class="text-xs tracking-wider uppercase bg-slate-900 border border-slate-800 px-2 py-0.5 rounded">
+                                ${task.priority}
+                            </span>
+                        </div>
+                        ${task.description ? `<p class="text-slate-300">${task.description}</p>` : ''}
+                        <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-900">
+                            <span class="text-xs text-slate-500">Due: ${task.due_date ? new Date(task.due_date).toLocaleDateString() : 'None'}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold ${task.status === 'DONE' ? 'text-emerald-400' : task.status === 'IN_PROGRESS' ? 'text-amber-400' : 'text-slate-400'}">
+                                    ${task.status}
+                                </span>
+                                ${task.status !== 'DONE' ? `
+                                    <button onclick="updateTaskStatusDirect('${task.id}', '${task.status === 'TODO' ? 'IN_PROGRESS' : 'DONE'}')" class="text-xs bg-cyan-950 hover:bg-cyan-900 text-cyan-400 px-2 py-0.5 rounded border border-cyan-800/50">
+                                        &rarr; ${task.status === 'TODO' ? 'Start' : 'Complete'}
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = `<p class="text-red-400 text-sm">Failed to retrieve tasks.</p>`;
+            }
+        }
+
+        async function updateTaskStatusDirect(taskId, newStatus) {
+            try {
+                const response = await fetch(`/workspace/tasks/${taskId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to update task status.', 'error');
+                    return;
+                }
+
+                showToast('Task status updated successfully!', 'success');
+                fetchWorkspaceTasks();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to update task status.', 'error');
+            }
+        }
+
+        async function addWorkspaceTask(e) {
+            e.preventDefault();
+            const title = document.getElementById('task-title').value;
+            const description = document.getElementById('task-description').value;
+            const priority = document.getElementById('task-priority').value;
+            const dueDate = document.getElementById('task-duedate').value;
+
+            try {
+                const response = await fetch('/workspace/tasks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ title, description, priority, dueDate })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to assign task.', 'error');
+                    return;
+                }
+
+                showToast('Task delegated successfully!', 'success');
+                document.getElementById('form-workspace-task').reset();
+                fetchWorkspaceTasks();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to delegate task.', 'error');
+            }
+        }
+
+        async function fetchWorkspaceEvents() {
+            const list = document.getElementById('workspace-event-list');
+            try {
+                const response = await fetch('/workspace/events', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    list.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                    return;
+                }
+
+                if (data.length === 0) {
+                    list.innerHTML = `<p class="text-slate-300 text-sm italic">No events scheduled yet.</p>`;
+                    return;
+                }
+
+                list.innerHTML = data.map(event => `
+                    <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-1.5">
+                        <div class="flex justify-between font-bold">
+                            <span>${event.title}</span>
+                            <span class="text-xs text-cyan-400 font-bold bg-cyan-950/40 px-2 py-0.5 rounded">
+                                ${event.location || 'No Location'}
+                            </span>
+                        </div>
+                        ${event.description ? `<p class="text-slate-300">${event.description}</p>` : ''}
+                        <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">
+                            Starts: ${new Date(event.starts_at).toLocaleString()}
+                            ${event.ends_at ? `| Ends: ${new Date(event.ends_at).toLocaleString()}` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = `<p class="text-red-400 text-sm">Failed to retrieve events.</p>`;
+            }
+        }
+
+        async function addWorkspaceEvent(e) {
+            e.preventDefault();
+            const title = document.getElementById('event-title').value;
+            const description = document.getElementById('event-description').value;
+            const startsAt = document.getElementById('event-starts-at').value;
+            const endsAt = document.getElementById('event-ends-at').value;
+            const location = document.getElementById('event-location').value;
+
+            try {
+                const response = await fetch('/workspace/events', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ title, description, startsAt, endsAt, location })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to schedule event.', 'error');
+                    return;
+                }
+
+                showToast('Event scheduled successfully!', 'success');
+                document.getElementById('form-workspace-event').reset();
+                fetchWorkspaceEvents();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to schedule event.', 'error');
+            }
+        }
+
+        async function fetchWorkspaceDocuments() {
+            const list = document.getElementById('workspace-document-list');
+            try {
+                const response = await fetch('/workspace/documents', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    list.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                    return;
+                }
+
+                if (data.length === 0) {
+                    list.innerHTML = `<p class="text-slate-300 text-sm italic">No documents archived yet.</p>`;
+                    return;
+                }
+
+                list.innerHTML = data.map(doc => `
+                    <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-1.5">
+                        <div class="flex justify-between font-bold">
+                            <span>${doc.title}</span>
+                            <span class="text-xs uppercase px-2 py-0.5 rounded font-bold ${doc.status === 'SIGNED' ? 'bg-emerald-950 text-emerald-400' : doc.status === 'FINAL' ? 'bg-blue-950 text-blue-400' : 'bg-slate-900 text-slate-400'}">
+                                ${doc.status}
+                            </span>
+                        </div>
+                        <div class="text-xs text-slate-400 font-semibold">Category: ${doc.category || 'Uncategorized'}</div>
+                        ${doc.content ? `<p class="text-slate-300 text-xs my-1 bg-slate-900/50 p-2 rounded border border-slate-900">${doc.content}</p>` : ''}
+                        ${doc.url ? `<a href="${doc.url}" target="_blank" class="text-xs text-cyan-400 hover:underline mt-1 break-all">🔗 Link: ${doc.url}</a>` : ''}
+                        ${doc.notes ? `<div class="text-xs text-slate-500 italic mt-1">Notes: ${doc.notes}</div>` : ''}
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = `<p class="text-red-400 text-sm">Failed to retrieve documents.</p>`;
+            }
+        }
+
+        async function addWorkspaceDocument(e) {
+            e.preventDefault();
+            const title = document.getElementById('doc-title').value;
+            const category = document.getElementById('doc-category').value;
+            const status = document.getElementById('doc-status').value;
+            const url = document.getElementById('doc-url').value;
+            const content = document.getElementById('doc-content').value;
+            const notes = document.getElementById('doc-notes').value;
+
+            try {
+                const response = await fetch('/workspace/documents', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ title, category, status, url, content, notes })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to archive document.', 'error');
+                    return;
+                }
+
+                showToast('Document archived successfully!', 'success');
+                document.getElementById('form-workspace-document').reset();
+                fetchWorkspaceDocuments();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to archive document.', 'error');
             }
         }
 

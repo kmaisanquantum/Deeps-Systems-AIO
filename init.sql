@@ -237,6 +237,57 @@ CREATE TABLE IF NOT EXISTS sales_leads (
 CREATE INDEX IF NOT EXISTS idx_sales_leads_tenant_id ON sales_leads (tenant_id);
 
 -- ---------------------------------------------------------------------
+-- WORKSPACE (VIRTUAL OFFICE) MODULE
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS workspace_tasks (
+    id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id           UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id           UUID REFERENCES branches(id) ON DELETE SET NULL,
+    title               VARCHAR(255) NOT NULL,
+    description         TEXT,
+    assignee_user_id    UUID REFERENCES users(id) ON DELETE SET NULL,
+    status              VARCHAR(50) NOT NULL DEFAULT 'TODO',
+    priority            VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
+    due_date            DATE,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_workspace_tasks_tenant ON workspace_tasks (tenant_id);
+
+CREATE TABLE IF NOT EXISTS workspace_events (
+    id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id           UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id           UUID REFERENCES branches(id) ON DELETE SET NULL,
+    title               VARCHAR(255) NOT NULL,
+    description         TEXT,
+    starts_at           TIMESTAMPTZ NOT NULL,
+    ends_at             TIMESTAMPTZ,
+    location            VARCHAR(255),
+    organizer_user_id   UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_workspace_events_tenant ON workspace_events (tenant_id);
+
+CREATE TABLE IF NOT EXISTS workspace_documents (
+    id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id           UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id           UUID REFERENCES branches(id) ON DELETE SET NULL,
+    title               VARCHAR(255) NOT NULL,
+    category            VARCHAR(50),
+    url                 TEXT,
+    content             TEXT,
+    status              VARCHAR(50) NOT NULL DEFAULT 'DRAFT',
+    notes               TEXT,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_workspace_documents_tenant ON workspace_documents (tenant_id);
+
+-- ---------------------------------------------------------------------
 -- updated_at auto-touch trigger (applied to all mutable tables)
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION trigger_set_updated_at()
@@ -285,6 +336,18 @@ CREATE TRIGGER set_updated_at_store_checkouts BEFORE UPDATE ON store_checkouts
 
 DROP TRIGGER IF EXISTS set_updated_at_sales_leads ON sales_leads;
 CREATE TRIGGER set_updated_at_sales_leads BEFORE UPDATE ON sales_leads
+    FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_workspace_tasks ON workspace_tasks;
+CREATE TRIGGER set_updated_at_workspace_tasks BEFORE UPDATE ON workspace_tasks
+    FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_workspace_events ON workspace_events;
+CREATE TRIGGER set_updated_at_workspace_events BEFORE UPDATE ON workspace_events
+    FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_workspace_documents ON workspace_documents;
+CREATE TRIGGER set_updated_at_workspace_documents BEFORE UPDATE ON workspace_documents
     FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
 
 

@@ -16,6 +16,7 @@ const hrController = require('../controllers/hrController');
 const intentController = require('../controllers/intentController');
 const storeController = require('../controllers/storeController');
 const salesController = require('../controllers/salesController');
+const workspaceController = require('../controllers/workspaceController');
 const logisticsService = require('../services/logisticsService');
 
 // -----------------------------------------------------------------
@@ -66,6 +67,17 @@ router.post('/store/items', requireTenant, storeController.createItem);
 // -----------------------------------------------------------------
 router.get('/sales/leads', requireTenant, salesController.listLeads);
 router.post('/sales/leads', requireTenant, salesController.createLead);
+
+// -----------------------------------------------------------------
+// Workspace (virtual office)
+// -----------------------------------------------------------------
+router.get('/workspace/tasks', requireTenant, workspaceController.listTasks);
+router.post('/workspace/tasks', requireTenant, workspaceController.createTask);
+router.patch('/workspace/tasks/:id/status', requireTenant, workspaceController.updateTaskStatus);
+router.get('/workspace/events', requireTenant, workspaceController.listEvents);
+router.post('/workspace/events', requireTenant, workspaceController.createEvent);
+router.get('/workspace/documents', requireTenant, workspaceController.listDocuments);
+router.post('/workspace/documents', requireTenant, workspaceController.createDocument);
 
 // -----------------------------------------------------------------
 // Logistics

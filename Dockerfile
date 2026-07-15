@@ -1,5 +1,7 @@
 # ==========================================
 # Step 1: Builder stage
+# Note: Static assets under `public/` require no compilation step
+# and are mapped out and served natively by the Express server.
 # ==========================================
 FROM node:20-alpine AS builder
 
@@ -25,7 +27,7 @@ FROM node:20-alpine AS runner
 
 # Set production environment and port
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=5000
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -35,8 +37,8 @@ WORKDIR /usr/src/app
 # and any custom server files or middleware maps.
 COPY --from=builder /usr/src/app .
 
-# Expose port 3000 as requested
-EXPOSE 3000
+# Expose port 5000 as requested
+EXPOSE 5000
 
 # Start the application
 CMD ["node", "index.js"]

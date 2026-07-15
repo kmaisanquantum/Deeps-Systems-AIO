@@ -20,7 +20,30 @@ const app = express();
 
 app.set('trust proxy', true); // required behind Coolify's reverse proxy
 
-app.use(helmet());
+// Enforce custom Content Security Policy (CSP) settings using Helmet.
+// This allows the external Tailwind Play CDN script to be fetched and executed,
+// style-src permits inline stylesheet generation, and script-src-attr permits
+// inline module card event handlers over the HTTP test origin.
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        // Allow the application to execute the Tailwind runtime compiler from the CDN
+        'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://cdn.tailwindcss.com'],
+        // Permit inline onClick event handlers on the workspace modules
+        'script-src-attr': ["'unsafe-inline'"],
+        // Allow runtime style injection by the Tailwind engine
+        'style-src': ["'self'", "'unsafe-inline'", 'https:'],
+        // Ensure standard API calls tunnel properly back to the backend
+        'connect-src': ["'self'"],
+        // Disable automatic HTTPS upgrades to maintain connectivity on the HTTP sslip.io environment
+        'upgrade-insecure-requests': null,
+      },
+    },
+  })
+);
+
 app.use(cors());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json({ limit: '2mb' }));
@@ -73,5 +96,14 @@ async function startServer() {
 }
 
 startServer();
+
+// Cleanly handle shut down of db pools on termination
+process.on('SIGTERM', () => {
+  console.log('[app] SIGTERM received. Closing database pool...');
+  db.pool.end(() => {
+    console.log('[app] Database pool closed.');
+    process.exit(0);
+  });
+});
 
 module.exports = app;

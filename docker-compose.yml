@@ -59,7 +59,7 @@ services:
         condition: service_started
     environment:
       NODE_ENV: production
-      PORT: 4000
+      PORT: 5000
       BASE_DOMAIN: ${BASE_DOMAIN:-dspng.tech}
 
       # --- Database ---
@@ -119,11 +119,10 @@ services:
     networks:
       - aio-internal
     ports:
-      # Coolify's reverse proxy typically targets this exposed port;
-      # adjust/remove if Coolify manages routing via container labels instead.
-      - "4000:4000"
+      # Coolify's reverse proxy targets container port 5000
+      - "5000:5000"
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4000/health"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/health"]
       interval: 15s
       timeout: 5s
       retries: 5

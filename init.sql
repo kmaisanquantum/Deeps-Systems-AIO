@@ -221,6 +221,22 @@ CREATE TABLE IF NOT EXISTS store_checkouts (
 CREATE INDEX IF NOT EXISTS idx_store_checkouts_tenant_id ON store_checkouts (tenant_id);
 
 -- ---------------------------------------------------------------------
+-- SALES & MARKETING MODULE
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS sales_leads (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    full_name       VARCHAR(255) NOT NULL,
+    email           VARCHAR(255) NOT NULL,
+    deal_value      NUMERIC(14, 2) NOT NULL DEFAULT 0.00 CHECK (deal_value >= 0),
+    stage           VARCHAR(50) NOT NULL DEFAULT 'Prospect',
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sales_leads_tenant_id ON sales_leads (tenant_id);
+
+-- ---------------------------------------------------------------------
 -- updated_at auto-touch trigger (applied to all mutable tables)
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION trigger_set_updated_at()
@@ -265,6 +281,10 @@ CREATE TRIGGER set_updated_at_store_pages BEFORE UPDATE ON store_pages
 
 DROP TRIGGER IF EXISTS set_updated_at_store_checkouts ON store_checkouts;
 CREATE TRIGGER set_updated_at_store_checkouts BEFORE UPDATE ON store_checkouts
+    FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+DROP TRIGGER IF EXISTS set_updated_at_sales_leads ON sales_leads;
+CREATE TRIGGER set_updated_at_sales_leads BEFORE UPDATE ON sales_leads
     FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
 
 

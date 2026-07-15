@@ -266,3 +266,25 @@ CREATE TRIGGER set_updated_at_store_pages BEFORE UPDATE ON store_pages
 DROP TRIGGER IF EXISTS set_updated_at_store_checkouts ON store_checkouts;
 CREATE TRIGGER set_updated_at_store_checkouts BEFORE UPDATE ON store_checkouts
     FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+
+-- ==========================================
+-- PRIMARY ADMINISTRATIVE DATA SEED
+-- ==========================================
+
+-- 1. Ensure a primary organizational tenant exists for the workspace domain
+INSERT INTO tenants (company_name, subdomain, is_active)
+VALUES ('Deeps Systems', 'deeps', true)
+ON CONFLICT (subdomain) DO NOTHING;
+
+-- 2. Seed the global administrator user account bound to the initialized tenant
+INSERT INTO users (tenant_id, full_name, email, password_hash, role)
+SELECT
+    id,
+    'Kmaisan',
+    'kmaisan@dspng.tech',  -- Kept lowercase to match runtime login normalizations
+    encode(digest('KapisRocket@2026', 'sha256'), 'hex'),
+    'admin'
+FROM tenants
+WHERE subdomain = 'deeps'
+ON CONFLICT (tenant_id, email) DO NOTHING;

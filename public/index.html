@@ -112,6 +112,26 @@
             color: #7dd3fc;
             text-decoration: underline;
         }
+
+        /* DATA ORCHESTRATION STATUS LIGHTS styling */
+        .status-light {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .status-light.pending {
+            background-color: #eab308;
+            box-shadow: 0 0 8px #eab308;
+        }
+        .status-light.online {
+            background-color: #10b981;
+            box-shadow: 0 0 8px #10b981;
+        }
+        .status-light.offline {
+            background-color: #ef4444;
+            box-shadow: 0 0 8px #ef4444;
+        }
     </style>
     <!-- Tailwind Play CDN in head right before closing head tag -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -161,7 +181,13 @@
                     <!-- Card 1: Omnichannel Comms -->
                     <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:border-cyan-500/30 cursor-pointer" onclick="routeToModule('comms')">
                         <div>
-                            <div class="text-3xl mb-4">💬</div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-3xl">💬</div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400" id="text-comms">CHECKING</span>
+                                    <div id="light-comms" class="status-light pending"></div>
+                                </div>
+                            </div>
                             <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Omnichannel Comms</h3>
                             <p class="text-slate-300 text-sm leading-relaxed mb-6">Orchestrate automated customer communications across channels with event-triggered message flows, smart routing, and fallback instant alerting pipelines.</p>
                         </div>
@@ -171,7 +197,13 @@
                     <!-- Card 2: HR & Talent Profiles -->
                     <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(59,130,246,0.3)] hover:border-blue-500/30 cursor-pointer" onclick="routeToModule('hr')">
                         <div>
-                            <div class="text-3xl mb-4">👥</div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-3xl">👥</div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400" id="text-hr">CHECKING</span>
+                                    <div id="light-hr" class="status-light pending"></div>
+                                </div>
+                            </div>
                             <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">HR & Talent Profiles</h3>
                             <p class="text-slate-300 text-sm leading-relaxed mb-6">Automated provisioning of organizational structures, background tracking of staff node registries, and automated workforce milestone workflows.</p>
                         </div>
@@ -181,7 +213,13 @@
                     <!-- Card 3: Ledger & Finance -->
                     <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(20,184,166,0.3)] hover:border-emerald-500/30 cursor-pointer" onclick="routeToModule('finance')">
                         <div>
-                            <div class="text-3xl mb-4">📊</div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-3xl">📊</div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400" id="text-finance">CHECKING</span>
+                                    <div id="light-finance" class="status-light pending"></div>
+                                </div>
+                            </div>
                             <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Ledger & Finance</h3>
                             <p class="text-slate-300 text-sm leading-relaxed mb-6">Automated ledger reconciliation engines, double-entry processing pipelines, financial automation scripts, and tenant billing webhooks.</p>
                         </div>
@@ -191,7 +229,13 @@
                     <!-- Card 4: Logistics Integration -->
                     <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(168,85,247,0.3)] hover:border-purple-500/30 cursor-pointer" onclick="routeToModule('logistics')">
                         <div>
-                            <div class="text-3xl mb-4">📦</div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-3xl">📦</div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400" id="text-logistics">CHECKING</span>
+                                    <div id="light-logistics" class="status-light pending"></div>
+                                </div>
+                            </div>
                             <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Logistics Integration</h3>
                             <p class="text-slate-300 text-sm leading-relaxed mb-6">Orchestrate real-time supply chain tasks, automated dispatch coordination, webhook waybill tracking loops, and autonomous shipping arrays.</p>
                         </div>
@@ -201,12 +245,44 @@
                     <!-- Card 5: Website & Online Store -->
                     <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(236,72,153,0.3)] hover:border-pink-500/30 cursor-pointer" onclick="routeToModule('store')">
                         <div>
-                            <div class="text-3xl mb-4">🏪</div>
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-3xl">🏪</div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400" id="text-store">CHECKING</span>
+                                    <div id="light-store" class="status-light pending"></div>
+                                </div>
+                            </div>
                             <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Website & Online Store</h3>
                             <p class="text-slate-300 text-sm leading-relaxed mb-6">Deploy public storefront portals backed by automated inventory synchronization, real-time checkout pipeline hooks, and dynamic content arrays.</p>
                         </div>
                         <button onclick="routeToModule('store')" class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch Storefront</button>
                     </div>
+
+                    <!-- Card 6: Sales & Marketing -->
+                    <div class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.02] transition shadow-pink-500/10 border-pink-500/30 cursor-pointer" onclick="routeToModule('sales')">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <!-- Sales Vector Icon -->
+                                <svg class="w-8 h-8 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.003 9.003 0 1020.945 13H11V3.055z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
+                                </svg>
+                                <!-- Dynamic Orchestration Light Container placeholder for Task 2 -->
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400" id="text-sales">CHECKING</span>
+                                    <div id="light-sales" class="status-light pending"></div>
+                                </div>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">Sales & Marketing</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                                Deploy public storefront portals backed by automated inventory synchronization, real-time checkout pipeline hooks, and dynamic content arrays.
+                            </p>
+                        </div>
+                        <button onclick="routeToModule('sales')" class="mt-4 px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-400 hover:to-rose-500 text-white font-medium rounded-lg transition shadow-md shadow-pink-500/20 text-center w-full">
+                            Launch Module
+                        </button>
+                    </div>
+
                 </div>
 
                 <!-- Laser Interconnect Line Decor -->
@@ -469,6 +545,56 @@
                 </div>
             </section>
 
+            <!-- SALES & MARKETING VIEW -->
+            <section id="view-sales" class="view-section">
+                <div class="back-nav mb-6">
+                    <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
+                </div>
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                    <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-white">📈 Sales & Marketing Pipeline</h2>
+                            <p class="text-slate-300 text-sm mt-1">Manage marketing leads, followups, deal pipelines, and track CRM parameters</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                            <h3 class="text-lg font-bold text-white mb-6">Create New Lead / Deal</h3>
+                            <form id="form-sales-add" onsubmit="addSalesLead(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Lead Full Name</label>
+                                    <input type="text" id="sales-name" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Samuel Kmaisan">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Email Address</label>
+                                    <input type="email" id="sales-email" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="samuel@client.com">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Deal Value (PGK)</label>
+                                    <input type="number" step="0.01" id="sales-value" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="15000.00">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Pipeline Stage</label>
+                                    <select id="sales-stage" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                        <option value="Prospect">Prospect</option>
+                                        <option value="Contacted">Contacted</option>
+                                        <option value="Qualified">Qualified</option>
+                                        <option value="Closed Won">Closed Won</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Register CRM Lead</button>
+                            </form>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold text-white mb-6">CRM Leads & Pipeline Deals</div>
+                            <div class="space-y-4" id="sales-leads-list">
+                                <p class="text-slate-300 text-sm italic">No active CRM leads logged.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- LOGISTICS VIEW -->
             <section id="view-logistics" class="view-section">
                 <div class="back-nav mb-6">
@@ -569,6 +695,7 @@
                 if (moduleId === 'comms') fetchComms();
                 if (moduleId === 'logistics') fetchShipments();
                 if (moduleId === 'store') fetchStoreItems();
+                if (moduleId === 'sales') fetchSalesLeads();
             }
         }
 
@@ -695,6 +822,27 @@
                     <button class="text-xs uppercase tracking-widest font-extrabold border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500 hover:text-slate-950 px-5 py-2 rounded-full transition-all duration-200 shadow-[0_0_10px_rgba(34,211,238,0.2)]" onclick="routeToView('view-auth')">Sign In</button>
                 `;
             }
+            updateOrchestrationLights();
+        }
+
+        // DATA ORCHESTRATION STATUS LIGHT UPDATER
+        function updateOrchestrationLights() {
+            const modules = ['comms', 'hr', 'finance', 'logistics', 'store', 'sales'];
+            modules.forEach(mod => {
+                const textEl = document.getElementById(`text-${mod}`);
+                const lightEl = document.getElementById(`light-${mod}`);
+                if (!textEl || !lightEl) return;
+
+                if (!authToken) {
+                    textEl.textContent = 'OFFLINE';
+                    textEl.className = 'text-xs font-mono uppercase tracking-wider text-red-500';
+                    lightEl.className = 'status-light offline';
+                } else {
+                    textEl.textContent = 'ONLINE';
+                    textEl.className = 'text-xs font-mono uppercase tracking-wider text-emerald-400';
+                    lightEl.className = 'status-light online';
+                }
+            });
         }
 
         // COMMS OPERATIONS
@@ -952,6 +1100,76 @@
             } catch (err) {
                 console.error(err);
                 showToast('Failed to add store item.', 'error');
+            }
+        }
+
+        // SALES & MARKETING OPERATIONS
+        async function fetchSalesLeads() {
+            const list = document.getElementById('sales-leads-list');
+            try {
+                const response = await fetch('/sales/leads', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    list.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                    return;
+                }
+
+                if (data.length === 0) {
+                    list.innerHTML = `<p class="text-slate-300 text-sm italic">No active CRM leads logged.</p>`;
+                    return;
+                }
+
+                list.innerHTML = data.map(lead => `
+                    <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-1.5">
+                        <div class="flex justify-between font-bold">
+                            <span>${lead.full_name}</span>
+                            <span class="text-pink-400 font-extrabold uppercase text-xs tracking-wider">
+                                ${lead.stage}
+                            </span>
+                        </div>
+                        <div class="text-slate-300">Email: ${lead.email}</div>
+                        <div class="text-slate-300 font-bold">Deal Value: ${lead.deal_value} PGK</div>
+                        <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">Logged: ${new Date(lead.created_at).toLocaleDateString()}</div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = `<p class="text-red-400 text-sm">Failed to retrieve store items.</p>`;
+            }
+        }
+
+        async function addSalesLead(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('sales-name').value;
+            const email = document.getElementById('sales-email').value;
+            const dealValue = parseFloat(document.getElementById('sales-value').value);
+            const stage = document.getElementById('sales-stage').value;
+
+            try {
+                const response = await fetch('/sales/leads', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ fullName, email, dealValue, stage })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to add sales lead.', 'error');
+                    return;
+                }
+
+                showToast('CRM sales lead registered successfully!', 'success');
+                document.getElementById('form-sales-add').reset();
+                fetchSalesLeads();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to add sales lead.', 'error');
             }
         }
 

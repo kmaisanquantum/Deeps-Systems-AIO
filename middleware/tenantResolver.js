@@ -156,4 +156,29 @@ function requireTenant(req, res, next) {
   return next();
 }
 
-module.exports = { tenantResolver, requireTenant, extractSubdomain };
+/**
+ * Require a logged-in user session (authUser context).
+ */
+function requireAuth(req, res, next) {
+  if (!req.authUser) {
+    return res.status(401).json({ error: 'Unauthorized.' });
+  }
+  return next();
+}
+
+/**
+ * Require specific user roles.
+ */
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.authUser) {
+      return res.status(401).json({ error: 'Unauthorized.' });
+    }
+    if (!roles.includes(req.authUser.role)) {
+      return res.status(403).json({ error: 'Forbidden. You do not have permission.' });
+    }
+    return next();
+  };
+}
+
+module.exports = { tenantResolver, requireTenant, extractSubdomain, requireAuth, requireRole };

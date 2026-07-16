@@ -323,6 +323,26 @@
                         </button>
                     </div>
 
+                    <!-- Card 9: Superadmin Console -->
+                    <div id="card-superadmin" style="display: none;" class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.02] transition shadow-purple-500/10 border-purple-500/30 cursor-pointer" onclick="routeToModule('superadmin')">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-3xl">🔑</span>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400" id="text-superadmin">CHECKING</span>
+                                    <div id="light-superadmin" class="status-light pending"></div>
+                                </div>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">Superadmin Console</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                                Centralized corporate tenant manager and platform-wide user control panel. Promote/reassign user contexts globally.
+                            </p>
+                        </div>
+                        <button onclick="routeToModule('superadmin')" class="mt-4 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-medium rounded-lg transition shadow-md shadow-purple-500/20 text-center w-full">
+                            Launch Console
+                        </button>
+                    </div>
+
                 </div>
 
                 <!-- Laser Interconnect Line Decor -->
@@ -380,6 +400,85 @@
                         <div class="text-center text-xs text-slate-300 mt-6">
                             Already have an account? <a href="#" onclick="toggleAuthBox('login')" class="text-cyan-400 font-bold hover:underline ml-1">Sign In instead</a>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SUPERADMIN CONSOLE VIEW -->
+            <section id="view-superadmin" class="view-section">
+                <div class="back-nav mb-6">
+                    <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
+                </div>
+
+                <!-- TENANT DIRECTORY & REGISTRATION -->
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 mb-8 shadow-xl">
+                    <div class="border-b border-slate-800 pb-4 mb-6">
+                        <h3 class="text-xl font-bold text-white">🏢 Global Tenant Registries</h3>
+                        <p class="text-slate-400 text-xs mt-1">Spin up corporate subdomains, toggle activation boundaries, and view global registries.</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Create Tenant Form -->
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6 lg:col-span-1">
+                            <h4 class="text-md font-bold text-white mb-4">Register Corporate Tenant</h4>
+                            <form id="form-superadmin-create-tenant" onsubmit="createSuperadminTenant(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Company Name</label>
+                                    <input type="text" id="super-tenant-name" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Acme Corp">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Subdomain Keyword</label>
+                                    <input type="text" id="super-tenant-subdomain" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. acme">
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" id="super-tenant-active" checked class="w-4 h-4 bg-slate-900 border border-slate-800 rounded text-purple-500 focus:ring-0 focus:ring-offset-0">
+                                    <label for="super-tenant-active" class="text-xs font-bold uppercase tracking-wider text-slate-400">Mark as Active</label>
+                                </div>
+                                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Activate Tenant</button>
+                            </form>
+                        </div>
+
+                        <!-- Tenant Listing Table -->
+                        <div class="lg:col-span-2">
+                            <div class="overflow-x-auto bg-slate-950/60 border border-slate-800 rounded-lg">
+                                <table class="min-w-full divide-y divide-slate-800 text-xs">
+                                    <thead class="bg-slate-900/50">
+                                        <tr>
+                                            <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Company Name</th>
+                                            <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Subdomain</th>
+                                            <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Status</th>
+                                            <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="superadmin-tenant-list" class="divide-y divide-slate-800">
+                                        <!-- Rendered dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CROSS-TENANT USER DIRECTORY -->
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-xl">
+                    <div class="border-b border-slate-800 pb-4 mb-6">
+                        <h3 class="text-xl font-bold text-white">🔑 Cross-Tenant User Directories</h3>
+                        <p class="text-slate-400 text-xs mt-1">Search corporate profiles across all tenants and change role / tenant associations platform-wide.</p>
+                    </div>
+                    <div class="overflow-x-auto bg-slate-950/60 border border-slate-800 rounded-lg">
+                        <table class="min-w-full divide-y divide-slate-800 text-xs">
+                            <thead class="bg-slate-900/50">
+                                <tr>
+                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">User Info</th>
+                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Corporate Tenant</th>
+                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Role Privilege</th>
+                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Status</th>
+                                    <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="superadmin-user-list" class="divide-y divide-slate-800">
+                                <!-- Rendered dynamically -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </section>
@@ -1113,6 +1212,10 @@
                 }
                 if (moduleId === 'sales') fetchSalesLeads();
                 if (moduleId === 'workspace') fetchWorkspaceData();
+                if (moduleId === 'superadmin') {
+                    fetchSuperadminTenants();
+                    fetchSuperadminUsers();
+                }
                 if (moduleId === 'admin') {
                     fetchTenant();
                     fetchBranches().then(() => {
@@ -1236,16 +1339,24 @@
         function renderHeader() {
             const nav = document.getElementById('header-nav');
             const adminCard = document.getElementById('card-admin');
+            const superadminCard = document.getElementById('card-superadmin');
             if (currentUser) {
                 nav.innerHTML = `
-                    <span class="text-xs uppercase tracking-widest text-cyan-400 font-bold bg-cyan-950/40 border border-cyan-800/60 px-3 py-1.5 rounded-full">👤 ${currentUser.fullName}</span>
+                    <span class="text-xs uppercase tracking-widest text-cyan-400 font-bold bg-cyan-950/40 border border-cyan-800/60 px-3 py-1.5 rounded-full">👤 ${currentUser.fullName} (${currentUser.role})</span>
                     <button class="text-xs uppercase tracking-widest font-extrabold border border-red-500/40 text-red-400 hover:bg-red-500 hover:text-white px-4 py-1.5 rounded-full transition-all duration-200" onclick="handleLogout()">Sign Out</button>
                 `;
                 if (adminCard) {
-                    if (currentUser.role === 'admin') {
+                    if (currentUser.role === 'admin' || currentUser.role === 'superadmin') {
                         adminCard.style.display = 'flex';
                     } else {
                         adminCard.style.display = 'none';
+                    }
+                }
+                if (superadminCard) {
+                    if (currentUser.role === 'superadmin') {
+                        superadminCard.style.display = 'flex';
+                    } else {
+                        superadminCard.style.display = 'none';
                     }
                 }
             } else {
@@ -1255,13 +1366,16 @@
                 if (adminCard) {
                     adminCard.style.display = 'none';
                 }
+                if (superadminCard) {
+                    superadminCard.style.display = 'none';
+                }
             }
             updateOrchestrationLights();
         }
 
         // DATA ORCHESTRATION STATUS LIGHT UPDATER
         function updateOrchestrationLights() {
-            const modules = ['comms', 'hr', 'finance', 'logistics', 'store', 'sales', 'workspace', 'admin'];
+            const modules = ['comms', 'hr', 'finance', 'logistics', 'store', 'sales', 'workspace', 'admin', 'superadmin'];
             modules.forEach(mod => {
                 const textEl = document.getElementById(`text-${mod}`);
                 const lightEl = document.getElementById(`light-${mod}`);
@@ -2749,6 +2863,190 @@
                 fetchStoreCheckouts();
             } catch (err) {
                 console.error(err);
+            }
+        }
+
+        // SUPERADMIN OPERATIONS
+        async function fetchSuperadminTenants() {
+            const list = document.getElementById('superadmin-tenant-list');
+            try {
+                const response = await fetch('/api/superadmin/tenants', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    list.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-red-400">Error: ${data.error}</td></tr>`;
+                    return;
+                }
+                if (data.length === 0) {
+                    list.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-slate-300 italic">No tenants registered.</td></tr>`;
+                    return;
+                }
+                list.innerHTML = data.map(tenant => `
+                    <tr>
+                        <td class="px-3 py-2">
+                            <input type="text" id="super-tenant-name-${tenant.id}" value="${tenant.company_name}" class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full">
+                        </td>
+                        <td class="px-3 py-2">
+                            <input type="text" id="super-tenant-subdomain-${tenant.id}" value="${tenant.subdomain}" class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full">
+                        </td>
+                        <td class="px-3 py-2">
+                            <select id="super-tenant-active-${tenant.id}" class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full">
+                                <option value="true" ${tenant.is_active ? 'selected' : ''}>Active</option>
+                                <option value="false" ${!tenant.is_active ? 'selected' : ''}>Suspended</option>
+                            </select>
+                        </td>
+                        <td class="px-3 py-2 text-center whitespace-nowrap space-x-1">
+                            <button onclick="updateSuperadminTenant('${tenant.id}')" class="text-xs bg-emerald-950/60 hover:bg-emerald-900 text-emerald-400 font-bold px-2 py-1 rounded border border-emerald-900/50">Save</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-red-400">Failed to retrieve tenants.</td></tr>`;
+            }
+        }
+
+        async function createSuperadminTenant(e) {
+            e.preventDefault();
+            const companyName = document.getElementById('super-tenant-name').value;
+            const subdomain = document.getElementById('super-tenant-subdomain').value;
+            const isActive = document.getElementById('super-tenant-active').checked;
+
+            try {
+                const response = await fetch('/api/superadmin/tenants', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ companyName, subdomain, isActive })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to register tenant.', 'error');
+                    return;
+                }
+                showToast('Tenant registered and activated successfully!', 'success');
+                document.getElementById('form-superadmin-create-tenant').reset();
+                fetchSuperadminTenants();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to register tenant.', 'error');
+            }
+        }
+
+        async function updateSuperadminTenant(id) {
+            const companyName = document.getElementById(`super-tenant-name-${id}`).value;
+            const subdomain = document.getElementById(`super-tenant-subdomain-${id}`).value;
+            const isActive = document.getElementById(`super-tenant-active-${id}`).value === 'true';
+
+            try {
+                const response = await fetch(`/api/superadmin/tenants/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ companyName, subdomain, isActive })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to save tenant.', 'error');
+                    return;
+                }
+                showToast('Tenant details saved successfully!', 'success');
+                fetchSuperadminTenants();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to save tenant.', 'error');
+            }
+        }
+
+        async function fetchSuperadminUsers() {
+            const list = document.getElementById('superadmin-user-list');
+            try {
+                const tenantsResponse = await fetch('/api/superadmin/tenants', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const tenantsData = await tenantsResponse.json();
+
+                const response = await fetch('/api/superadmin/users', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    list.innerHTML = `<tr><td colspan="5" class="px-4 py-3 text-red-400">Error: ${data.error}</td></tr>`;
+                    return;
+                }
+                if (data.length === 0) {
+                    list.innerHTML = `<tr><td colspan="5" class="px-4 py-3 text-slate-300 italic">No users found.</td></tr>`;
+                    return;
+                }
+
+                list.innerHTML = data.map(user => {
+                    const isSelf = user.id === currentUser.id;
+                    return `
+                        <tr>
+                            <td class="px-3 py-2">
+                                <span class="font-bold text-slate-100 block">${user.full_name}</span>
+                                <span class="text-slate-400 text-xxs">${user.email}</span>
+                            </td>
+                            <td class="px-3 py-2">
+                                <select id="super-user-tenant-${user.id}" class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full">
+                                    ${tenantsData.map(t => `<option value="${t.id}" ${user.tenant_id === t.id ? 'selected' : ''}>${t.company_name}</option>`).join('')}
+                                </select>
+                            </td>
+                            <td class="px-3 py-2">
+                                <select id="super-user-role-${user.id}" class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full">
+                                    <option value="employee" ${user.role === 'employee' ? 'selected' : ''}>Employee</option>
+                                    <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>Manager</option>
+                                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrator</option>
+                                    <option value="superadmin" ${user.role === 'superadmin' ? 'selected' : ''}>Superadmin</option>
+                                </select>
+                            </td>
+                            <td class="px-3 py-2">
+                                <select id="super-user-active-${user.id}" ${isSelf ? 'disabled' : ''} class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full">
+                                    <option value="true" ${user.is_active ? 'selected' : ''}>Active</option>
+                                    <option value="false" ${!user.is_active ? 'selected' : ''}>Suspended</option>
+                                </select>
+                            </td>
+                            <td class="px-3 py-2 text-center whitespace-nowrap">
+                                <button onclick="updateSuperadminUser('${user.id}')" class="text-xs bg-emerald-950/60 hover:bg-emerald-900 text-emerald-400 font-bold px-2.5 py-1 rounded border border-emerald-900/50">Save</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = `<tr><td colspan="5" class="px-4 py-3 text-red-400">Failed to retrieve global users.</td></tr>`;
+            }
+        }
+
+        async function updateSuperadminUser(id) {
+            const tenantId = document.getElementById(`super-user-tenant-${id}`).value;
+            const role = document.getElementById(`super-user-role-${id}`).value;
+            const isActive = document.getElementById(`super-user-active-${id}`) ? (document.getElementById(`super-user-active-${id}`).value === 'true') : null;
+
+            try {
+                const response = await fetch(`/api/superadmin/users/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ tenantId, role, isActive })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to reassign user context.', 'error');
+                    return;
+                }
+                showToast('Global user permissions updated successfully!', 'success');
+                fetchSuperadminUsers();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to save global permissions.', 'error');
             }
         }
 

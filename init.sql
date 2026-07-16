@@ -33,6 +33,9 @@ DO $$ BEGIN
     END IF;
 END $$;
 
+-- Isolated enum update to safely introduce superadmin platform-wide tier
+DO $$     BEGIN       IF NOT EXISTS (        SELECT 1 FROM pg_enum e         JOIN pg_type t ON t.oid = e.enumtypid         WHERE t.typname = 'user_role' AND e.enumlabel = 'superadmin'      ) THEN         ALTER TYPE user_role ADD VALUE 'superadmin';       END IF;     END $$;
+
 -- ---------------------------------------------------------------------
 -- TENANTS
 -- ---------------------------------------------------------------------

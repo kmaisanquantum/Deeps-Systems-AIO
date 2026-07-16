@@ -128,7 +128,8 @@ async function tenantResolver(req, res, next) {
       req.tenantId = tenant.id;
 
       // Guard against a stale/forged token pointing at a different tenant.
-      if (authContext && authContext.tenantId && authContext.tenantId !== tenant.id) {
+      // Superadmins are platform-wide and bypass this restriction.
+      if (authContext && authContext.tenantId && authContext.tenantId !== tenant.id && authContext.role !== 'superadmin') {
         return res.status(403).json({ error: 'Token/tenant mismatch.' });
       }
 

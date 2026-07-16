@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { requireTenant } = require('../middleware/tenantResolver');
+const { requireTenant, requireAuth, requireRole } = require('../middleware/tenantResolver');
 
 const authController = require('../controllers/authController');
 const communicationController = require('../controllers/communicationController');
@@ -17,6 +17,7 @@ const intentController = require('../controllers/intentController');
 const storeController = require('../controllers/storeController');
 const salesController = require('../controllers/salesController');
 const workspaceController = require('../controllers/workspaceController');
+const adminController = require('../controllers/adminController');
 const logisticsService = require('../services/logisticsService');
 
 // -----------------------------------------------------------------
@@ -78,6 +79,15 @@ router.get('/workspace/events', requireTenant, workspaceController.listEvents);
 router.post('/workspace/events', requireTenant, workspaceController.createEvent);
 router.get('/workspace/documents', requireTenant, workspaceController.listDocuments);
 router.post('/workspace/documents', requireTenant, workspaceController.createDocument);
+
+// -----------------------------------------------------------------
+// Admin / user management
+// -----------------------------------------------------------------
+router.get('/admin/users', requireTenant, requireAuth, requireRole('admin'), adminController.listUsers);
+router.post('/admin/users', requireTenant, requireAuth, requireRole('admin'), adminController.createUser);
+router.patch('/admin/users/:id/role', requireTenant, requireAuth, requireRole('admin'), adminController.updateUserRole);
+router.patch('/admin/users/:id/password', requireTenant, requireAuth, requireRole('admin'), adminController.resetUserPassword);
+router.patch('/admin/users/:id/status', requireTenant, requireAuth, requireRole('admin'), adminController.updateUserStatus);
 
 // -----------------------------------------------------------------
 // Logistics

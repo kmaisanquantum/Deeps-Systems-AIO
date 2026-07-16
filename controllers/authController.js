@@ -22,7 +22,8 @@ function hashPassword(password) {
  * Register a new user under a tenant. If no tenant exists, creates one.
  */
 async function register(req, res) {
-  const { fullName, email, password, role = 'employee', companyName, subdomain } = req.body || {};
+  const { fullName, email, password, companyName, subdomain } = req.body || {};
+  const role = 'employee'; // Hardened: force employee role for all public self-signups
 
   if (!fullName || !email || !password) {
     return res.status(400).json({ error: 'Full name, email, and password are required.' });

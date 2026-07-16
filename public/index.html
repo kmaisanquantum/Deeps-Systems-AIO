@@ -640,18 +640,38 @@
                 <div class="back-nav mb-6">
                     <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
                 </div>
-                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
-                    <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
-                        <div>
-                            <h2 class="text-2xl font-extrabold text-white">🛡️ Tenant Admin Portal</h2>
-                            <p class="text-slate-300 text-sm mt-1">Manage users, adjust roles, reset passwords, and suspend/reactivate team member credentials</p>
-                        </div>
-                    </div>
 
+                <!-- COMPANY SETTINGS CONSOLE -->
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 mb-8 shadow-xl">
+                    <div class="border-b border-slate-800 pb-4 mb-6">
+                        <h3 class="text-xl font-bold text-white">🏢 Company Settings</h3>
+                        <p class="text-slate-400 text-xs mt-1">Configure your corporate identifier and subdomain mapping context.</p>
+                    </div>
+                    <form id="form-tenant-settings" onsubmit="updateTenant(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Company Name</label>
+                            <input type="text" id="tenant-company-name" required class="w-full bg-slate-950 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Subdomain (Read-Only)</label>
+                            <input type="text" id="tenant-subdomain" disabled class="w-full bg-slate-950/40 border border-slate-800/50 rounded-md p-3 text-slate-500 cursor-not-allowed">
+                        </div>
+                        <div class="md:col-span-2">
+                            <button type="submit" class="bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 px-6 rounded-md tracking-wider transition-all duration-200 text-sm">Save Corporate Identifier</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- USER MANAGEMENT CONSOLE -->
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 mb-8 shadow-xl">
+                    <div class="border-b border-slate-800 pb-4 mb-6">
+                        <h3 class="text-xl font-bold text-white">🛡️ User Registry & Permissions</h3>
+                        <p class="text-slate-400 text-xs mt-1">Provision and manage user directory accounts, dynamic roles, and tenant status switches.</p>
+                    </div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <!-- Create User Form Column -->
+                        <!-- Create User Form -->
                         <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6 lg:col-span-1">
-                            <h3 class="text-lg font-bold text-white mb-6">Create New User</h3>
+                            <h4 class="text-md font-bold text-white mb-4">Create New User</h4>
                             <form id="form-admin-create-user" onsubmit="createAdminUser(event)" class="space-y-4">
                                 <div>
                                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Full Name</label>
@@ -673,24 +693,78 @@
                                         <option value="admin">Administrator</option>
                                     </select>
                                 </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Branch Context</label>
+                                    <select id="admin-user-branch" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                        <option value="">No branch associated</option>
+                                    </select>
+                                </div>
                                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Register User</button>
                             </form>
                         </div>
 
-                        <!-- User Management Registry Column -->
+                        <!-- User Directory Registry -->
                         <div class="lg:col-span-2">
-                            <div class="text-lg font-bold text-white mb-6">User registry & permissions</div>
                             <div class="overflow-x-auto bg-slate-950/60 border border-slate-800 rounded-lg">
-                                <table class="min-w-full divide-y divide-slate-800 text-sm">
+                                <table class="min-w-full divide-y divide-slate-800 text-xs">
                                     <thead class="bg-slate-900/50">
                                         <tr>
-                                            <th class="px-4 py-3 text-left font-bold uppercase text-xs text-slate-400 tracking-wider">User</th>
-                                            <th class="px-4 py-3 text-left font-bold uppercase text-xs text-slate-400 tracking-wider">Role</th>
-                                            <th class="px-4 py-3 text-left font-bold uppercase text-xs text-slate-400 tracking-wider">Status</th>
-                                            <th class="px-4 py-3 text-left font-bold uppercase text-xs text-slate-400 tracking-wider">Actions</th>
+                                            <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">User Info</th>
+                                            <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider w-1/4">Role</th>
+                                            <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider w-1/4">Branch</th>
+                                            <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Status</th>
+                                            <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="admin-user-list" class="divide-y divide-slate-800">
+                                        <!-- Rendered dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BRANCH MANAGEMENT PANEL -->
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-xl">
+                    <div class="border-b border-slate-800 pb-4 mb-6">
+                        <h3 class="text-xl font-bold text-white">📍 Branch Operations Engine</h3>
+                        <p class="text-slate-400 text-xs mt-1">Orchestrate and coordinate remote site structures and central hub locations.</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Create Branch Form -->
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6 lg:col-span-1">
+                            <h4 class="text-md font-bold text-white mb-4">Add New Branch</h4>
+                            <form id="form-admin-create-branch" onsubmit="createBranch(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Branch Name</label>
+                                    <input type="text" id="admin-branch-name" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Lae Logistics Hub">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Location City</label>
+                                    <input type="text" id="admin-branch-city" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Lae">
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" id="admin-branch-ishub" class="w-4 h-4 bg-slate-900 border border-slate-800 rounded text-cyan-500 focus:ring-0 focus:ring-offset-0">
+                                    <label for="admin-branch-ishub" class="text-xs font-bold uppercase tracking-wider text-slate-400">Mark as Regional Hub</label>
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Create Branch</button>
+                            </form>
+                        </div>
+
+                        <!-- Branches Directory -->
+                        <div class="lg:col-span-2">
+                            <div class="overflow-x-auto bg-slate-950/60 border border-slate-800 rounded-lg">
+                                <table class="min-w-full divide-y divide-slate-800 text-xs">
+                                    <thead class="bg-slate-900/50">
+                                        <tr>
+                                            <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Branch Name</th>
+                                            <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Location City</th>
+                                            <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Hub Status</th>
+                                            <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="admin-branch-list" class="divide-y divide-slate-800">
                                         <!-- Rendered dynamically -->
                                     </tbody>
                                 </table>
@@ -907,6 +981,7 @@
         // CLIENT STATE
         let currentUser = null;
         let authToken = localStorage.getItem('authToken');
+        let allBranches = [];
 
         // Twinkling Tech Lights Micro-animation Generator
         function makeSparkles() {
@@ -953,7 +1028,12 @@
                 if (moduleId === 'store') fetchStoreItems();
                 if (moduleId === 'sales') fetchSalesLeads();
                 if (moduleId === 'workspace') fetchWorkspaceData();
-                if (moduleId === 'admin') fetchAdminUsers();
+                if (moduleId === 'admin') {
+                    fetchTenant();
+                    fetchBranches().then(() => {
+                        fetchAdminUsers();
+                    });
+                }
             }
         }
 
@@ -1443,6 +1523,184 @@
         }
 
         // ADMIN PORTAL OPERATIONS
+        async function fetchTenant() {
+            try {
+                const response = await fetch('/admin/tenant', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('tenant-company-name').value = data.company_name;
+                    document.getElementById('tenant-subdomain').value = data.subdomain;
+                } else {
+                    showToast(data.error || 'Failed to fetch tenant settings.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to fetch tenant configuration.', 'error');
+            }
+        }
+
+        async function updateTenant(e) {
+            e.preventDefault();
+            const company_name = document.getElementById('tenant-company-name').value;
+
+            try {
+                const response = await fetch('/admin/tenant', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ company_name })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Corporate settings saved successfully!', 'success');
+                    fetchTenant();
+                } else {
+                    showToast(data.error || 'Failed to update corporate settings.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to update corporate settings.', 'error');
+            }
+        }
+
+        async function fetchBranches() {
+            try {
+                const response = await fetch('/admin/branches', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    allBranches = data;
+                    renderBranches();
+                    populateUserBranchDropdowns();
+                } else {
+                    showToast(data.error || 'Failed to fetch branches.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to retrieve branches.', 'error');
+            }
+        }
+
+        function renderBranches() {
+            const list = document.getElementById('admin-branch-list');
+            if (allBranches.length === 0) {
+                list.innerHTML = `<tr><td colspan="4" class="px-3 py-3 text-slate-300 italic">No operational branches registered.</td></tr>`;
+                return;
+            }
+
+            list.innerHTML = allBranches.map(b => `
+                <tr>
+                    <td class="px-3 py-2">
+                        <input type="text" id="branch-name-${b.id}" value="${b.branch_name}" class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full">
+                    </td>
+                    <td class="px-3 py-2">
+                        <input type="text" id="branch-city-${b.id}" value="${b.location_city || ''}" class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full" placeholder="e.g. Lae">
+                    </td>
+                    <td class="px-3 py-2">
+                        <select id="branch-ishub-${b.id}" class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full">
+                            <option value="true" ${b.is_hub ? 'selected' : ''}>Hub</option>
+                            <option value="false" ${!b.is_hub ? 'selected' : ''}>Branch</option>
+                        </select>
+                    </td>
+                    <td class="px-3 py-2 text-center space-x-1 whitespace-nowrap">
+                        <button onclick="updateBranch('${b.id}')" class="text-xs bg-emerald-950/60 hover:bg-emerald-900 text-emerald-400 font-bold px-2.5 py-1 rounded border border-emerald-900/50">Save</button>
+                        <button onclick="deleteBranch('${b.id}')" class="text-xs bg-red-950/60 hover:bg-red-900 text-red-400 font-bold px-2.5 py-1 rounded border border-red-900/50">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function populateUserBranchDropdowns() {
+            const select = document.getElementById('admin-user-branch');
+            if (!select) return;
+
+            const optionsHtml = `<option value="">No branch associated</option>` +
+                allBranches.map(b => `<option value="${b.id}">${b.branch_name}</option>`).join('');
+            select.innerHTML = optionsHtml;
+        }
+
+        async function createBranch(e) {
+            e.preventDefault();
+            const branch_name = document.getElementById('admin-branch-name').value;
+            const location_city = document.getElementById('admin-branch-city').value;
+            const is_hub = document.getElementById('admin-branch-ishub').checked;
+
+            try {
+                const response = await fetch('/admin/branches', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ branch_name, location_city, is_hub })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Branch added successfully!', 'success');
+                    document.getElementById('form-admin-create-branch').reset();
+                    fetchBranches();
+                } else {
+                    showToast(data.error || 'Failed to add branch.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to add branch.', 'error');
+            }
+        }
+
+        async function updateBranch(id) {
+            const branch_name = document.getElementById(`branch-name-${id}`).value;
+            const location_city = document.getElementById(`branch-city-${id}`).value;
+            const is_hub = document.getElementById(`branch-ishub-${id}`).value === 'true';
+
+            try {
+                const response = await fetch(`/admin/branches/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ branch_name, location_city, is_hub })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Branch details saved successfully!', 'success');
+                    fetchBranches();
+                } else {
+                    showToast(data.error || 'Failed to save branch.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to save branch.', 'error');
+            }
+        }
+
+        async function deleteBranch(id) {
+            if (!confirm('Are you sure you want to delete this branch?')) return;
+
+            try {
+                const response = await fetch(`/admin/branches/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('Branch deleted successfully!', 'success');
+                    fetchBranches();
+                } else {
+                    showToast(data.error || 'Failed to delete branch.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to delete branch.', 'error');
+            }
+        }
+
         async function fetchAdminUsers() {
             const list = document.getElementById('admin-user-list');
             try {
@@ -1452,12 +1710,12 @@
 
                 const data = await response.json();
                 if (!response.ok) {
-                    list.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-red-400">Error: ${data.error}</td></tr>`;
+                    list.innerHTML = `<tr><td colspan="5" class="px-4 py-3 text-red-400">Error: ${data.error}</td></tr>`;
                     return;
                 }
 
                 if (data.length === 0) {
-                    list.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-slate-300 italic">No users found.</td></tr>`;
+                    list.innerHTML = `<tr><td colspan="5" class="px-4 py-3 text-slate-300 italic">No users found.</td></tr>`;
                     return;
                 }
 
@@ -1465,36 +1723,40 @@
                     const isSelf = user.id === currentUser.id;
                     return `
                         <tr>
-                            <td class="px-4 py-3">
-                                <div class="font-bold text-white">${user.full_name}${isSelf ? ' <span class="text-xs text-cyan-400 font-normal">(You)</span>' : ''}</div>
-                                <div class="text-xs text-slate-400">${user.email}</div>
+                            <td class="px-3 py-2">
+                                <input type="text" id="user-name-${user.id}" value="${user.full_name}" class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full mb-1">
+                                <input type="email" id="user-email-${user.id}" value="${user.email}" class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-300 text-xxs w-full">
                             </td>
-                            <td class="px-4 py-3">
-                                <select onchange="updateUserRole('${user.id}', this.value)" ${isSelf ? 'disabled' : ''} class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs focus:outline-none focus:border-cyan-500">
+                            <td class="px-3 py-2">
+                                <select id="user-role-${user.id}" ${isSelf ? 'disabled' : ''} class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full">
                                     <option value="employee" ${user.role === 'employee' ? 'selected' : ''}>Employee</option>
                                     <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>Manager</option>
                                     <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Administrator</option>
                                 </select>
                             </td>
-                            <td class="px-4 py-3">
-                                <span class="px-2 py-0.5 text-xs font-bold rounded ${user.is_active ? 'bg-emerald-950 text-emerald-400' : 'bg-red-950 text-red-400'}">
-                                    ${user.is_active ? 'ACTIVE' : 'SUSPENDED'}
-                                </span>
+                            <td class="px-3 py-2">
+                                <select id="user-branch-${user.id}" class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full">
+                                    <option value="">None</option>
+                                    ${allBranches.map(b => `<option value="${b.id}" ${user.branch_id === b.id ? 'selected' : ''}>${b.branch_name}</option>`).join('')}
+                                </select>
                             </td>
-                            <td class="px-4 py-3 space-x-2">
-                                <button onclick="resetUserPassword('${user.id}')" class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-800">
-                                    Reset Pass
-                                </button>
-                                <button onclick="updateUserStatus('${user.id}', ${!user.is_active})" ${isSelf ? 'disabled' : ''} class="text-xs px-2 py-1 rounded font-bold ${user.is_active ? 'bg-red-950/40 text-red-400 hover:bg-red-950 border border-red-900/50' : 'bg-emerald-950/40 text-emerald-400 hover:bg-emerald-950 border border-emerald-900/50'}">
-                                    ${user.is_active ? 'Suspend' : 'Activate'}
-                                </button>
+                            <td class="px-3 py-2">
+                                <select id="user-active-${user.id}" ${isSelf ? 'disabled' : ''} class="bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs w-full">
+                                    <option value="true" ${user.is_active ? 'selected' : ''}>Active</option>
+                                    <option value="false" ${!user.is_active ? 'selected' : ''}>Suspended</option>
+                                </select>
+                            </td>
+                            <td class="px-3 py-2 text-center space-x-1 whitespace-nowrap">
+                                <button onclick="updateAdminUser('${user.id}')" class="text-xs bg-emerald-950/60 hover:bg-emerald-900 text-emerald-400 font-bold px-2 py-1 rounded border border-emerald-900/50">Save</button>
+                                <button onclick="deleteAdminUser('${user.id}')" ${isSelf ? 'disabled' : ''} class="text-xs bg-red-950/60 hover:bg-red-900 text-red-400 font-bold px-2 py-1 rounded border border-red-900/50">Delete</button>
+                                <button onclick="resetUserPassword('${user.id}')" class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 px-1.5 py-1 rounded border border-slate-800">Pass</button>
                             </td>
                         </tr>
                     `;
                 }).join('');
             } catch (err) {
                 console.error(err);
-                list.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-red-400">Failed to retrieve users.</td></tr>`;
+                list.innerHTML = `<tr><td colspan="5" class="px-4 py-3 text-red-400">Failed to retrieve users.</td></tr>`;
             }
         }
 
@@ -1504,6 +1766,7 @@
             const email = document.getElementById('admin-user-email').value;
             const password = document.getElementById('admin-user-password').value;
             const role = document.getElementById('admin-user-role').value;
+            const branchId = document.getElementById('admin-user-branch').value;
 
             try {
                 const response = await fetch('/admin/users', {
@@ -1512,7 +1775,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({ fullName, email, password, role })
+                    body: JSON.stringify({ fullName, email, password, role, branchId: branchId || null })
                 });
 
                 const data = await response.json();
@@ -1530,30 +1793,65 @@
             }
         }
 
-        async function updateUserRole(id, role) {
+        async function updateAdminUser(id) {
+            const full_name = document.getElementById(`user-name-${id}`).value;
+            const email = document.getElementById(`user-email-${id}`).value;
+            const role = document.getElementById(`user-role-${id}`) ? document.getElementById(`user-role-${id}`).value : null;
+            const branch_id = document.getElementById(`user-branch-${id}`).value;
+            const is_active = document.getElementById(`user-active-${id}`) ? document.getElementById(`user-active-${id}`).value === 'true' : null;
+
             try {
-                const response = await fetch(`/admin/users/${id}/role`, {
+                const response = await fetch(`/admin/users/${id}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({ role })
+                    body: JSON.stringify({
+                        full_name,
+                        email,
+                        role,
+                        branch_id: branch_id || null,
+                        is_active
+                    })
                 });
 
                 const data = await response.json();
                 if (!response.ok) {
-                    showToast(data.error || 'Failed to update role.', 'error');
-                    fetchAdminUsers(); // Revert selection
+                    showToast(data.error || 'Failed to update user profile.', 'error');
+                    fetchAdminUsers();
                     return;
                 }
 
-                showToast('User role updated successfully!', 'success');
+                showToast('User profile saved successfully!', 'success');
                 fetchAdminUsers();
             } catch (err) {
                 console.error(err);
-                showToast('Failed to update role.', 'error');
+                showToast('Failed to update user profile.', 'error');
                 fetchAdminUsers();
+            }
+        }
+
+        async function deleteAdminUser(id) {
+            if (!confirm('Are you sure you want to delete this user profile?')) return;
+
+            try {
+                const response = await fetch(`/admin/users/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to delete user.', 'error');
+                    return;
+                }
+
+                showToast('User profile deleted successfully!', 'success');
+                fetchAdminUsers();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to delete user.', 'error');
             }
         }
 
@@ -1585,31 +1883,6 @@
             } catch (err) {
                 console.error(err);
                 showToast('Failed to reset password.', 'error');
-            }
-        }
-
-        async function updateUserStatus(id, isActive) {
-            try {
-                const response = await fetch(`/admin/users/${id}/status`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify({ isActive })
-                });
-
-                const data = await response.json();
-                if (!response.ok) {
-                    showToast(data.error || 'Failed to update user status.', 'error');
-                    return;
-                }
-
-                showToast(`User ${isActive ? 'reactivated' : 'suspended'} successfully!`, 'success');
-                fetchAdminUsers();
-            } catch (err) {
-                console.error(err);
-                showToast('Failed to update user status.', 'error');
             }
         }
 

@@ -85,9 +85,21 @@ router.post('/workspace/documents', requireTenant, workspaceController.createDoc
 // -----------------------------------------------------------------
 router.get('/admin/users', requireTenant, requireAuth, requireRole('admin'), adminController.listUsers);
 router.post('/admin/users', requireTenant, requireAuth, requireRole('admin'), adminController.createUser);
+router.patch('/admin/users/:id', requireTenant, requireAuth, requireRole('admin'), adminController.updateUser);
+router.delete('/admin/users/:id', requireTenant, requireAuth, requireRole('admin'), adminController.deleteUser);
 router.patch('/admin/users/:id/role', requireTenant, requireAuth, requireRole('admin'), adminController.updateUserRole);
 router.patch('/admin/users/:id/password', requireTenant, requireAuth, requireRole('admin'), adminController.resetUserPassword);
 router.patch('/admin/users/:id/status', requireTenant, requireAuth, requireRole('admin'), adminController.updateUserStatus);
+
+// Branches CRUD
+router.get('/admin/branches', requireTenant, requireAuth, requireRole('admin'), adminController.listBranches);
+router.post('/admin/branches', requireTenant, requireAuth, requireRole('admin'), adminController.createBranch);
+router.patch('/admin/branches/:id', requireTenant, requireAuth, requireRole('admin'), adminController.updateBranch);
+router.delete('/admin/branches/:id', requireTenant, requireAuth, requireRole('admin'), adminController.deleteBranch);
+
+// Tenant configuration
+router.get('/admin/tenant', requireTenant, requireAuth, requireRole('admin'), adminController.getTenant);
+router.patch('/admin/tenant', requireTenant, requireAuth, requireRole('admin'), adminController.updateTenant);
 
 // -----------------------------------------------------------------
 // Logistics

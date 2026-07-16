@@ -16,6 +16,7 @@ const db = require('../db');
 const RESERVED_SUBDOMAINS = new Set(['www', 'api', 'admin', 'app', 'localhost']);
 
 const BASE_DOMAIN = process.env.BASE_DOMAIN || 'dspng.tech';
+const JWT_SECRET = process.env.JWT_SECRET || 'deeps-systems-aio-secret-key-12345';
 
 /**
  * Extract the leading label of a hostname, e.g.
@@ -58,10 +59,10 @@ function extractAuthContext(req) {
   if (!header || !header.startsWith('Bearer ')) return null;
 
   const token = header.slice('Bearer '.length).trim();
-  if (!token || !process.env.JWT_SECRET) return null;
+  if (!token) return null;
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     return {
       userId: decoded.userId || decoded.sub || null,
       branchId: decoded.branchId || null,

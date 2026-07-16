@@ -33,8 +33,10 @@ app.use(
         'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://cdn.tailwindcss.com'],
         // Permit inline onClick event handlers on the workspace modules
         'script-src-attr': ["'unsafe-inline'"],
-        // Allow runtime style injection by the Tailwind engine
-        'style-src': ["'self'", "'unsafe-inline'", 'https:'],
+        // Allow runtime style injection by the Tailwind engine and Google Fonts styles
+        'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        // Limit font loading to Google Fonts CDN and data URIs
+        'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
         // Ensure standard API calls tunnel properly back to the backend
         'connect-src': ["'self'"],
         // Disable automatic HTTPS upgrades to maintain connectivity on the HTTP sslip.io environment

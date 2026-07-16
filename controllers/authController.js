@@ -7,14 +7,14 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
+const { hashPassword, verifyPassword } = require('../utils/password');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'deeps-systems-aio-secret-key-12345';
 
-/**
- * Hash password using native Node.js crypto module (SHA-256)
- */
-function hashPassword(password) {
-  return crypto.createHash('sha256').update(password).digest('hex');
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'deeps-systems-aio-secret-key-12345') {
+    throw new Error('FATAL SECURITY EXCEPTION: JWT_SECRET is mandatory in production environment and must not match the fallback key.');
+  }
 }
 
 /**
@@ -68,7 +68,7 @@ async function register(req, res) {
     }
 
     // Insert user
-    const passwordHash = hashPassword(password);
+    const passwordHash = await hashPassword(password);
     const userInsert = await client.query(
       `INSERT INTO users (tenant_id, full_name, email, password_hash, role)
        VALUES ($1, $2, $3, $4, $5)
@@ -132,10 +132,23 @@ async function login(req, res) {
     }
 
     const user = result.rows[0];
-    const passwordHash = hashPassword(password);
+    const { ok, needsUpgrade } = await verifyPassword(password, user.password_hash);
 
-    if (user.password_hash !== passwordHash) {
+    if (!ok) {
       return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
+    if (needsUpgrade) {
+      try {
+        const newHash = await hashPassword(password);
+        await db.query(
+          'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+          [newHash, user.id]
+        );
+        user.password_hash = newHash;
+      } catch (upgradeErr) {
+        console.error('[authController] Transparent password upgrade failed:', upgradeErr);
+      }
     }
 
     if (!user.is_active) {

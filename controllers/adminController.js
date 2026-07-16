@@ -5,15 +5,8 @@
 // =====================================================================
 'use strict';
 
-const crypto = require('crypto');
 const db = require('../db');
-
-/**
- * Hash password using SHA-256
- */
-function hashPassword(password) {
-  return crypto.createHash('sha256').update(password).digest('hex');
-}
+const { hashPassword } = require('../utils/password');
 
 /**
  * Last Admin Guard evaluation logic
@@ -133,7 +126,7 @@ async function createUser(req, res) {
       }
     }
 
-    const passwordHash = hashPassword(password);
+    const passwordHash = await hashPassword(password);
     const result = await db.query(
       `INSERT INTO users (tenant_id, branch_id, full_name, email, password_hash, role)
        VALUES ($1, $2, $3, $4, $5, $6)
@@ -355,7 +348,7 @@ async function resetUserPassword(req, res) {
   }
 
   try {
-    const passwordHash = hashPassword(password);
+    const passwordHash = await hashPassword(password);
     const result = await db.query(
       `UPDATE users
           SET password_hash = $1, updated_at = now()

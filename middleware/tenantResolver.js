@@ -18,6 +18,12 @@ const RESERVED_SUBDOMAINS = new Set(['www', 'api', 'admin', 'app', 'localhost'])
 const BASE_DOMAIN = process.env.BASE_DOMAIN || 'dspng.tech';
 const JWT_SECRET = process.env.JWT_SECRET || 'deeps-systems-aio-secret-key-12345';
 
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'deeps-systems-aio-secret-key-12345') {
+    throw new Error('FATAL SECURITY EXCEPTION: JWT_SECRET is mandatory in production environment and must not match the fallback key.');
+  }
+}
+
 /**
  * Extract the leading label of a hostname, e.g.
  * "clientname.dspng.tech" -> "clientname"

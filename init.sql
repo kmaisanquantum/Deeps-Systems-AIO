@@ -371,6 +371,10 @@ VALUES ('Deeps Systems', 'deeps', true)
 ON CONFLICT (subdomain) DO NOTHING;
 
 -- 2. Seed the global administrator user account bound to the initialized tenant
+-- NOTE: The system leaves this legacy un-salted SHA-256 password hash intact in the seed.
+-- Upon the first successful authentication/login of this user, the system automatically
+-- runs a transparent "upgrade-on-login" cycle in the application layer to upgrade this hash
+-- to a salted, highly secure cost-12 bcrypt representation.
 INSERT INTO users (tenant_id, full_name, email, password_hash, role)
 SELECT
     id,

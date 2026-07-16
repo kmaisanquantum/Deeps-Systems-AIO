@@ -305,7 +305,7 @@ async function runTests() {
     req.body = { role: 'employee' }; // Proposed demotion
     await adminController.updateUser(req, res);
     assert.strictEqual(res.statusCode, 400);
-    assert.strictEqual(res.jsonData.error, 'Cannot remove the last active admin.');
+    assert.strictEqual(res.jsonData.error, 'Cannot remove or demote the last active admin.');
   }
 
   // 14. Last Admin Guard - Block Suspension of Last Admin
@@ -317,7 +317,7 @@ async function runTests() {
     req.body = { is_active: false }; // Proposed suspension
     await adminController.updateUser(req, res);
     assert.strictEqual(res.statusCode, 400);
-    assert.strictEqual(res.jsonData.error, 'Cannot remove the last active admin.');
+    assert.strictEqual(res.jsonData.error, 'Cannot remove or demote the last active admin.');
   }
 
   // 15. Last Admin Guard - Block Deletion of Last Admin
@@ -328,7 +328,7 @@ async function runTests() {
     req.params = { id: 'user-some-other' }; // Targeted admin
     await adminController.deleteUser(req, res);
     assert.strictEqual(res.statusCode, 400);
-    assert.strictEqual(res.jsonData.error, 'Cannot remove the last active admin.');
+    assert.strictEqual(res.jsonData.error, 'Cannot remove or demote the last active admin.');
   }
 
   // 16. Last Admin Guard - Block Self-Deletion

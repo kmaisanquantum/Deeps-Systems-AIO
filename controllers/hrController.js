@@ -45,6 +45,10 @@ async function createProfile(req, res) {
 
     eventDispatcher.dispatchAsync('hr.profile.created', tenantId, { profile });
 
+    if (salaryAmount != null && salaryAmount > 0) {
+      await syncPayrollTransaction(tenantId, branchId, req.authUser, fullName, salaryAmount, salaryCurrency);
+    }
+
     return res.status(201).json(profile);
   } catch (err) {
     console.error('[hrController] createProfile failed', err);
@@ -101,6 +105,10 @@ async function updateProfileStatus(req, res) {
 
     eventDispatcher.dispatchAsync('hr.profile.status_updated', tenantId, { profile });
 
+    if (salaryAmount != null && salaryAmount > 0) {
+      await syncPayrollTransaction(tenantId, profile.branch_id, req.authUser, profile.full_name, salaryAmount, profile.salary_currency);
+    }
+
     return res.status(200).json(profile);
   } catch (err) {
     console.error('[hrController] updateProfileStatus failed', err);
@@ -143,4 +151,52 @@ async function listProfiles(req, res) {
   }
 }
 
-module.exports = { createProfile, updateProfileStatus, listProfiles };
+async function syncPayrollTransaction(tenantId, branchId, authUser, fullName, salaryAmount, salaryCurrency) {
+  try {
+    await db.query(
+      `INSERT INTO financial_transactions
+          (tenant_id, branch_id, created_by_user_id, transaction_type, amount, currency,
+           description, is_manual, verification_status)
+       VALUES ($1, $2, $3, 'PAYROLL', $4, $5, $6, TRUE, 'PENDING')`,
+      [
+        tenantId,
+        branchId,
+        (authUser && authUser.userId) || null,
+        salaryAmount,
+        salaryCurrency || 'PGK',
+        `Payroll ledger entry for ${fullName}`,
+      ]
+    );
+  } catch (err) {
+    console.error('[hrController] syncPayrollTransaction failed:', err);
+  }
+}
+
+/**
+ * DELETE /hr/profiles/:id
+ * Delete a profile safely under active tenant.
+ */
+async function deleteProfile(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const result = await db.query(
+      'DELETE FROM hr_profiles WHERE id = $1 AND tenant_id = $2 RETURNING id',
+      [id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'HR profile not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json({ message: 'HR profile deleted successfully.' });
+  } catch (err) {
+    console.error('[hrController] deleteProfile error:', err);
+    return res.status(500).json({ error: 'Failed to delete HR profile.' });
+  }
+}
+
+module.exports = { createProfile, updateProfileStatus, listProfiles, deleteProfile };

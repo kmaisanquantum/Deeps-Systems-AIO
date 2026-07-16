@@ -233,9 +233,39 @@ async function listTransactions(req, res) {
   }
 }
 
+/**
+ * GET /finance/summary
+ * Return aggregated financial statistics grouped by type and status.
+ */
+async function getFinanceSummary(req, res) {
+  const tenantId = req.tenantId;
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Tenant context is required.' });
+  }
+
+  try {
+    const result = await db.query(
+      `SELECT transaction_type,
+              verification_status,
+              SUM(amount)::NUMERIC(14,2) AS total_amount,
+              COUNT(*)::int AS count
+         FROM financial_transactions
+        WHERE tenant_id = $1
+        GROUP BY transaction_type, verification_status`,
+      [tenantId]
+    );
+
+    return res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('[financeController] getFinanceSummary failed', err);
+    return res.status(500).json({ error: 'Failed to retrieve financial summary statistics.' });
+  }
+}
+
 module.exports = {
   logTransaction,
   logManualTransaction,
   reconcileInvoicePayment,
   listTransactions,
+  getFinanceSummary,
 };

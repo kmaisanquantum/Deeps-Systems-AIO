@@ -19,6 +19,7 @@ const storeController = require('../controllers/storeController');
 const salesController = require('../controllers/salesController');
 const workspaceController = require('../controllers/workspaceController');
 const adminController = require('../controllers/adminController');
+const superadminController = require('../controllers/superadminController');
 const logisticsService = require('../services/logisticsService');
 
 // -----------------------------------------------------------------
@@ -125,6 +126,15 @@ router.delete('/admin/branches/:id', requireTenant, requireAuth, requireRole('ad
 // Tenant configuration
 router.get('/admin/tenant', requireTenant, requireAuth, requireRole('admin'), adminController.getTenant);
 router.patch('/admin/tenant', requireTenant, requireAuth, requireRole('admin'), adminController.updateTenant);
+
+// -----------------------------------------------------------------
+// Superadmin operations (Centralized and platform-wide)
+// -----------------------------------------------------------------
+router.get('/api/superadmin/tenants', requireAuth, requireRole('superadmin'), superadminController.listTenants);
+router.post('/api/superadmin/tenants', requireAuth, requireRole('superadmin'), superadminController.createTenant);
+router.patch('/api/superadmin/tenants/:id', requireAuth, requireRole('superadmin'), superadminController.updateTenantStatus);
+router.get('/api/superadmin/users', requireAuth, requireRole('superadmin'), superadminController.listAllUsers);
+router.patch('/api/superadmin/users/:id', requireAuth, requireRole('superadmin'), superadminController.updateUserTenantOrRole);
 
 // -----------------------------------------------------------------
 // Logistics

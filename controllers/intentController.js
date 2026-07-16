@@ -13,6 +13,10 @@ const logisticsService = require('../services/logisticsService');
 const hrController = require('./hrController');
 const eventDispatcher = require('../services/eventDispatcher');
 
+const salesController = require('./salesController');
+const storeController = require('./storeController');
+const workspaceController = require('./workspaceController');
+
 const AI_ENGINE_SERVICE_URL = process.env.AI_ENGINE_SERVICE_URL;
 
 const aiClient = axios.create({
@@ -219,6 +223,84 @@ async function executeIntentAction(aiResult, context) {
       fakeReq.query = { branchId };
       const res = createCapturingResponse();
       await hrController.listProfiles(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_LEAD': {
+      fakeReq.body = {
+        fullName: data.fullName || data.full_name,
+        email: data.email,
+        dealValue: data.dealValue || data.deal_value || 0,
+        stage: data.stage || 'Prospect',
+      };
+      const res = createCapturingResponse();
+      await salesController.createLead(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_STORE_ITEM': {
+      fakeReq.body = {
+        title: data.title,
+        price: data.price || 0,
+        description: data.description,
+        inventoryCount: data.inventoryCount || data.inventory_count || 0,
+      };
+      const res = createCapturingResponse();
+      await storeController.createItem(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_STORE_PAGE': {
+      fakeReq.body = {
+        title: data.title,
+        slug: data.slug,
+        content: data.content,
+        isPublished: data.isPublished !== undefined ? data.isPublished : data.is_published,
+      };
+      const res = createCapturingResponse();
+      await storeController.createPage(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_WORKSPACE_TASK': {
+      fakeReq.body = {
+        title: data.title,
+        description: data.description,
+        assigneeUserId: data.assigneeUserId || data.assignee_user_id,
+        status: data.status || 'TODO',
+        priority: data.priority || 'NORMAL',
+        dueDate: data.dueDate || data.due_date,
+      };
+      const res = createCapturingResponse();
+      await workspaceController.createTask(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_WORKSPACE_EVENT': {
+      fakeReq.body = {
+        title: data.title,
+        description: data.description,
+        startsAt: data.startsAt || data.starts_at,
+        endsAt: data.endsAt || data.ends_at,
+        location: data.location,
+        organizerUserId: data.organizerUserId || data.organizer_user_id,
+      };
+      const res = createCapturingResponse();
+      await workspaceController.createEvent(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_WORKSPACE_DOCUMENT': {
+      fakeReq.body = {
+        title: data.title,
+        category: data.category,
+        url: data.url,
+        content: data.content,
+        status: data.status || 'DRAFT',
+        notes: data.notes,
+      };
+      const res = createCapturingResponse();
+      await workspaceController.createDocument(fakeReq, res);
       return res.capture;
     }
 

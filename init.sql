@@ -236,6 +236,13 @@ CREATE TABLE IF NOT EXISTS sales_leads (
 
 CREATE INDEX IF NOT EXISTS idx_sales_leads_tenant_id ON sales_leads (tenant_id);
 
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'sales_leads_stage_check') THEN
+        ALTER TABLE sales_leads ADD CONSTRAINT sales_leads_stage_check CHECK (stage IN ('Prospect','Contacted','Qualified','Won','Lost'));
+    END IF;
+END $$;
+
 -- ---------------------------------------------------------------------
 -- WORKSPACE (VIRTUAL OFFICE) MODULE
 -- ---------------------------------------------------------------------

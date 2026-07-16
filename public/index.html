@@ -430,6 +430,69 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- CMS Pages and Checkout Tracking Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 border-t border-slate-800 pt-8 mt-8">
+                        <!-- CMS Pages Console -->
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                            <h3 class="text-lg font-bold text-white mb-4">📄 CMS Page Manager</h3>
+                            <form id="form-store-page" onsubmit="createStorePage(event)" class="space-y-4 mb-6">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Page Title</label>
+                                        <input type="text" id="page-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Terms of Service">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">URL Slug</label>
+                                        <input type="text" id="page-slug" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="terms-of-service">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Page Content (HTML/MD)</label>
+                                    <textarea id="page-content" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="Enter page HTML or body text..."></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2.5 rounded-md tracking-wider transition-all duration-200">Publish CMS Page</button>
+                            </form>
+                            <div class="text-md font-bold text-white mb-4">Active CMS Pages</div>
+                            <div class="space-y-3" id="store-pages-list">
+                                <p class="text-slate-300 text-sm italic">No CMS pages published yet.</p>
+                            </div>
+                        </div>
+
+                        <!-- Checkouts Transaction Ledger -->
+                        <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                            <h3 class="text-lg font-bold text-white mb-4">🛒 Checkout Order Logs</h3>
+                            <!-- Purchase Test Form -->
+                            <form id="form-test-purchase" onsubmit="createTestPurchase(event)" class="space-y-3 mb-6 bg-slate-900/50 p-4 border border-slate-800 rounded-md">
+                                <div class="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-2">Simulate Store Purchase</div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xxs font-bold text-slate-400 mb-1">Customer Email</label>
+                                        <input type="email" id="checkout-email" required class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 text-xs text-slate-100">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xxs font-bold text-slate-400 mb-1">Product ID</label>
+                                        <input type="text" id="checkout-item-id" required class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 text-xs text-slate-100" placeholder="UUID format">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xxs font-bold text-slate-400 mb-1">Quantity</label>
+                                        <input type="number" id="checkout-qty" value="1" min="1" required class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 text-xs text-slate-100">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xxs font-bold text-slate-400 mb-1">Amount (PGK)</label>
+                                        <input type="number" step="0.01" id="checkout-amount" required class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 text-xs text-slate-100">
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-bold py-1.5 rounded text-xs transition-all duration-200">Submit Simulation Order</button>
+                            </form>
+                            <div class="text-md font-bold text-white mb-4">Transaction History</div>
+                            <div class="space-y-3" id="store-checkouts-list">
+                                <p class="text-slate-300 text-sm italic">No online purchases recorded.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -531,6 +594,13 @@
                             </form>
                         </div>
                         <div>
+                            <div class="text-lg font-bold text-white mb-4">💰 Real-Time Financial Summary (BI Analytics)</div>
+                            <div class="grid grid-cols-2 gap-4 mb-6" id="finance-summary-grid">
+                                <div class="bg-slate-950/60 p-3 border border-slate-800 rounded-md">
+                                    <div class="text-xxs font-bold text-slate-500 uppercase tracking-wider">Loading stats...</div>
+                                </div>
+                            </div>
+
                             <div class="text-lg font-bold text-white mb-6">Double-Entry Ledger Books</div>
                             <div class="space-y-4" id="finance-tx-list">
                                 <p class="text-slate-300 text-sm italic">No transaction logs available.</p>
@@ -822,11 +892,19 @@
                                             <input type="date" id="task-duedate" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
                                         </div>
                                     </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Assignee User ID</label>
+                                        <input type="text" id="task-assignee" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="UUID Format (optional)">
+                                    </div>
                                     <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Create Task</button>
                                 </form>
                             </div>
                             <div>
-                                <div class="text-lg font-bold text-white mb-6">Task Registry</div>
+                                <div class="text-lg font-bold text-white mb-4">Task Registry</div>
+                                <div class="flex items-center gap-2 mb-4 bg-slate-900 border border-slate-800 p-3 rounded-md">
+                                    <input type="checkbox" id="task-filter-assigned" onchange="fetchWorkspaceTasks()" class="w-4 h-4 text-cyan-600 bg-slate-950 border-slate-800 rounded">
+                                    <label for="task-filter-assigned" class="text-xs text-slate-300 font-semibold cursor-pointer">Only show tasks assigned to me</label>
+                                </div>
                                 <div class="space-y-4 max-h-[500px] overflow-y-auto" id="workspace-task-list">
                                     <p class="text-slate-300 text-sm italic">No tasks assigned yet.</p>
                                 </div>
@@ -1022,10 +1100,17 @@
                 routeToView(`view-${moduleId}`);
                 // Fetch relevant data
                 if (moduleId === 'hr') fetchProfiles();
-                if (moduleId === 'finance') fetchTransactions();
+                if (moduleId === 'finance') {
+                    fetchTransactions();
+                    fetchFinanceSummary();
+                }
                 if (moduleId === 'comms') fetchComms();
                 if (moduleId === 'logistics') fetchShipments();
-                if (moduleId === 'store') fetchStoreItems();
+                if (moduleId === 'store') {
+                    fetchStoreItems();
+                    fetchStorePages();
+                    fetchStoreCheckouts();
+                }
                 if (moduleId === 'sales') fetchSalesLeads();
                 if (moduleId === 'workspace') fetchWorkspaceData();
                 if (moduleId === 'admin') {
@@ -1271,7 +1356,10 @@
                         </div>
                         <div class="text-slate-300">Role: ${profile.position_title}</div>
                         <div class="text-slate-300">Salary: ${profile.salary_amount} ${profile.salary_currency}</div>
-                        <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">Hire Date: ${profile.hire_date ? new Date(profile.hire_date).toLocaleDateString() : 'N/A'}</div>
+                        <div class="flex justify-between items-center text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">
+                            <span>Hire Date: ${profile.hire_date ? new Date(profile.hire_date).toLocaleDateString() : 'N/A'}</span>
+                            <button onclick="deleteEmployeeProfile('${profile.id}')" class="text-xxs bg-red-950 hover:bg-red-900 text-red-400 px-1.5 py-0.5 rounded border border-red-900">Delete</button>
+                        </div>
                     </div>
                 `).join('');
             } catch (err) {
@@ -1404,14 +1492,33 @@
 
                 list.innerHTML = data.map(item => `
                     <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-1.5">
-                        <div class="flex justify-between font-bold">
-                            <span>${item.title}</span>
-                            <span class="text-emerald-400 font-bold">
-                                ${item.price} PGK
-                            </span>
+                        <div class="flex flex-col gap-2">
+                            <div>
+                                <label class="block text-xxs font-bold uppercase tracking-wider text-slate-500">Title</label>
+                                <input type="text" id="item-title-${item.id}" value="${item.title}" class="w-full bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xxs font-bold uppercase tracking-wider text-slate-500">Price (PGK)</label>
+                                    <input type="number" step="0.01" id="item-price-${item.id}" value="${item.price}" class="w-full bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-xxs font-bold uppercase tracking-wider text-slate-500">Stock Count</label>
+                                    <input type="number" id="item-stock-${item.id}" value="${item.inventory_count}" class="w-full bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xxs font-bold uppercase tracking-wider text-slate-500">Description</label>
+                                <input type="text" id="item-desc-${item.id}" value="${item.description || ''}" class="w-full bg-slate-900 border border-slate-800 rounded p-1 text-slate-100 text-xs">
+                            </div>
+                            <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-900">
+                                <span class="text-xxs text-slate-500">ID: ${item.id}</span>
+                                <div class="space-x-1">
+                                    <button onclick="updateStoreItem('${item.id}')" class="text-xs bg-emerald-950/60 hover:bg-emerald-900 text-emerald-400 font-bold px-2 py-0.5 rounded border border-emerald-900/50">Save</button>
+                                    <button onclick="deleteStoreItem('${item.id}')" class="text-xs bg-red-950/60 hover:bg-red-900 text-red-400 font-bold px-2 py-0.5 rounded border border-red-900/50">Delete</button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="text-slate-300">Description: ${item.description || 'N/A'}</div>
-                        <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">Stock Count: ${item.inventory_count} units | ID: ${item.id.slice(0, 8)}...</div>
                     </div>
                 `).join('');
             } catch (err) {
@@ -1473,11 +1580,18 @@
 
                 list.innerHTML = data.map(lead => `
                     <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-1.5">
-                        <div class="flex justify-between font-bold">
+                        <div class="flex justify-between font-bold items-center">
                             <span>${lead.full_name}</span>
-                            <span class="text-pink-400 font-extrabold uppercase text-xs tracking-wider">
-                                ${lead.stage}
-                            </span>
+                            <div class="flex items-center gap-1.5">
+                                <select onchange="updateLeadStage('${lead.id}', this.value)" class="bg-slate-900 border border-slate-800 rounded p-1 text-pink-400 font-extrabold uppercase text-xs tracking-wider">
+                                    <option value="Prospect" ${lead.stage === 'Prospect' ? 'selected' : ''}>Prospect</option>
+                                    <option value="Contacted" ${lead.stage === 'Contacted' ? 'selected' : ''}>Contacted</option>
+                                    <option value="Qualified" ${lead.stage === 'Qualified' ? 'selected' : ''}>Qualified</option>
+                                    <option value="Won" ${lead.stage === 'Won' ? 'selected' : ''}>Won</option>
+                                    <option value="Lost" ${lead.stage === 'Lost' ? 'selected' : ''}>Lost</option>
+                                </select>
+                                <button onclick="deleteLead('${lead.id}')" class="text-xs bg-red-950 hover:bg-red-900 text-red-400 px-2 py-1 rounded border border-red-900/50">Delete</button>
+                            </div>
                         </div>
                         <div class="text-slate-300">Email: ${lead.email}</div>
                         <div class="text-slate-300 font-bold">Deal Value: ${lead.deal_value} PGK</div>
@@ -1486,7 +1600,50 @@
                 `).join('');
             } catch (err) {
                 console.error(err);
-                list.innerHTML = `<p class="text-red-400 text-sm">Failed to retrieve store items.</p>`;
+                list.innerHTML = `<p class="text-red-400 text-sm">Failed to retrieve CRM leads.</p>`;
+            }
+        }
+
+        async function updateLeadStage(id, stage) {
+            try {
+                const response = await fetch(`/sales/leads/${id}/stage`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ stage })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to update lead stage.', 'error');
+                    return;
+                }
+                showToast('Lead stage updated successfully!', 'success');
+                fetchSalesLeads();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to update lead stage.', 'error');
+            }
+        }
+
+        async function deleteLead(id) {
+            if (!confirm('Are you sure you want to delete this lead?')) return;
+            try {
+                const response = await fetch(`/sales/leads/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to delete lead.', 'error');
+                    return;
+                }
+                showToast('Lead deleted successfully!', 'success');
+                fetchSalesLeads();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to delete lead.', 'error');
             }
         }
 
@@ -1912,8 +2069,14 @@
 
         async function fetchWorkspaceTasks() {
             const list = document.getElementById('workspace-task-list');
+            const showOnlyMine = document.getElementById('task-filter-assigned')?.checked;
+            let url = '/workspace/tasks';
+            if (showOnlyMine && currentUser && currentUser.id) {
+                url += `?assigneeUserId=${currentUser.id}`;
+            }
+
             try {
-                const response = await fetch('/workspace/tasks', {
+                const response = await fetch(url, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
 
@@ -1948,6 +2111,7 @@
                                         &rarr; ${task.status === 'TODO' ? 'Start' : 'Complete'}
                                     </button>
                                 ` : ''}
+                                <button onclick="deleteWorkspaceTask('${task.id}')" class="text-xs bg-red-950 hover:bg-red-900 text-red-400 px-2 py-0.5 rounded border border-red-900/50">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -1989,6 +2153,7 @@
             const description = document.getElementById('task-description').value;
             const priority = document.getElementById('task-priority').value;
             const dueDate = document.getElementById('task-duedate').value;
+            const assigneeUserId = document.getElementById('task-assignee').value || null;
 
             try {
                 const response = await fetch('/workspace/tasks', {
@@ -1997,7 +2162,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({ title, description, priority, dueDate })
+                    body: JSON.stringify({ title, description, priority, dueDate, assigneeUserId })
                 });
 
                 const data = await response.json();
@@ -2012,6 +2177,25 @@
             } catch (err) {
                 console.error(err);
                 showToast('Failed to delegate task.', 'error');
+            }
+        }
+
+        async function deleteWorkspaceTask(id) {
+            if (!confirm('Are you sure you want to delete this task?')) return;
+            try {
+                const response = await fetch(`/workspace/tasks/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to delete task.', 'error');
+                    return;
+                }
+                showToast('Task deleted successfully!', 'success');
+                fetchWorkspaceTasks();
+            } catch (err) {
+                console.error(err);
             }
         }
 
@@ -2037,9 +2221,12 @@
                     <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-1.5">
                         <div class="flex justify-between font-bold">
                             <span>${event.title}</span>
-                            <span class="text-xs text-cyan-400 font-bold bg-cyan-950/40 px-2 py-0.5 rounded">
-                                ${event.location || 'No Location'}
-                            </span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs text-cyan-400 font-bold bg-cyan-950/40 px-2 py-0.5 rounded">
+                                    ${event.location || 'No Location'}
+                                </span>
+                                <button onclick="deleteWorkspaceEvent('${event.id}')" class="text-xxs bg-red-950 hover:bg-red-900 text-red-400 px-1.5 py-0.5 rounded border border-red-900/50">Delete</button>
+                            </div>
                         </div>
                         ${event.description ? `<p class="text-slate-300">${event.description}</p>` : ''}
                         <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">
@@ -2087,6 +2274,25 @@
             }
         }
 
+        async function deleteWorkspaceEvent(id) {
+            if (!confirm('Are you sure you want to delete this event?')) return;
+            try {
+                const response = await fetch(`/workspace/events/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to delete event.', 'error');
+                    return;
+                }
+                showToast('Event deleted successfully!', 'success');
+                fetchWorkspaceEvents();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
         async function fetchWorkspaceDocuments() {
             const list = document.getElementById('workspace-document-list');
             try {
@@ -2109,9 +2315,12 @@
                     <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-1.5">
                         <div class="flex justify-between font-bold">
                             <span>${doc.title}</span>
-                            <span class="text-xs uppercase px-2 py-0.5 rounded font-bold ${doc.status === 'SIGNED' ? 'bg-emerald-950 text-emerald-400' : doc.status === 'FINAL' ? 'bg-blue-950 text-blue-400' : 'bg-slate-900 text-slate-400'}">
-                                ${doc.status}
-                            </span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs uppercase px-2 py-0.5 rounded font-bold ${doc.status === 'SIGNED' ? 'bg-emerald-950 text-emerald-400' : doc.status === 'FINAL' ? 'bg-blue-950 text-blue-400' : 'bg-slate-900 text-slate-400'}">
+                                    ${doc.status}
+                                </span>
+                                <button onclick="deleteWorkspaceDocument('${doc.id}')" class="text-xxs bg-red-950 hover:bg-red-900 text-red-400 px-1.5 py-0.5 rounded border border-red-900/50">Delete</button>
+                            </div>
                         </div>
                         <div class="text-xs text-slate-400 font-semibold">Category: ${doc.category || 'Uncategorized'}</div>
                         ${doc.content ? `<p class="text-slate-300 text-xs my-1 bg-slate-900/50 p-2 rounded border border-slate-900">${doc.content}</p>` : ''}
@@ -2159,20 +2368,132 @@
             }
         }
 
+        async function deleteWorkspaceDocument(id) {
+            if (!confirm('Are you sure you want to delete this document?')) return;
+            try {
+                const response = await fetch(`/workspace/documents/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to delete document.', 'error');
+                    return;
+                }
+                showToast('Document deleted successfully!', 'success');
+                fetchWorkspaceDocuments();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function deleteEmployeeProfile(id) {
+            if (!confirm('Are you sure you want to delete this employee profile?')) return;
+            try {
+                const response = await fetch(`/hr/profiles/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to delete profile.', 'error');
+                    return;
+                }
+                showToast('HR profile deleted successfully!', 'success');
+                fetchProfiles();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchFinanceSummary() {
+            const grid = document.getElementById('finance-summary-grid');
+            if (!grid) return;
+            try {
+                const response = await fetch('/finance/summary', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    grid.innerHTML = `<div class="col-span-2 text-red-400 text-xs">Error: ${data.error}</div>`;
+                    return;
+                }
+                if (data.length === 0) {
+                    grid.innerHTML = `<div class="col-span-2 text-slate-400 text-xs italic">No financial ledger entries recorded.</div>`;
+                    return;
+                }
+                grid.innerHTML = data.map(stat => `
+                    <div class="bg-slate-950/80 p-3 border border-slate-800 rounded-md flex flex-col gap-1">
+                        <div class="text-xxs font-bold text-cyan-400 uppercase tracking-wider">${stat.transaction_type} (${stat.verification_status})</div>
+                        <div class="text-md font-extrabold text-white">${stat.total_amount} PGK</div>
+                        <div class="text-xxs text-slate-500">${stat.count} transaction(s)</div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
         // LOGISTICS OPERATIONS
         async function fetchShipments() {
             const list = document.getElementById('logistics-ship-list');
-            list.innerHTML = `
-                <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-2">
-                    <div class="flex justify-between font-bold">
-                        <span>DHL Express</span>
-                        <span class="text-amber-400 font-bold">IN TRANSIT</span>
+            try {
+                const response = await fetch('/logistics/shipments', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    list.innerHTML = `<p class="text-red-400 text-sm">Error: ${data.error}</p>`;
+                    return;
+                }
+                if (data.length === 0) {
+                    list.innerHTML = `<p class="text-slate-300 text-sm italic">No active shipment tracking logs available.</p>`;
+                    return;
+                }
+                list.innerHTML = data.map(ship => `
+                    <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-2">
+                        <div class="flex justify-between items-center font-bold">
+                            <span>${ship.carrier_name}</span>
+                            <select onchange="updateShipmentStatus('${ship.id}', this.value)" class="bg-slate-900 border border-slate-800 text-xs rounded p-1 ${ship.shipping_status === 'DELIVERED' ? 'text-emerald-400' : 'text-amber-400'} font-bold">
+                                <option value="PENDING" ${ship.shipping_status === 'PENDING' ? 'selected' : ''}>PENDING</option>
+                                <option value="DISPATCHED" ${ship.shipping_status === 'DISPATCHED' ? 'selected' : ''}>DISPATCHED</option>
+                                <option value="IN_TRANSIT" ${ship.shipping_status === 'IN_TRANSIT' ? 'selected' : ''}>IN_TRANSIT</option>
+                                <option value="DELIVERED" ${ship.shipping_status === 'DELIVERED' ? 'selected' : ''}>DELIVERED</option>
+                                <option value="FAILED" ${ship.shipping_status === 'FAILED' ? 'selected' : ''}>FAILED</option>
+                            </select>
+                        </div>
+                        <div class="text-slate-300">Tracking: ${ship.tracking_number || 'N/A'}</div>
+                        <div class="text-slate-300">Route: ${ship.origin_address} &rarr; ${ship.destination_address}</div>
+                        <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">Weight: ${ship.weight_kg} kg | ${new Date(ship.created_at).toLocaleDateString()}</div>
                     </div>
-                    <div class="text-slate-300">Tracking: DHL-981047192</div>
-                    <div class="text-slate-300">Route: Port Moresby HQ &rarr; Lae Hub</div>
-                    <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">Weight: 2.5 kg | Dec 2, 2024</div>
-                </div>
-            `;
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = `<p class="text-red-400 text-sm">Failed to retrieve shipments.</p>`;
+            }
+        }
+
+        async function updateShipmentStatus(id, status) {
+            try {
+                const response = await fetch(`/logistics/shipments/${id}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ status })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to update shipment status.', 'error');
+                    return;
+                }
+                showToast('Shipment status updated successfully!', 'success');
+                fetchShipments();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to update shipment status.', 'error');
+            }
         }
 
         async function createShipment(e) {
@@ -2204,6 +2525,230 @@
             } catch (err) {
                 console.error(err);
                 showToast('Failed to create shipment order.', 'error');
+            }
+        }
+
+        // STORE CMS & ATOMIC INVENTORY ACTIONS
+        async function updateStoreItem(id) {
+            const title = document.getElementById(`item-title-${id}`).value;
+            const price = parseFloat(document.getElementById(`item-price-${id}`).value);
+            const inventoryCount = parseInt(document.getElementById(`item-stock-${id}`).value, 10);
+            const description = document.getElementById(`item-desc-${id}`).value;
+
+            try {
+                const response = await fetch(`/store/items/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ title, price, inventoryCount, description })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to update store item.', 'error');
+                    return;
+                }
+
+                showToast('Store item updated successfully!', 'success');
+                fetchStoreItems();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to update store item.', 'error');
+            }
+        }
+
+        async function deleteStoreItem(id) {
+            if (!confirm('Are you sure you want to delete this catalog item?')) return;
+            try {
+                const response = await fetch(`/store/items/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to delete item.', 'error');
+                    return;
+                }
+
+                showToast('Store item deleted successfully!', 'success');
+                fetchStoreItems();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to delete item.', 'error');
+            }
+        }
+
+        async function fetchStorePages() {
+            const list = document.getElementById('store-pages-list');
+            try {
+                const response = await fetch('/store/pages', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    list.innerHTML = `<p class="text-red-400 text-xs">Error: ${data.error}</p>`;
+                    return;
+                }
+                if (data.length === 0) {
+                    list.innerHTML = `<p class="text-slate-300 text-sm italic">No CMS pages published yet.</p>`;
+                    return;
+                }
+                list.innerHTML = data.map(page => `
+                    <div class="bg-slate-900 border border-slate-800 rounded p-3 text-xs flex flex-col gap-1.5">
+                        <div class="flex justify-between items-center font-bold">
+                            <span>${page.title} (<span class="text-cyan-400">${page.slug}</span>)</span>
+                            <div class="space-x-1">
+                                <button onclick="deleteStorePage('${page.id}')" class="text-xxs bg-red-950 text-red-400 border border-red-900 px-1.5 py-0.5 rounded">Delete</button>
+                            </div>
+                        </div>
+                        <p class="text-slate-400 text-xxs">${page.content || 'No content.'}</p>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function createStorePage(e) {
+            e.preventDefault();
+            const title = document.getElementById('page-title').value;
+            const slug = document.getElementById('page-slug').value;
+            const content = document.getElementById('page-content').value;
+
+            try {
+                const response = await fetch('/store/pages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ title, slug, content })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to publish page.', 'error');
+                    return;
+                }
+                showToast('CMS page published successfully!', 'success');
+                document.getElementById('form-store-page').reset();
+                fetchStorePages();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to publish page.', 'error');
+            }
+        }
+
+        async function deleteStorePage(id) {
+            if (!confirm('Are you sure you want to delete this CMS page?')) return;
+            try {
+                const response = await fetch(`/store/pages/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to delete page.', 'error');
+                    return;
+                }
+                showToast('CMS page deleted successfully!', 'success');
+                fetchStorePages();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchStoreCheckouts() {
+            const list = document.getElementById('store-checkouts-list');
+            try {
+                const response = await fetch('/store/checkouts', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    list.innerHTML = `<p class="text-red-400 text-xs">Error: ${data.error}</p>`;
+                    return;
+                }
+                if (data.length === 0) {
+                    list.innerHTML = `<p class="text-slate-300 text-sm italic">No online purchases recorded.</p>`;
+                    return;
+                }
+                list.innerHTML = data.map(ch => `
+                    <div class="bg-slate-900 border border-slate-800 rounded p-3 text-xs flex flex-col gap-1.5">
+                        <div class="flex justify-between items-center font-bold">
+                            <span>${ch.email || 'Anonymous'}</span>
+                            <span class="text-emerald-400">${ch.amount} ${ch.currency}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xxs mt-1">
+                            <span class="text-slate-500">ID: ${ch.id.slice(0, 8)}...</span>
+                            <select onchange="updateCheckoutStatus('${ch.id}', this.value)" class="bg-slate-950 border border-slate-800 text-amber-400 rounded p-0.5 font-bold uppercase">
+                                <option value="PENDING" ${ch.status === 'PENDING' ? 'selected' : ''}>Pending</option>
+                                <option value="PAID" ${ch.status === 'PAID' ? 'selected' : ''}>Paid</option>
+                                <option value="FAILED" ${ch.status === 'FAILED' ? 'selected' : ''}>Failed</option>
+                            </select>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function createTestPurchase(e) {
+            e.preventDefault();
+            const email = document.getElementById('checkout-email').value;
+            const itemId = document.getElementById('checkout-item-id').value;
+            const quantity = parseInt(document.getElementById('checkout-qty').value, 10);
+            const amount = parseFloat(document.getElementById('checkout-amount').value);
+
+            try {
+                const response = await fetch('/store/checkouts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        email,
+                        amount,
+                        items: [{ itemId, quantity }]
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to submit purchase order.', 'error');
+                    return;
+                }
+                showToast('Test purchase submitted successfully!', 'success');
+                document.getElementById('form-test-purchase').reset();
+                fetchStoreCheckouts();
+                fetchStoreItems(); // inventory reduced
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function updateCheckoutStatus(id, status) {
+            try {
+                const response = await fetch(`/store/checkouts/${id}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ status })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to update checkout status.', 'error');
+                    return;
+                }
+                showToast('Checkout status updated!', 'success');
+                fetchStoreCheckouts();
+            } catch (err) {
+                console.error(err);
             }
         }
 

@@ -13,23 +13,62 @@ const db = require('../db');
 
 /**
  * GET /workspace/tasks
- * List all workspace tasks for the active tenant.
+ * List all workspace tasks for the active tenant. Supports optional assigneeUserId filtering.
  */
 async function listTasks(req, res) {
   const tenantId = req.tenantId;
+  const assigneeUserId = req.query.assigneeUserId || req.query.assignee_user_id;
+
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Tenant context is required.' });
+  }
+
+  try {
+    let result;
+    if (assigneeUserId) {
+      result = await db.query(
+        'SELECT * FROM workspace_tasks WHERE tenant_id = $1 AND assignee_user_id = $2 ORDER BY due_date ASC, created_at DESC',
+        [tenantId, assigneeUserId]
+      );
+    } else {
+      result = await db.query(
+        'SELECT * FROM workspace_tasks WHERE tenant_id = $1 ORDER BY due_date ASC, created_at DESC',
+        [tenantId]
+      );
+    }
+    return res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('[workspaceController] listTasks Error:', err);
+    return res.status(500).json({ error: 'Failed to list workspace tasks.' });
+  }
+}
+
+/**
+ * DELETE /workspace/tasks/:id
+ * Delete a workspace task.
+ */
+async function deleteTask(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+
   if (!tenantId) {
     return res.status(400).json({ error: 'Tenant context is required.' });
   }
 
   try {
     const result = await db.query(
-      'SELECT * FROM workspace_tasks WHERE tenant_id = $1 ORDER BY due_date ASC, created_at DESC',
-      [tenantId]
+      'DELETE FROM workspace_tasks WHERE id = $1 AND tenant_id = $2 RETURNING id',
+      [id, tenantId]
     );
-    return res.status(200).json(result.rows);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Workspace task not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json({ message: 'Workspace task deleted successfully.' });
   } catch (err) {
-    console.error('[workspaceController] listTasks Error:', err);
-    return res.status(500).json({ error: 'Failed to list workspace tasks.' });
+    console.error('[workspaceController] deleteTask Error:', err);
+    return res.status(500).json({ error: 'Failed to delete workspace task.' });
   }
 }
 
@@ -257,12 +296,160 @@ async function createDocument(req, res) {
   }
 }
 
+/**
+ * PATCH /workspace/events/:id
+ * Update workspace event.
+ */
+async function updateEvent(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+  const { title, description, startsAt, endsAt, location, organizerUserId } = req.body || {};
+
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Tenant context is required.' });
+  }
+
+  try {
+    const result = await db.query(
+      `UPDATE workspace_events
+          SET title = COALESCE($1, title),
+              description = COALESCE($2, description),
+              starts_at = COALESCE($3, starts_at),
+              ends_at = COALESCE($4, ends_at),
+              location = COALESCE($5, location),
+              organizer_user_id = COALESCE($6, organizer_user_id),
+              updated_at = now()
+        WHERE id = $7 AND tenant_id = $8
+        RETURNING *`,
+      [title, description, startsAt, endsAt, location, organizerUserId, id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Workspace event not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error('[workspaceController] updateEvent Error:', err);
+    return res.status(500).json({ error: 'Failed to update workspace event.' });
+  }
+}
+
+/**
+ * DELETE /workspace/events/:id
+ * Delete workspace event.
+ */
+async function deleteEvent(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Tenant context is required.' });
+  }
+
+  try {
+    const result = await db.query(
+      'DELETE FROM workspace_events WHERE id = $1 AND tenant_id = $2 RETURNING id',
+      [id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Workspace event not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json({ message: 'Workspace event deleted successfully.' });
+  } catch (err) {
+    console.error('[workspaceController] deleteEvent Error:', err);
+    return res.status(500).json({ error: 'Failed to delete workspace event.' });
+  }
+}
+
+/**
+ * PATCH /workspace/documents/:id
+ * Update workspace document.
+ */
+async function updateDocument(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+  const { title, category, url, content, status, notes } = req.body || {};
+
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Tenant context is required.' });
+  }
+
+  if (status) {
+    const allowedStatuses = ['DRAFT', 'FINAL', 'SIGNED'];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: `status must be one of: ${allowedStatuses.join(', ')}` });
+    }
+  }
+
+  try {
+    const result = await db.query(
+      `UPDATE workspace_documents
+          SET title = COALESCE($1, title),
+              category = COALESCE($2, category),
+              url = COALESCE($3, url),
+              content = COALESCE($4, content),
+              status = COALESCE($5, status),
+              notes = COALESCE($6, notes),
+              updated_at = now()
+        WHERE id = $7 AND tenant_id = $8
+        RETURNING *`,
+      [title, category, url, content, status, notes, id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Workspace document not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error('[workspaceController] updateDocument Error:', err);
+    return res.status(500).json({ error: 'Failed to update workspace document.' });
+  }
+}
+
+/**
+ * DELETE /workspace/documents/:id
+ * Delete workspace document.
+ */
+async function deleteDocument(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Tenant context is required.' });
+  }
+
+  try {
+    const result = await db.query(
+      'DELETE FROM workspace_documents WHERE id = $1 AND tenant_id = $2 RETURNING id',
+      [id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Workspace document not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json({ message: 'Workspace document deleted successfully.' });
+  } catch (err) {
+    console.error('[workspaceController] deleteDocument Error:', err);
+    return res.status(500).json({ error: 'Failed to delete workspace document.' });
+  }
+}
+
 module.exports = {
   listTasks,
   createTask,
   updateTaskStatus,
+  deleteTask,
   listEvents,
   createEvent,
+  updateEvent,
+  deleteEvent,
   listDocuments,
   createDocument,
+  updateDocument,
+  deleteDocument,
 };

@@ -162,7 +162,7 @@ async function updateUser(req, res) {
   }
 
   // Guard against self-demotion / self-suspension
-  const isSelf = (id === req.authUser.userId);
+  const isSelf = (String(id) === String(req.authUser.userId));
   if (isSelf) {
     if (role && role !== 'admin') {
       return res.status(400).json({ error: 'Self-demotion is not allowed. You cannot change your own role.' });
@@ -193,7 +193,7 @@ async function updateUser(req, res) {
       false
     );
     if (!passesGuard) {
-      return res.status(400).json({ error: 'Cannot remove the last active admin.' });
+      return res.status(400).json({ error: 'Cannot remove or demote the last active admin.' });
     }
 
     // Check email uniqueness under same tenant
@@ -260,7 +260,7 @@ async function deleteUser(req, res) {
   }
 
   // Prevent administrative self-deletion
-  if (id === req.authUser.userId) {
+  if (String(id) === String(req.authUser.userId)) {
     return res.status(400).json({ error: 'Self-deletion is not allowed.' });
   }
 
@@ -268,7 +268,7 @@ async function deleteUser(req, res) {
     // Last Admin Guard evaluation
     const passesGuard = await checkLastAdminGuard(tenantId, id, null, null, true);
     if (!passesGuard) {
-      return res.status(400).json({ error: 'Cannot remove the last active admin.' });
+      return res.status(400).json({ error: 'Cannot remove or demote the last active admin.' });
     }
 
     const result = await db.query(
@@ -309,14 +309,14 @@ async function updateUserRole(req, res) {
   }
 
   // Guard against self-demotion
-  if (id === req.authUser.userId) {
+  if (String(id) === String(req.authUser.userId)) {
     return res.status(400).json({ error: 'Self-demotion is not allowed. You cannot change your own role.' });
   }
 
   try {
     const passesGuard = await checkLastAdminGuard(tenantId, id, role, null, false);
     if (!passesGuard) {
-      return res.status(400).json({ error: 'Cannot remove the last active admin.' });
+      return res.status(400).json({ error: 'Cannot remove or demote the last active admin.' });
     }
 
     const result = await db.query(
@@ -392,14 +392,14 @@ async function updateUserStatus(req, res) {
   }
 
   // Guard against self-suspension
-  if (id === req.authUser.userId) {
+  if (String(id) === String(req.authUser.userId)) {
     return res.status(400).json({ error: 'Self-suspension is not allowed. You cannot change your own status.' });
   }
 
   try {
     const passesGuard = await checkLastAdminGuard(tenantId, id, null, !!isActive, false);
     if (!passesGuard) {
-      return res.status(400).json({ error: 'Cannot remove the last active admin.' });
+      return res.status(400).json({ error: 'Cannot remove or demote the last active admin.' });
     }
 
     const result = await db.query(
@@ -607,14 +607,62 @@ async function updateTenant(req, res) {
   }
 }
 
+/**
+ * PATCH /admin/users/:id/branch
+ * Safely alter branch_id after verifying branch ownership.
+ */
+async function assignUserBranch(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+  const { branch_id, branchId } = req.body || {};
+  const targetBranchId = branch_id || branchId || null;
+
+  if (!tenantId) {
+    return res.status(400).json({ error: 'Tenant context is required.' });
+  }
+
+  try {
+    if (targetBranchId) {
+      const branchCheck = await db.query(
+        'SELECT id FROM branches WHERE id = $1 AND tenant_id = $2',
+        [targetBranchId, tenantId]
+      );
+      if (branchCheck.rowCount === 0) {
+        return res.status(400).json({ error: 'Invalid branch for this tenant.' });
+      }
+    }
+
+    const result = await db.query(
+      `UPDATE users
+          SET branch_id = $1, updated_at = now()
+        WHERE id = $2 AND tenant_id = $3
+        RETURNING id, tenant_id, branch_id, full_name, email, role, is_active`,
+      [targetBranchId, id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'User not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error('[adminController] assignUserBranch Error:', err);
+    return res.status(500).json({ error: 'Failed to assign branch to user.' });
+  }
+}
+
+const updateUserDetails = updateUser;
+
 module.exports = {
   listUsers,
   createUser,
   updateUser,
+  updateUserDetails,
   deleteUser,
   updateUserRole,
   resetUserPassword,
   updateUserStatus,
+  assignUserBranch,
   listBranches,
   createBranch,
   updateBranch,

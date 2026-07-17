@@ -1,163 +1,18 @@
-version: "3.9"
-
-# =====================================================================
-# Deeps Systems AIO — docker-compose.yml
-# Designed for direct placement inside a Coolify Project Stack on a
-# Vultr VPS. Three services on an internal bridge network: PostgreSQL,
-# the aio-core Node/Express app, and the self-hosted Akaunting container.
-# =====================================================================
-
-networks:
-  aio-internal:
-    driver: bridge
-
-volumes:
-  aio_postgres_data:
-    driver: local
-  akaunting_storage:
-    driver: local
+version: '3.8'
 
 services:
-  # -------------------------------------------------------------
-  # PostgreSQL — primary datastore for aio-core's custom schema
-  # -------------------------------------------------------------
-  postgres:
-    image: postgres:16-alpine
-    container_name: aio-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-deeps_systems_aio}
-      POSTGRES_USER: ${POSTGRES_USER:-aio_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - aio_postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - aio-internal
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aio_admin} -d ${POSTGRES_DB:-deeps_systems_aio}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    # No external ports published — reachable only over the internal
-    # bridge network by aio-core. Coolify manages TLS/reverse-proxy
-    # exposure for aio-core only.
-
-  # -------------------------------------------------------------
-  # aio-core — the custom Node.js/Express backend
-  # -------------------------------------------------------------
   aio-core:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: aio-core
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-      akaunting:
-        condition: service_started
-    environment:
-      NODE_ENV: production
-      PORT: 5000
-      BASE_DOMAIN: ${BASE_DOMAIN:-dspng.tech}
-
-      # --- Database ---
-      DATABASE_URL: postgres://${POSTGRES_USER:-aio_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-deeps_systems_aio}
-
-      # --- Auth ---
-      JWT_SECRET: ${JWT_SECRET}
-
-      # --- AI orchestration engine ---
-      AI_ENGINE_SERVICE_URL: ${AI_ENGINE_SERVICE_URL}
-
-      # --- WhatsApp Business Cloud API ---
-      WHATSAPP_API_TOKEN: ${WHATSAPP_API_TOKEN}
-      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN}
-      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
-      WHATSAPP_GRAPH_VERSION: ${WHATSAPP_GRAPH_VERSION:-v19.0}
-
-      # --- HostGator SMTP/IMAP relay ---
-      HOSTGATOR_SMTP_HOST: ${HOSTGATOR_SMTP_HOST}
-      HOSTGATOR_SMTP_PORT: ${HOSTGATOR_SMTP_PORT:-465}
-      HOSTGATOR_SMTP_SECURE: ${HOSTGATOR_SMTP_SECURE:-true}
-      HOSTGATOR_SMTP_USER: ${HOSTGATOR_SMTP_USER}
-      HOSTGATOR_SMTP_PASS: ${HOSTGATOR_SMTP_PASS}
-      HOSTGATOR_SMTP_FROM: ${HOSTGATOR_SMTP_FROM}
-      HOSTGATOR_IMAP_HOST: ${HOSTGATOR_IMAP_HOST}
-      HOSTGATOR_IMAP_PORT: ${HOSTGATOR_IMAP_PORT:-993}
-      HOSTGATOR_IMAP_USER: ${HOSTGATOR_IMAP_USER}
-      HOSTGATOR_IMAP_PASS: ${HOSTGATOR_IMAP_PASS}
-
-      # --- SMS fallback provider ---
-      SMS_API_URL: ${SMS_API_URL}
-      SMS_API_KEY: ${SMS_API_KEY}
-
-      # --- Akaunting bridge (internal Docker network) ---
-      AKAUNTING_BASE_URL: http://akaunting:80
-      AKAUNTING_API_KEY: ${AKAUNTING_API_KEY}
-      AKAUNTING_COMPANY_ID: ${AKAUNTING_COMPANY_ID:-1}
-
-      # --- BSP Pay ---
-      BSP_PAY_BASE_URL: ${BSP_PAY_BASE_URL}
-      BSP_PAY_MERCHANT_ID: ${BSP_PAY_MERCHANT_ID}
-      BSP_PAY_SECRET: ${BSP_PAY_SECRET}
-      BSP_PAY_CALLBACK_URL: ${BSP_PAY_CALLBACK_URL}
-
-      # --- Kina Bank IPG ---
-      KINA_IPG_BASE_URL: ${KINA_IPG_BASE_URL}
-      KINA_IPG_MERCHANT_ID: ${KINA_IPG_MERCHANT_ID}
-      KINA_IPG_TOKEN: ${KINA_IPG_TOKEN}
-      KINA_IPG_WEBHOOK_SECRET: ${KINA_IPG_WEBHOOK_SECRET}
-
-      # --- Logistics: DHL + Post PNG ---
-      DHL_BASE_URL: ${DHL_BASE_URL}
-      DHL_API_KEY: ${DHL_API_KEY}
-      DHL_ACCOUNT_NUMBER: ${DHL_ACCOUNT_NUMBER}
-      POST_PNG_BASE_URL: ${POST_PNG_BASE_URL}
-      POST_PNG_API_KEY: ${POST_PNG_API_KEY}
-    networks:
-      - aio-internal
+    image: kmaisanquantum/deeps-systems-aio-core:latest
+    container_name: aio-core-service
     ports:
-      # Coolify's reverse proxy targets container port 5000
-      - "5000:5000"
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5000/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-
-  # -------------------------------------------------------------
-  # Akaunting — self-hosted finance/accounting engine, reached
-  # internally by aio-core at http://akaunting:80
-  # -------------------------------------------------------------
-  akaunting:
-    image: akaunting/akaunting:latest
-    container_name: akaunting
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - "3000:3000"
     environment:
-      APP_ENV: production
-      APP_KEY: ${AKAUNTING_APP_KEY}
-      APP_URL: ${AKAUNTING_APP_URL}
-      DB_CONNECTION: pgsql
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_DATABASE: ${AKAUNTING_DB_NAME:-akaunting}
-      DB_USERNAME: ${POSTGRES_USER:-aio_admin}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-      MAIL_MAILER: smtp
-      MAIL_HOST: ${HOSTGATOR_SMTP_HOST}
-      MAIL_PORT: ${HOSTGATOR_SMTP_PORT:-465}
-      MAIL_USERNAME: ${HOSTGATOR_SMTP_USER}
-      MAIL_PASSWORD: ${HOSTGATOR_SMTP_PASS}
-      MAIL_ENCRYPTION: ssl
-    volumes:
-      - akaunting_storage:/var/www/html/storage
-    networks:
-      - aio-internal
-    # Intentionally not published externally — reachable only via the
-    # internal bridge network by aio-core, and via Coolify's own proxy
-    # rule if admin UI access is desired at a separate subdomain.
+      - PORT=3000
+      - NODE_ENV=production
+      - GITHUB_API_BASE_URL=${GITHUB_API_BASE_URL}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - VULTR_API_BASE_URL=${VULTR_API_BASE_URL}
+      - VULTR_API_KEY=${VULTR_API_KEY}
+      - HOSTGATOR_API_BASE_URL=${HOSTGATOR_API_BASE_URL}
+      - HOSTGATOR_API_KEY=${HOSTGATOR_API_KEY}
+    restart: always

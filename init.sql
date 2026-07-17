@@ -467,6 +467,106 @@ FOR EACH ROW
 EXECUTE FUNCTION trigger_set_timestamp();
 
 -- =========================================================================
+-- SEED DATA FOR LEARNING PLATFORM RESOURCES (GAP 4 / SEED DATA)
+-- =========================================================================
+
+-- Seed 1. Oracle University
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'Oracle University', 'https://education.oracle.com', 'Training', 'Oracle University'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'Oracle University');
+
+-- Seed 2. Khan Academy
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'Khan Academy', 'https://khanacademy.org', 'General', 'Khan Academy'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'Khan Academy');
+
+-- Seed 3. D-Wave Intro to Quantum Computing
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'D-Wave Intro to Quantum Computing', 'https://learning.dwavesys.com', 'Quantum', 'D-Wave'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'D-Wave Intro to Quantum Computing');
+
+-- Seed 4. Gandhi-King Global Academy
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'Gandhi-King Global Academy', 'https://usip.org/gandhi-king-global-academy', 'Diplomacy', 'Gandhi-King Global Academy'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'Gandhi-King Global Academy');
+
+-- Seed 5. ESCAP eLearning Platform
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'ESCAP eLearning Platform', 'https://elearning.unescap.org', 'General', 'ESCAP'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'ESCAP eLearning Platform');
+
+-- Seed 6. ITU Academy
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'ITU Academy', 'https://academy.itu.int', 'Training', 'ITU Academy'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'ITU Academy');
+
+-- Seed 7. Tech Diplomacy Academy
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'Tech Diplomacy Academy', 'https://techdiplomacyacademy.org', 'Diplomacy', 'Tech Diplomacy Academy'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'Tech Diplomacy Academy');
+
+-- Seed 8. Quantum Computing
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'Quantum Computing', 'https://quantumcomputing.com', 'Quantum', 'Quantum Computing'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'Quantum Computing');
+
+-- Seed 9. IBM Quantum Learning
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'IBM Quantum Learning', 'https://learning.quantum.ibm.com', 'Quantum', 'IBM'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'IBM Quantum Learning');
+
+-- Seed 10. Pennylane
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'Pennylane', 'https://pennylane.ai', 'Quantum', 'Pennylane'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'Pennylane');
+
+-- Seed 11. UNODC
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'UNODC', 'https://elearning.unodc.org', 'General', 'UNODC'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'UNODC');
+
+-- Seed 12. QuTech Academy
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'QuTech Academy', 'https://academy.qutech.nl', 'Quantum', 'QuTech'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'QuTech Academy');
+
+-- Seed 13. Q-CTRL
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'Q-CTRL', 'https://q-ctrl.com', 'Quantum', 'Q-CTRL'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'Q-CTRL');
+
+-- Seed 14. Open Learning
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'Open Learning', 'https://openlearning.com', 'General', 'Open Learning'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'Open Learning');
+
+-- Seed 15. Security Blue Team
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'Security Blue Team', 'https://securityblueteam.com', 'Security', 'Security Blue Team'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'Security Blue Team');
+
+-- Seed 16. IT Masters
+INSERT INTO learning_resources (tenant_id, title, url, category, provider)
+SELECT t.id, 'IT Masters', 'https://itmasters.edu.au', 'Training', 'IT Masters'
+FROM tenants t WHERE t.subdomain = 'deeps'
+AND NOT EXISTS (SELECT 1 FROM learning_resources lr WHERE lr.tenant_id = t.id AND lr.title = 'IT Masters');
+
+-- =========================================================================
 -- SERVICE FEES (OPERATIONS) ADDITIONS
 -- =========================================================================
 

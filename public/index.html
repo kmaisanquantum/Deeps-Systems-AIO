@@ -363,6 +363,26 @@
                         </button>
                     </div>
 
+                    <!-- Card 11: Learning Pathway -->
+                    <div id="card-learning" class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.02] transition shadow-amber-500/10 border-amber-500/30 cursor-pointer" onclick="routeToModule('learning')">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-3xl">🎓</span>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400" id="text-learning">ONLINE</span>
+                                    <div id="light-learning" class="status-light success"></div>
+                                </div>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">Learning Pathway</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                                Organize study links, track category resources, and schedule training courses.
+                            </p>
+                        </div>
+                        <button onclick="routeToModule('learning')" class="mt-4 px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-white font-medium rounded-lg transition shadow-md shadow-amber-500/20 text-center w-full">
+                            Launch Learning Pathway
+                        </button>
+                    </div>
+
                 </div>
 
                 <!-- Laser Interconnect Line Decor -->
@@ -1170,6 +1190,144 @@
                 </div>
             </section>
 
+            <!-- LEARNING PATHWAY VIEW -->
+            <section id="view-learning" class="view-section">
+                <div class="back-nav mb-6">
+                    <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
+                </div>
+                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
+                    <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-white">🎓 Learning Pathway & Training</h2>
+                            <p class="text-slate-300 text-sm mt-1">Organize study links, categorize research modules, and plan study schedules</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition" onclick="fetchLearningResources()">
+                                Refresh Resources
+                            </button>
+                            <button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition" onclick="fetchStudySchedules()">
+                                Refresh Schedules
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <!-- Left column: Creation & Add Forms (span 4) -->
+                        <div class="lg:col-span-4 space-y-8">
+                            <!-- Create Resource Form -->
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                                <h3 class="text-lg font-bold text-white mb-6">Add New Learning Resource</h3>
+                                <form id="form-learning-resource" onsubmit="addLearningResource(event)" class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Title</label>
+                                        <input type="text" id="resource-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Advanced PostgreSQL Tuning">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Resource URL</label>
+                                        <input type="url" id="resource-url" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="https://example.com/course">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Category</label>
+                                        <input type="text" id="resource-category" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Engineering, Finance">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Provider / Host</label>
+                                        <input type="text" id="resource-provider" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Coursera, Internal Wiki">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Description</label>
+                                        <textarea id="resource-description" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-sm" placeholder="Brief overview of resource..."></textarea>
+                                    </div>
+                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Save Resource</button>
+                                </form>
+                            </div>
+
+                            <!-- Create Study Schedule Form -->
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                                <h3 class="text-lg font-bold text-white mb-6">Schedule Study Session</h3>
+                                <form id="form-study-schedule" onsubmit="addStudySchedule(event)" class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Session Title</label>
+                                        <input type="text" id="schedule-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Team SQL Review">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Topic</label>
+                                        <input type="text" id="schedule-topic" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Indexing & Explain Analyzes">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Referenced Resource</label>
+                                        <select id="schedule-resource" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                            <option value="">-- No Reference --</option>
+                                        </select>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Scheduled At</label>
+                                            <input type="datetime-local" id="schedule-date" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-xs">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Duration (Min)</label>
+                                            <input type="number" id="schedule-duration" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="60">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Notes</label>
+                                        <textarea id="schedule-notes" rows="2" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-sm" placeholder="Important preparation notes..."></textarea>
+                                    </div>
+                                    <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Create Schedule</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Lists & Tables (span 8) -->
+                        <div class="lg:col-span-8 space-y-8">
+                            <!-- Resources List Card -->
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                                <h3 class="text-lg font-bold text-white mb-6">Learning Resources</h3>
+                                <div class="overflow-x-auto rounded-lg">
+                                    <table class="min-w-full divide-y divide-slate-800 text-xs" id="resources-table">
+                                        <thead class="bg-slate-900/50">
+                                            <tr>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Title</th>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Category</th>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Provider</th>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Description</th>
+                                                <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="learning-resources-list" class="divide-y divide-slate-800 text-slate-300">
+                                            <!-- Rendered dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Study Schedule List Card -->
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                                <h3 class="text-lg font-bold text-white mb-6">Study & Training Schedule</h3>
+                                <div class="overflow-x-auto rounded-lg">
+                                    <table class="min-w-full divide-y divide-slate-800 text-xs" id="schedules-table">
+                                        <thead class="bg-slate-900/50">
+                                            <tr>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Session</th>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Topic</th>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Resource</th>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Scheduled At</th>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Status</th>
+                                                <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="study-schedule-list" class="divide-y divide-slate-800 text-slate-300">
+                                            <!-- Rendered dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- DEVOPS VIEW -->
             <section id="view-devops" class="view-section">
                 <div class="back-nav mb-6">
@@ -1341,6 +1499,10 @@
                 if (moduleId === 'sales') fetchSalesLeads();
                 if (moduleId === 'workspace') fetchWorkspaceData();
                 if (moduleId === 'devops') fetchNodes();
+                if (moduleId === 'learning') {
+                    fetchLearningResources();
+                    fetchStudySchedules();
+                }
                 if (moduleId === 'superadmin') {
                     fetchSuperadminTenants();
                     fetchSuperadminUsers();
@@ -1511,7 +1673,7 @@
 
         // DATA ORCHESTRATION STATUS LIGHT UPDATER
         function updateOrchestrationLights() {
-            const modules = ['comms', 'hr', 'finance', 'logistics', 'store', 'sales', 'workspace', 'admin', 'superadmin', 'devops'];
+            const modules = ['comms', 'hr', 'finance', 'logistics', 'store', 'sales', 'workspace', 'admin', 'superadmin', 'devops', 'learning'];
             modules.forEach(mod => {
                 const textEl = document.getElementById(`text-${mod}`);
                 const lightEl = document.getElementById(`light-${mod}`);
@@ -3341,6 +3503,283 @@
                 // Re-enable UI
                 if (input) input.disabled = false;
                 if (btn) btn.disabled = false;
+            }
+        }
+
+        // LEARNING PATHWAY OPERATIONS
+        let cachedResources = [];
+
+        async function fetchLearningResources() {
+            try {
+                const response = await fetch('/learning/resources', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to fetch learning resources.', 'error');
+                    return;
+                }
+                cachedResources = data;
+                renderLearningResources();
+                populateResourceDropdown();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to Learning Resources API.', 'error');
+            }
+        }
+
+        function renderLearningResources() {
+            const tbody = document.getElementById('learning-resources-list');
+            tbody.innerHTML = '';
+
+            if (cachedResources.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center text-slate-500 italic">No registered learning resources found.</td></tr>`;
+                return;
+            }
+
+            cachedResources.forEach(res => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-900/40 transition duration-150';
+
+                tr.innerHTML = `
+                    <td class="px-3 py-3">
+                        <div class="font-bold text-white">${res.title}</div>
+                        <a href="${res.url}" target="_blank" class="text-xxs text-cyan-400 hover:underline inline-flex items-center gap-1 mt-0.5">
+                            Visit Link ↗
+                        </a>
+                    </td>
+                    <td class="px-3 py-3"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-xxs uppercase">${res.category || 'General'}</span></td>
+                    <td class="px-3 py-3 text-slate-300">${res.provider || 'N/A'}</td>
+                    <td class="px-3 py-3 text-slate-400 max-w-xs truncate" title="${res.description || ''}">${res.description || '-'}</td>
+                    <td class="px-3 py-3 text-center">
+                        <button class="px-2 py-1 bg-red-600/80 hover:bg-red-500 text-white text-xxs font-bold rounded transition" onclick="deleteLearningResource('${res.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function populateResourceDropdown() {
+            const dropdown = document.getElementById('schedule-resource');
+            dropdown.innerHTML = '<option value="">-- No Reference --</option>';
+            cachedResources.forEach(res => {
+                const opt = document.createElement('option');
+                opt.value = res.id;
+                opt.textContent = res.title;
+                dropdown.appendChild(opt);
+            });
+        }
+
+        async function addLearningResource(event) {
+            event.preventDefault();
+            const title = document.getElementById('resource-title').value.trim();
+            const url = document.getElementById('resource-url').value.trim();
+            const category = document.getElementById('resource-category').value.trim();
+            const provider = document.getElementById('resource-provider').value.trim();
+            const description = document.getElementById('resource-description').value.trim();
+
+            try {
+                const response = await fetch('/learning/resources', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ title, url, category, provider, description })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to create resource.', 'error');
+                    return;
+                }
+                showToast('Learning resource saved successfully!', 'success');
+                // Clear fields
+                document.getElementById('resource-title').value = '';
+                document.getElementById('resource-url').value = '';
+                document.getElementById('resource-category').value = '';
+                document.getElementById('resource-provider').value = '';
+                document.getElementById('resource-description').value = '';
+
+                fetchLearningResources();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to save learning resource.', 'error');
+            }
+        }
+
+        async function deleteLearningResource(id) {
+            if (!confirm('Are you sure you want to delete this learning resource?')) return;
+            try {
+                const response = await fetch(`/learning/resources/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to delete resource.', 'error');
+                    return;
+                }
+                showToast('Resource deleted successfully!', 'success');
+                fetchLearningResources();
+                fetchStudySchedules(); // Refresh schedules in case they referenced it
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to delete learning resource.', 'error');
+            }
+        }
+
+        async function fetchStudySchedules() {
+            try {
+                const response = await fetch('/learning/schedules', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to fetch study schedules.', 'error');
+                    return;
+                }
+                renderStudySchedules(data);
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to Study Schedules API.', 'error');
+            }
+        }
+
+        function renderStudySchedules(schedules) {
+            const tbody = document.getElementById('study-schedule-list');
+            tbody.innerHTML = '';
+
+            if (schedules.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-3 py-4 text-center text-slate-500 italic">No scheduled study sessions.</td></tr>`;
+                return;
+            }
+
+            schedules.forEach(sch => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-900/40 transition duration-150';
+
+                const dateStr = sch.scheduled_at ? new Date(sch.scheduled_at).toLocaleString() : 'N/A';
+                const duration = sch.duration_minutes ? `${sch.duration_minutes} mins` : 'N/A';
+
+                let statusBadge = '';
+                if (sch.status === 'Completed') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-800 text-emerald-400 font-bold uppercase tracking-wider text-xxs">Completed</span>`;
+                } else if (sch.status === 'In Progress') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded bg-blue-950/40 border border-blue-800 text-blue-400 font-bold uppercase tracking-wider text-xxs">In Progress</span>`;
+                } else if (sch.status === 'Cancelled') {
+                    statusBadge = `<span class="px-2 py-0.5 rounded bg-red-950/40 border border-red-800 text-red-400 font-bold uppercase tracking-wider text-xxs">Cancelled</span>`;
+                } else {
+                    statusBadge = `<span class="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-bold uppercase tracking-wider text-xxs">${sch.status || 'Planned'}</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="px-3 py-3">
+                        <div class="font-bold text-white">${sch.title}</div>
+                        <div class="text-xxs text-slate-400 mt-0.5">${sch.notes || '-'}</div>
+                    </td>
+                    <td class="px-3 py-3 text-slate-300 font-mono text-xxs uppercase">${sch.topic || 'General'}</td>
+                    <td class="px-3 py-3 text-slate-300 font-semibold">${sch.resource_title || '<span class="text-slate-500 italic">None</span>'}</td>
+                    <td class="px-3 py-3 text-slate-400">
+                        <div>${dateStr}</div>
+                        <div class="text-xxs text-slate-500 mt-0.5">Duration: ${duration}</div>
+                    </td>
+                    <td class="px-3 py-3">${statusBadge}</td>
+                    <td class="px-3 py-3 text-center flex items-center justify-center gap-1.5">
+                        <select class="bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-slate-200 text-xxs focus:outline-none focus:border-cyan-500" onchange="updateScheduleStatus('${sch.id}', this.value)">
+                            <option value="Planned" ${sch.status === 'Planned' ? 'selected' : ''}>Planned</option>
+                            <option value="In Progress" ${sch.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                            <option value="Completed" ${sch.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                            <option value="Cancelled" ${sch.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                        <button class="px-1.5 py-0.5 bg-red-600/80 hover:bg-red-500 text-white text-xxs font-bold rounded transition" onclick="deleteStudySchedule('${sch.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function addStudySchedule(event) {
+            event.preventDefault();
+            const title = document.getElementById('schedule-title').value.trim();
+            const topic = document.getElementById('schedule-topic').value.trim();
+            const resourceId = document.getElementById('schedule-resource').value || null;
+            const scheduledAt = document.getElementById('schedule-date').value || null;
+            const durationMinutes = parseInt(document.getElementById('schedule-duration').value) || null;
+            const notes = document.getElementById('schedule-notes').value.trim();
+
+            try {
+                const response = await fetch('/learning/schedules', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ title, topic, resourceId, scheduledAt, durationMinutes, notes })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to create schedule.', 'error');
+                    return;
+                }
+                showToast('Study session scheduled successfully!', 'success');
+                // Clear fields
+                document.getElementById('schedule-title').value = '';
+                document.getElementById('schedule-topic').value = '';
+                document.getElementById('schedule-resource').value = '';
+                document.getElementById('schedule-date').value = '';
+                document.getElementById('schedule-duration').value = '';
+                document.getElementById('schedule-notes').value = '';
+
+                fetchStudySchedules();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to save study schedule.', 'error');
+            }
+        }
+
+        async function updateScheduleStatus(id, status) {
+            try {
+                const response = await fetch(`/learning/schedules/${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to update schedule status.', 'error');
+                    return;
+                }
+                showToast('Schedule status updated!', 'success');
+                fetchStudySchedules();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to update study schedule.', 'error');
+            }
+        }
+
+        async function deleteStudySchedule(id) {
+            if (!confirm('Are you sure you want to delete this study session schedule?')) return;
+            try {
+                const response = await fetch(`/learning/schedules/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to delete study schedule.', 'error');
+                    return;
+                }
+                showToast('Study schedule session deleted successfully!', 'success');
+                fetchStudySchedules();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to delete study schedule.', 'error');
             }
         }
 

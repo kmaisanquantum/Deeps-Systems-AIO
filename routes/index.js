@@ -22,6 +22,7 @@ const adminController = require('../controllers/adminController');
 const superadminController = require('../controllers/superadminController');
 const logisticsService = require('../services/logisticsService');
 const devopsController = require('../controllers/devopsController');
+const learningController = require('../controllers/learningController');
 
 // -----------------------------------------------------------------
 // Authentication
@@ -225,6 +226,19 @@ router.post('/devops/nodes', requireTenant, devopsController.createNode);
 router.patch('/devops/nodes/:id', requireTenant, devopsController.updateNode);
 router.patch('/devops/nodes/:id/sync', requireTenant, devopsController.syncNode);
 router.get('/devops/providers/:provider/resources', requireTenant, devopsController.listProviderResources);
+
+// -----------------------------------------------------------------
+// Learning Pathway Module
+// -----------------------------------------------------------------
+router.get('/learning/resources', requireTenant, learningController.listResources);
+router.post('/learning/resources', requireTenant, learningController.createResource);
+router.patch('/learning/resources/:id', requireTenant, learningController.updateResource);
+router.delete('/learning/resources/:id', requireTenant, learningController.deleteResource);
+
+router.get('/learning/schedules', requireTenant, learningController.listSchedules);
+router.post('/learning/schedules', requireTenant, learningController.createSchedule);
+router.patch('/learning/schedules/:id', requireTenant, learningController.updateSchedule);
+router.delete('/learning/schedules/:id', requireTenant, learningController.deleteSchedule);
 
 // Health check (unscoped — used by Coolify/Docker health probes)
 // -----------------------------------------------------------------

@@ -1637,6 +1637,60 @@
                                 </div>
                                 <pre id="query-output" class="bg-slate-900 border border-slate-800 p-4 rounded-md text-xs font-mono text-emerald-400 overflow-auto max-h-60" style="white-space: pre-wrap;"></pre>
                             </div>
+
+                            <!-- DevOps Pipelines Section -->
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                                <h3 class="text-lg font-bold text-white mb-6 flex justify-between items-center">
+                                    <span>⚙️ CI/CD Pipelines loop</span>
+                                    <button class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white text-xxs font-bold rounded transition" onclick="fetchPipelines()">Refresh Pipelines</button>
+                                </h3>
+
+                                <!-- Create Pipeline Form -->
+                                <form id="form-create-pipeline" onsubmit="addPipeline(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 bg-slate-900/50 p-4 border border-slate-800 rounded-lg">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xxs font-bold uppercase tracking-wider text-slate-400 mb-2">Pipeline Name</label>
+                                        <input type="text" id="pipeline-name" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-2 text-slate-100 text-xs focus:outline-none focus:border-cyan-500" placeholder="e.g. Core App Main Deployment">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xxs font-bold uppercase tracking-wider text-slate-400 mb-2">Target Node</label>
+                                        <select id="pipeline-node" class="w-full bg-slate-900 border border-slate-800 rounded-md p-2 text-slate-100 text-xs focus:outline-none focus:border-cyan-500">
+                                            <option value="">-- No Node --</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-end">
+                                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-md text-xs tracking-wider transition-all duration-200">Register Pipeline</button>
+                                    </div>
+                                </form>
+
+                                <!-- Pipelines Table -->
+                                <div class="overflow-x-auto rounded-lg mb-8">
+                                    <table class="min-w-full divide-y divide-slate-800 text-xs" id="pipelines-table">
+                                        <thead class="bg-slate-900/50">
+                                            <tr>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Pipeline Name</th>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Target Node</th>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Current Stage</th>
+                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Loops Completed</th>
+                                                <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="pipelines-list" class="divide-y divide-slate-800 text-slate-300">
+                                            <!-- Rendered dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Pipeline Event History Panel -->
+                                <div id="pipeline-history-panel" class="hidden border border-slate-800 bg-slate-900/40 rounded-lg p-4">
+                                    <h4 class="text-sm font-bold text-white mb-4 flex justify-between items-center">
+                                        <span>📜 Stage Transition History (<span id="history-pipeline-name" class="text-cyan-400 font-mono"></span>)</span>
+                                        <button class="text-xxs text-slate-400 hover:text-white" onclick="closePipelineHistory()">Close History</button>
+                                    </h4>
+                                    <div class="space-y-3 max-h-[300px] overflow-y-auto" id="pipeline-events-list">
+                                        <!-- History items will go here -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -4201,6 +4255,7 @@
                     return;
                 }
 
+                populatePipelineNodeOptions(data);
                 data.forEach(node => {
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-900/40 transition duration-150';
@@ -4229,10 +4284,235 @@
                     `;
                     tbody.appendChild(tr);
                 });
+                fetchPipelines();
             } catch (err) {
                 console.error(err);
                 showToast('Error connecting to DevOps nodes API.', 'error');
             }
+        }
+
+        // DEVOPS PIPELINES OPERATIONS
+        let activeHistoryPipelineId = null;
+
+        function populatePipelineNodeOptions(nodes) {
+            const dropdown = document.getElementById('pipeline-node');
+            if (!dropdown) return;
+            dropdown.innerHTML = '<option value="">-- No Node --</option>';
+            nodes.forEach(node => {
+                const opt = document.createElement('option');
+                opt.value = node.id;
+                opt.textContent = node.name;
+                dropdown.appendChild(opt);
+            });
+        }
+
+        async function fetchPipelines() {
+            try {
+                const response = await fetch('/devops/pipelines', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Error fetching pipelines.', 'error');
+                    return;
+                }
+                renderPipelines(data);
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to DevOps Pipelines API.', 'error');
+            }
+        }
+
+        function renderPipelines(pipelines) {
+            const tbody = document.getElementById('pipelines-list');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (pipelines.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center text-slate-500 italic">No registered DevOps pipelines found.</td></tr>`;
+                return;
+            }
+
+            const stages = ['PLAN', 'CODE', 'BUILD', 'TEST', 'RELEASE', 'DEPLOY', 'OPERATE', 'MONITOR'];
+
+            pipelines.forEach(pipe => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-900/40 transition duration-150';
+
+                let selectOptions = '';
+                stages.forEach(st => {
+                    selectOptions += `<option value="${st}" ${pipe.current_stage === st ? 'selected' : ''}>${st}</option>`;
+                });
+
+                tr.innerHTML = `
+                    <td class="px-3 py-3">
+                        <div class="font-bold text-white">${pipe.name}</div>
+                        <div class="text-xxs text-slate-500 font-mono mt-0.5">${pipe.id}</div>
+                    </td>
+                    <td class="px-3 py-3 text-slate-300 font-semibold">${pipe.node_name || '<span class="text-slate-500 italic">None</span>'}</td>
+                    <td class="px-3 py-3">
+                        <span class="px-2.5 py-1 rounded-full bg-cyan-950/40 border border-cyan-800 text-cyan-400 font-bold font-mono text-xxs uppercase tracking-wider">${pipe.current_stage}</span>
+                    </td>
+                    <td class="px-3 py-3 font-mono text-slate-300 font-bold">${pipe.cycle_count}</td>
+                    <td class="px-3 py-3 text-center flex items-center justify-center gap-1.5 mt-0.5">
+                        <select class="bg-slate-900 border border-slate-800 rounded px-1.5 py-1 text-slate-200 text-xxs focus:outline-none focus:border-cyan-500 font-mono" onchange="transitionPipelineStage('${pipe.id}', this.value, '${pipe.name}')">
+                            ${selectOptions}
+                        </select>
+                        <button class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-white text-xxs font-bold rounded transition" onclick="fetchPipelineEvents('${pipe.id}', '${pipe.name}')">History</button>
+                        <button class="px-1.5 py-1 bg-red-600/80 hover:bg-red-500 text-white text-xxs font-bold rounded transition" onclick="deletePipeline('${pipe.id}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function addPipeline(event) {
+            event.preventDefault();
+            const name = document.getElementById('pipeline-name').value.trim();
+            const nodeId = document.getElementById('pipeline-node').value || null;
+
+            try {
+                const response = await fetch('/devops/pipelines', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ name, node_id: nodeId })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Error creating pipeline.', 'error');
+                    return;
+                }
+                showToast('Pipeline registered successfully!', 'success');
+                document.getElementById('pipeline-name').value = '';
+                document.getElementById('pipeline-node').value = '';
+                fetchPipelines();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to save DevOps pipeline.', 'error');
+            }
+        }
+
+        async function deletePipeline(id) {
+            if (!confirm('Are you sure you want to delete this DevOps CI/CD pipeline?')) return;
+            try {
+                const response = await fetch(`/devops/pipelines/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to delete pipeline.', 'error');
+                    return;
+                }
+                showToast('DevOps pipeline deleted successfully!', 'success');
+                fetchPipelines();
+                if (activeHistoryPipelineId === id) {
+                    closePipelineHistory();
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to delete DevOps pipeline.', 'error');
+            }
+        }
+
+        async function fetchPipelineEvents(id, name) {
+            activeHistoryPipelineId = id;
+            const panel = document.getElementById('pipeline-history-panel');
+            const nameSpan = document.getElementById('history-pipeline-name');
+            const list = document.getElementById('pipeline-events-list');
+
+            if (panel) panel.classList.remove('hidden');
+            if (nameSpan) nameSpan.textContent = name;
+            if (list) list.innerHTML = '<p class="text-slate-500 italic text-xs">Loading event logs...</p>';
+
+            try {
+                const response = await fetch(`/devops/pipelines/${id}/events`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to fetch transition logs.', 'error');
+                    return;
+                }
+                renderPipelineEvents(data);
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to DevOps Pipeline Events API.', 'error');
+            }
+        }
+
+        function renderPipelineEvents(events) {
+            const list = document.getElementById('pipeline-events-list');
+            if (!list) return;
+            list.innerHTML = '';
+
+            if (events.length === 0) {
+                list.innerHTML = '<p class="text-slate-500 italic text-xs">No stage transitions logged.</p>';
+                return;
+            }
+
+            events.forEach(ev => {
+                const div = document.createElement('div');
+                div.className = 'border-l-2 border-cyan-500 pl-4 py-1.5 relative';
+
+                const timeStr = new Date(ev.created_at).toLocaleString();
+
+                div.innerHTML = `
+                    <div class="absolute -left-1.5 top-2.5 w-2.5 h-2.5 rounded-full bg-cyan-400"></div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-white font-mono">${ev.stage}</span>
+                        <span class="text-xxs text-slate-500">${timeStr}</span>
+                    </div>
+                    <p class="text-xxs text-slate-400 mt-1">${ev.note || ''}</p>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function transitionPipelineStage(id, stage, name) {
+            const note = prompt(`Enter a note/log for transition to ${stage}:`, `Transitioned to ${stage}`);
+            if (note === null) {
+                // Cancel was clicked: refresh pipelines list to restore selector status
+                fetchPipelines();
+                return;
+            }
+
+            try {
+                const response = await fetch(`/devops/pipelines/${id}/transition`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ stage, note })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to transition stage.', 'error');
+                    fetchPipelines();
+                    return;
+                }
+                showToast(`Transitioned successfully to ${stage}!`, 'success');
+                fetchPipelines();
+                if (activeHistoryPipelineId === id) {
+                    fetchPipelineEvents(id, name);
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to transition DevOps pipeline stage.', 'error');
+                fetchPipelines();
+            }
+        }
+
+        function closePipelineHistory() {
+            activeHistoryPipelineId = null;
+            const panel = document.getElementById('pipeline-history-panel');
+            if (panel) panel.classList.add('hidden');
         }
 
         async function handleCreateNode(event) {
@@ -4275,6 +4555,7 @@
                 document.getElementById('node-config').value = '';
                 document.getElementById('node-branch-id').value = '';
                 fetchNodes();
+                fetchPipelines();
             } catch (err) {
                 console.error(err);
                 showToast('Error connecting to DevOps nodes API.', 'error');
@@ -4297,6 +4578,7 @@
                 }
                 showToast(`Sync completed: ${data.node.status === 'active' ? 'SUCCESS' : 'FAILED'}`, 'success');
                 fetchNodes();
+                fetchPipelines();
             } catch (err) {
                 console.error(err);
                 showToast('Error connecting to DevOps nodes API.', 'error');
@@ -4320,6 +4602,7 @@
                 }
                 showToast('Node status updated successfully!', 'success');
                 fetchNodes();
+                fetchPipelines();
             } catch (err) {
                 console.error(err);
                 showToast('Error connecting to DevOps nodes API.', 'error');

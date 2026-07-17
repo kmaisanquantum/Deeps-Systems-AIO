@@ -67,6 +67,11 @@ router.delete('/hr/profiles/:id', requireTenant, hrController.deleteProfile);
 // -----------------------------------------------------------------
 // Website & Online Store
 // -----------------------------------------------------------------
+router.get('/api/store/sites', requireTenant, storeController.listSites);
+router.post('/api/store/sites', requireTenant, storeController.createSite);
+router.delete('/api/store/sites/:id', requireTenant, storeController.deleteSite);
+router.post('/api/store/sites/:id/check', requireTenant, storeController.checkSite);
+
 router.get('/store/items', requireTenant, storeController.listItems);
 router.post('/store/items', requireTenant, storeController.createItem);
 router.patch('/store/items/:id', requireTenant, storeController.updateItem);

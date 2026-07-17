@@ -4,6 +4,7 @@
 // =====================================================================
 'use strict';
 
+const axios = require('axios');
 const db = require('../db');
 
 /**
@@ -350,6 +351,128 @@ async function updateCheckoutStatus(req, res) {
   }
 }
 
+/**
+ * GET /api/store/sites
+ * List all connected sites for the active tenant.
+ */
+async function listSites(req, res) {
+  const tenantId = req.tenantId;
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const result = await db.query(
+      'SELECT * FROM connected_sites WHERE tenant_id = $1 ORDER BY label ASC',
+      [tenantId]
+    );
+    return res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('[storeController] listSites failed', err);
+    return res.status(500).json({ error: 'Failed to list connected sites.' });
+  }
+}
+
+/**
+ * POST /api/store/sites
+ * Create a new connected site under the active tenant.
+ */
+async function createSite(req, res) {
+  const tenantId = req.tenantId;
+  const { label, url } = req.body || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+  if (!label || !url) return res.status(400).json({ error: 'label and url are required.' });
+
+  try {
+    const result = await db.query(
+      `INSERT INTO connected_sites (tenant_id, label, url)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [tenantId, label, url]
+    );
+    return res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('[storeController] createSite failed', err);
+    return res.status(500).json({ error: 'Failed to create connected site.' });
+  }
+}
+
+/**
+ * DELETE /api/store/sites/:id
+ * Delete a connected site under the active tenant.
+ */
+async function deleteSite(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const result = await db.query(
+      'DELETE FROM connected_sites WHERE id = $1 AND tenant_id = $2 RETURNING id',
+      [id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Site not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json({ message: 'Site deleted successfully.' });
+  } catch (err) {
+    console.error('[storeController] deleteSite error:', err);
+    return res.status(500).json({ error: 'Failed to delete connected site.' });
+  }
+}
+
+/**
+ * POST /api/store/sites/:id/check
+ * Ping the site and update status.
+ */
+async function checkSite(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const siteCheck = await db.query(
+      'SELECT id, url FROM connected_sites WHERE id = $1 AND tenant_id = $2',
+      [id, tenantId]
+    );
+
+    if (siteCheck.rowCount === 0) {
+      return res.status(404).json({ error: 'Site not found or not in tenant scope.' });
+    }
+
+    const site = siteCheck.rows[0];
+    let status = 'offline';
+
+    try {
+      const response = await axios.get(site.url, { timeout: 5000 });
+      if (response.status >= 200 && response.status < 400) {
+        status = 'online';
+      }
+    } catch (axiosErr) {
+      console.warn(`[storeController] checkSite ping failed for ${site.url}:`, axiosErr.message);
+      status = 'offline';
+    }
+
+    const updateResult = await db.query(
+      `UPDATE connected_sites
+          SET last_status = $1,
+              last_checked_at = now(),
+              updated_at = now()
+        WHERE id = $2 AND tenant_id = $3
+        RETURNING *`,
+      [status, id, tenantId]
+    );
+
+    return res.status(200).json(updateResult.rows[0]);
+  } catch (err) {
+    console.error('[storeController] checkSite error:', err);
+    return res.status(500).json({ error: 'Failed to check connected site.' });
+  }
+}
+
 module.exports = {
   listItems,
   createItem,
@@ -362,4 +485,8 @@ module.exports = {
   listCheckouts,
   createCheckout,
   updateCheckoutStatus,
+  listSites,
+  createSite,
+  deleteSite,
+  checkSite,
 };

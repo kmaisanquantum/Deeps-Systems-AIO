@@ -567,3 +567,27 @@ CREATE TRIGGER set_timestamp_devops_credentials
 BEFORE UPDATE ON devops_credentials
 FOR EACH ROW
 EXECUTE FUNCTION trigger_set_timestamp();
+
+-- =========================================================================
+-- CONNECTED SITES ADDITIONS
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS connected_sites (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    label VARCHAR(255) NOT NULL,
+    url VARCHAR(500) NOT NULL,
+    last_status VARCHAR(20),
+    last_checked_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_connected_sites_tenant ON connected_sites(tenant_id);
+
+-- Attach standard updated_at trigger
+DROP TRIGGER IF EXISTS set_timestamp_connected_sites ON connected_sites;
+CREATE TRIGGER set_timestamp_connected_sites
+BEFORE UPDATE ON connected_sites
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();

@@ -1561,6 +1561,7 @@
                                         <option value="github">GitHub</option>
                                         <option value="vultr">Vultr</option>
                                         <option value="hostgator">HostGator</option>
+                                        <option value="coolify">Coolify</option>
                                     </select>
                                 </div>
                                 <div>
@@ -1607,6 +1608,7 @@
                                             <option value="github">GitHub</option>
                                             <option value="vultr">Vultr</option>
                                             <option value="hostgator">HostGator</option>
+                                            <option value="coolify">Coolify</option>
                                         </select>
                                     </div>
                                     <button class="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-md tracking-wider transition-all duration-200" onclick="fetchProviderResources()">Query Live Resources</button>
@@ -4257,6 +4259,7 @@
                         <td class="px-3 py-3 text-center flex justify-center gap-2">
                             <button class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xxs font-bold rounded transition" onclick="syncNode('${node.id}')">Sync</button>
                             <button class="px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-xxs font-bold rounded transition" onclick="updateNodeStatus('${node.id}', 'inactive')">Deactivate</button>
+                            <button class="px-2 py-1 bg-red-800 hover:bg-red-700 text-white text-xxs font-bold rounded transition" onclick="deleteNode('${node.id}')">Delete</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -4490,6 +4493,26 @@
             activeHistoryPipelineId = null;
             const panel = document.getElementById('pipeline-history-panel');
             if (panel) panel.classList.add('hidden');
+        }
+
+        async function deleteNode(id) {
+            if (!confirm('Are you sure you want to permanently delete this DevOps Node? This cannot be undone.')) return;
+            try {
+                const response = await fetch(`/devops/nodes/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.message || 'Failed to delete DevOps Node.', 'error');
+                    return;
+                }
+                showToast('DevOps Node permanently removed.', 'success');
+                fetchNodes();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to delete DevOps Node.', 'error');
+            }
         }
 
         async function handleCreateNode(event) {

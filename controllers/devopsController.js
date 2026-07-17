@@ -336,6 +336,31 @@ async function transitionStage(req, res) {
   }
 }
 
+async function deleteNode(req, res) {
+  try {
+    const tenantId = req.tenantId;
+    const { id } = req.params;
+
+    if (!tenantId) {
+      return res.status(400).json({ success: false, message: 'Tenant ID is required' });
+    }
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Node ID is required' });
+    }
+
+    const query = 'DELETE FROM devops_nodes WHERE id = $1 AND tenant_id = $2 RETURNING *';
+    const { rows, rowCount } = await db.query(query, [id, tenantId]);
+
+    if (rowCount === 0) {
+      return res.status(404).json({ success: false, message: 'Node not found or unauthorized' });
+    }
+
+    return res.status(200).json({ success: true, message: 'DevOps Node permanently removed', node: rows[0] });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+}
+
 module.exports = {
   listNodes,
   createNode,
@@ -346,5 +371,6 @@ module.exports = {
   createPipeline,
   deletePipeline,
   listPipelineEvents,
-  transitionStage
+  transitionStage,
+  deleteNode
 };

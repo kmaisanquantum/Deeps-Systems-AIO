@@ -324,7 +324,7 @@
                                 </div>
                             </div>
                             <h3 class="text-xl font-extrabold text-white mb-2 tracking-wide">Ledger & Finance</h3>
-                            <p class="text-slate-300 text-sm leading-relaxed mb-6">Automated ledger reconciliation engines, double-entry processing pipelines, financial automation scripts, and tenant billing webhooks.</p>
+                            <p class="text-slate-300 text-sm leading-relaxed mb-6">Automated ledger reconciliation engines, double-entry processing pipelines, tracking of recurring service fees (hosting, domain renewals, IPA, IRC), and tenant billing integrations.</p>
                         </div>
                         <button onclick="routeToModule('finance')" class="mt-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-medium rounded-lg transition shadow-md shadow-cyan-500/20 text-center">Launch</button>
                     </div>
@@ -486,25 +486,7 @@
                         </button>
                     </div>
 
-                    <!-- Card 12: Service Fees Operations -->
-                    <div id="card-fees" class="bg-slate-900/60 backdrop-blur-md border border-slate-700/50 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.02] transition shadow-rose-500/10 border-rose-500/30 cursor-pointer" onclick="routeToModule('fees')">
-                        <div>
-                            <div class="flex items-center justify-between mb-4">
-                                <span class="text-3xl">💳</span>
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-xs font-mono uppercase tracking-wider text-slate-400" id="text-fees">ONLINE</span>
-                                    <div id="light-fees" class="status-light success"></div>
-                                </div>
-                            </div>
-                            <h3 class="text-xl font-bold text-white mb-2">Service Fees</h3>
-                            <p class="text-slate-300 text-sm leading-relaxed mb-6">
-                                Track recurring corporate operating expenses and register payments directly to core ledger.
-                            </p>
-                        </div>
-                        <button onclick="routeToModule('fees')" class="mt-4 px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-400 hover:to-pink-500 text-white font-medium rounded-lg transition shadow-md shadow-rose-500/20 text-center w-full">
-                            Launch Service Fees
-                        </button>
-                    </div>
+
 
                 </div>
 
@@ -867,6 +849,100 @@
                             <div class="text-lg font-bold text-white mb-6">Double-Entry Ledger Books</div>
                             <div class="space-y-4" id="finance-tx-list">
                                 <p class="text-slate-300 text-sm italic">No transaction logs available.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Section: Recurring Service Fees & Operating Costs -->
+                    <div class="mt-12 pt-8 border-t border-slate-800/80">
+                        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                            💳 RECURRING SERVICE FEES & OPERATING COSTS
+                        </h3>
+                        <p class="text-slate-400 text-sm mb-6">
+                            Track corporate operating expenses and trigger ledger-bridged payments directly to the active ledger below.
+                        </p>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                            <!-- Left column: Creation form (span 4) -->
+                            <div class="lg:col-span-4">
+                                <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                                    <h3 class="text-lg font-bold text-white mb-6">Register Service Fee</h3>
+                                    <form id="form-service-fee" onsubmit="addServiceFee(event)" class="space-y-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fee Name</label>
+                                            <input type="text" id="fee-name" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Vultr VPS Production">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Provider / Host</label>
+                                            <input type="text" id="fee-provider" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Vultr, PNG IPA">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Category</label>
+                                                <select id="fee-category" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-xs">
+                                                    <option value="HOSTING">Hosting</option>
+                                                    <option value="IPA">IPA Fees</option>
+                                                    <option value="IRC">IRC Taxes</option>
+                                                    <option value="DOMAIN">Domains</option>
+                                                    <option value="OTHER">Other</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Billing Cycle</label>
+                                                <select id="fee-cycle" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-xs">
+                                                    <option value="MONTHLY">Monthly</option>
+                                                    <option value="QUARTERLY">Quarterly</option>
+                                                    <option value="ANNUAL">Annual</option>
+                                                    <option value="ONE_OFF">One Off</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Amount</label>
+                                                <input type="number" step="0.01" id="fee-amount" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="250.00">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Currency</label>
+                                                <input type="text" id="fee-currency" required value="PGK" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 font-mono text-center">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Next Due Date</label>
+                                            <input type="date" id="fee-due-date" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-xs">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Notes / Details</label>
+                                            <textarea id="fee-notes" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-sm" placeholder="Any specific accounting or billing details..."></textarea>
+                                        </div>
+                                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Save Service Fee</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Table / Records list (span 8) -->
+                            <div class="lg:col-span-8">
+                                <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
+                                    <h3 class="text-lg font-bold text-white mb-6">Tracked Service Costs & Fees</h3>
+                                    <div class="overflow-x-auto rounded-lg">
+                                        <table class="min-w-full divide-y divide-slate-800 text-xs" id="fees-table">
+                                            <thead class="bg-slate-900/50">
+                                                <tr>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Fee Details</th>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Category</th>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Cycle</th>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Amount</th>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Next Due</th>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Status</th>
+                                                    <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="service-fees-list" class="divide-y divide-slate-800 text-slate-300">
+                                                <!-- Rendered dynamically -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1314,107 +1390,7 @@
                 </div>
             </section>
 
-            <!-- SERVICE FEES VIEW -->
-            <section id="view-fees" class="view-section">
-                <div class="back-nav mb-6">
-                    <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
-                </div>
-                <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
-                    <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
-                        <div>
-                            <h2 class="text-2xl font-extrabold text-white">💳 Service Fees & Operating Costs</h2>
-                            <p class="text-slate-300 text-sm mt-1">Track monthly hosting, IPA, IRC, and domain renewals with integrated Finance ledger bridging</p>
-                        </div>
-                        <button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition" onclick="fetchFees()">
-                            Refresh List
-                        </button>
-                    </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                        <!-- Left column: Creation form (span 4) -->
-                        <div class="lg:col-span-4">
-                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
-                                <h3 class="text-lg font-bold text-white mb-6">Register Service Fee</h3>
-                                <form id="form-service-fee" onsubmit="addServiceFee(event)" class="space-y-4">
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fee Name</label>
-                                        <input type="text" id="fee-name" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Vultr VPS Production">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Provider / Host</label>
-                                        <input type="text" id="fee-provider" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Vultr, PNG IPA">
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Category</label>
-                                            <select id="fee-category" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-xs">
-                                                <option value="HOSTING">Hosting</option>
-                                                <option value="IPA">IPA Fees</option>
-                                                <option value="IRC">IRC Taxes</option>
-                                                <option value="DOMAIN">Domains</option>
-                                                <option value="OTHER">Other</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Billing Cycle</label>
-                                            <select id="fee-cycle" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-xs">
-                                                <option value="MONTHLY">Monthly</option>
-                                                <option value="QUARTERLY">Quarterly</option>
-                                                <option value="ANNUAL">Annual</option>
-                                                <option value="ONE_OFF">One Off</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Amount</label>
-                                            <input type="number" step="0.01" id="fee-amount" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="250.00">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Currency</label>
-                                            <input type="text" id="fee-currency" required value="PGK" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 font-mono text-center">
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Next Due Date</label>
-                                        <input type="date" id="fee-due-date" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-xs">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Notes / Details</label>
-                                        <textarea id="fee-notes" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-sm" placeholder="Any specific accounting or billing details..."></textarea>
-                                    </div>
-                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Save Service Fee</button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- Right Column: Table / Records list (span 8) -->
-                        <div class="lg:col-span-8">
-                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6">
-                                <h3 class="text-lg font-bold text-white mb-6">Tracked Service Costs & Fees</h3>
-                                <div class="overflow-x-auto rounded-lg">
-                                    <table class="min-w-full divide-y divide-slate-800 text-xs" id="fees-table">
-                                        <thead class="bg-slate-900/50">
-                                            <tr>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Fee Details</th>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Category</th>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Cycle</th>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Amount</th>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Next Due</th>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Status</th>
-                                                <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="service-fees-list" class="divide-y divide-slate-800 text-slate-300">
-                                            <!-- Rendered dynamically -->
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
 
             <!-- LEARNING PATHWAY VIEW -->
             <section id="view-learning" class="view-section">
@@ -1768,6 +1744,7 @@
                 if (moduleId === 'finance') {
                     fetchTransactions();
                     fetchFinanceSummary();
+                    fetchFees();
                 }
                 if (moduleId === 'comms') fetchComms();
                 if (moduleId === 'logistics') fetchShipments();

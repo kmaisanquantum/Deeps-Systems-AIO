@@ -1903,7 +1903,7 @@
                 if (moduleId === 'finance') {
                     fetchTransactions();
                     fetchFinanceSummary();
-                    fetchFees();
+                    fetchServiceFees();
                 }
                 if (moduleId === 'comms') fetchComms();
                 if (moduleId === 'logistics') fetchShipments();
@@ -1918,9 +1918,6 @@
                 if (moduleId === 'devops') {
                     fetchNodes();
                     fetchCredentials();
-                }
-                if (moduleId === 'fees') {
-                    fetchFees();
                 }
                 if (moduleId === 'learning') {
                     fetchLearningResources();
@@ -2096,7 +2093,7 @@
 
         // DATA ORCHESTRATION STATUS LIGHT UPDATER
         function updateOrchestrationLights() {
-            const modules = ['comms', 'hr', 'finance', 'logistics', 'store', 'sales', 'workspace', 'admin', 'superadmin', 'devops', 'learning', 'fees'];
+            const modules = ['comms', 'hr', 'finance', 'logistics', 'store', 'sales', 'workspace', 'admin', 'superadmin', 'devops', 'learning'];
             modules.forEach(mod => {
                 const textEl = document.getElementById(`text-${mod}`);
                 const lightEl = document.getElementById(`light-${mod}`);
@@ -4069,7 +4066,7 @@
         }
 
         // SERVICE FEES MODULE OPERATIONS
-        async function fetchFees() {
+        async function fetchServiceFees() {
             try {
                 const response = await fetch('/service-fees', {
                     headers: { 'Authorization': `Bearer ${authToken}` }
@@ -4173,7 +4170,9 @@
                 document.getElementById('fee-due-date').value = '';
                 document.getElementById('fee-notes').value = '';
 
-                fetchFees();
+                fetchServiceFees();
+                if (typeof fetchTransactions === 'function') fetchTransactions();
+                if (typeof fetchFinanceSummary === 'function') fetchFinanceSummary();
             } catch (err) {
                 console.error(err);
                 showToast('Failed to save service fee.', 'error');
@@ -4195,7 +4194,7 @@
                     return;
                 }
                 showToast('Payment recorded & bridged to ledger successfully!', 'success');
-                fetchFees();
+                fetchServiceFees();
                 if (typeof fetchTransactions === 'function') fetchTransactions();
                 if (typeof fetchFinanceSummary === 'function') fetchFinanceSummary();
             } catch (err) {
@@ -4217,7 +4216,7 @@
                     return;
                 }
                 showToast('Service fee removed.', 'success');
-                fetchFees();
+                fetchServiceFees();
             } catch (err) {
                 console.error(err);
                 showToast('Failed to delete service fee.', 'error');

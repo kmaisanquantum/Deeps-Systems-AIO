@@ -228,6 +228,12 @@ router.patch('/devops/nodes/:id', requireTenant, devopsController.updateNode);
 router.patch('/devops/nodes/:id/sync', requireTenant, devopsController.syncNode);
 router.get('/devops/providers/:provider/resources', requireTenant, devopsController.listProviderResources);
 
+router.get('/devops/pipelines', requireTenant, devopsController.listPipelines);
+router.post('/devops/pipelines', requireTenant, devopsController.createPipeline);
+router.delete('/devops/pipelines/:id', requireTenant, devopsController.deletePipeline);
+router.get('/devops/pipelines/:id/events', requireTenant, devopsController.listPipelineEvents);
+router.post('/devops/pipelines/:id/transition', requireTenant, devopsController.transitionStage);
+
 // -----------------------------------------------------------------
 // Learning Pathway Module
 // -----------------------------------------------------------------

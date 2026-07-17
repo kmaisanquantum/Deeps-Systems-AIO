@@ -495,3 +495,51 @@ CREATE TRIGGER set_timestamp_service_fees
 BEFORE UPDATE ON service_fees
 FOR EACH ROW
 EXECUTE FUNCTION trigger_set_timestamp();
+
+-- =========================================================================
+-- DEVOPS CI/CD PIPELINE ADDITIONS
+-- =========================================================================
+
+-- Guarded ENUM type creation
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'devops_pipeline_stage') THEN
+        CREATE TYPE devops_pipeline_stage AS ENUM (
+            'PLAN', 'CODE', 'BUILD', 'TEST', 'RELEASE', 'DEPLOY', 'OPERATE', 'MONITOR'
+        );
+    END IF;
+END $$;
+
+-- Idempotent Pipelines Table
+CREATE TABLE IF NOT EXISTS devops_pipelines (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID,
+    node_id UUID REFERENCES devops_nodes(id) ON DELETE SET NULL,
+    name VARCHAR(255) NOT NULL,
+    current_stage devops_pipeline_stage NOT NULL DEFAULT 'PLAN',
+    status VARCHAR(50) NOT NULL DEFAULT 'active',
+    cycle_count INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_devops_pipelines_tenant_id ON devops_pipelines(tenant_id);
+
+-- Idempotent Pipeline Stage Events Table (Stage History)
+CREATE TABLE IF NOT EXISTS devops_pipeline_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    pipeline_id UUID NOT NULL REFERENCES devops_pipelines(id) ON DELETE CASCADE,
+    stage devops_pipeline_stage NOT NULL,
+    note TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_devops_pipeline_events_pipeline_id ON devops_pipeline_events(pipeline_id);
+
+-- Attach modification trigger to pipelines
+DROP TRIGGER IF EXISTS set_timestamp_devops_pipelines ON devops_pipelines;
+CREATE TRIGGER set_timestamp_devops_pipelines
+BEFORE UPDATE ON devops_pipelines
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();

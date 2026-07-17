@@ -1,9 +1,39 @@
 const axios = require('axios');
+const db = require('../db');
+
+// Helper to retrieve decrypted per-tenant credentials from database
+async function getCredential(provider, tenantId) {
+  if (!tenantId) {
+    return null;
+  }
+  const key = process.env.CREDENTIALS_ENCRYPTION_KEY;
+  if (!key) {
+    return null;
+  }
+  try {
+    const query = `
+      SELECT pgp_sym_decrypt(secret_encrypted, $1) AS secret, base_url
+      FROM devops_credentials
+      WHERE tenant_id = $2 AND LOWER(provider) = $3
+    `;
+    const { rows } = await db.query(query, [key, tenantId, provider.toLowerCase()]);
+    if (rows.length > 0) {
+      return {
+        secret: rows[0].secret,
+        baseUrl: rows[0].base_url
+      };
+    }
+  } catch (error) {
+    console.error(`[devopsService] Error retrieving decrypted credential for ${provider}:`, error);
+  }
+  return null;
+}
 
 // Localized axios clients
-function getGithubClient() {
-  const baseURL = process.env.GITHUB_API_BASE_URL || 'https://api.github.com';
-  const token = process.env.GITHUB_TOKEN;
+async function getGithubClient(tenantId) {
+  const cred = await getCredential('github', tenantId);
+  const baseURL = (cred && cred.baseUrl) || process.env.GITHUB_API_BASE_URL || 'https://api.github.com';
+  const token = (cred && cred.secret) || process.env.GITHUB_TOKEN;
   if (!token) {
     return null;
   }
@@ -17,9 +47,10 @@ function getGithubClient() {
   });
 }
 
-function getVultrClient() {
-  const baseURL = process.env.VULTR_API_BASE_URL || 'https://api.vultr.com/v2';
-  const apiKey = process.env.VULTR_API_KEY;
+async function getVultrClient(tenantId) {
+  const cred = await getCredential('vultr', tenantId);
+  const baseURL = (cred && cred.baseUrl) || process.env.VULTR_API_BASE_URL || 'https://api.vultr.com/v2';
+  const apiKey = (cred && cred.secret) || process.env.VULTR_API_KEY;
   if (!apiKey) {
     return null;
   }
@@ -31,9 +62,10 @@ function getVultrClient() {
   });
 }
 
-function getHostgatorClient() {
-  const baseURL = process.env.HOSTGATOR_API_BASE_URL || 'https://api.hostgator.com/v1';
-  const apiKey = process.env.HOSTGATOR_API_KEY;
+async function getHostgatorClient(tenantId) {
+  const cred = await getCredential('hostgator', tenantId);
+  const baseURL = (cred && cred.baseUrl) || process.env.HOSTGATOR_API_BASE_URL || 'https://api.hostgator.com/v1';
+  const apiKey = (cred && cred.secret) || process.env.HOSTGATOR_API_KEY;
   if (!apiKey) {
     return null;
   }
@@ -45,9 +77,10 @@ function getHostgatorClient() {
   });
 }
 
-function getCoolifyClient() {
-  const baseURL = process.env.COOLIFY_API_BASE_URL || 'https://app.coolify.io/api/v1';
-  const apiKey = process.env.COOLIFY_API_KEY;
+async function getCoolifyClient(tenantId) {
+  const cred = await getCredential('coolify', tenantId);
+  const baseURL = (cred && cred.baseUrl) || process.env.COOLIFY_API_BASE_URL || 'https://app.coolify.io/api/v1';
+  const apiKey = (cred && cred.secret) || process.env.COOLIFY_API_KEY;
   if (!apiKey) {
     return null;
   }
@@ -59,11 +92,11 @@ function getCoolifyClient() {
   });
 }
 
-async function listProviderResources(provider) {
+async function listProviderResources(provider, tenantId) {
   const prov = (provider || '').toLowerCase();
   
   if (prov === 'github') {
-    const client = getGithubClient();
+    const client = await getGithubClient(tenantId);
     if (!client) {
       return { success: false, message: 'GitHub credentials are unset' };
     }
@@ -79,7 +112,7 @@ async function listProviderResources(provider) {
   }
   
   if (prov === 'vultr') {
-    const client = getVultrClient();
+    const client = await getVultrClient(tenantId);
     if (!client) {
       return { success: false, message: 'Vultr credentials are unset' };
     }
@@ -95,7 +128,7 @@ async function listProviderResources(provider) {
   }
   
   if (prov === 'hostgator') {
-    const client = getHostgatorClient();
+    const client = await getHostgatorClient(tenantId);
     if (!client) {
       return { success: false, message: 'HostGator credentials are unset' };
     }
@@ -111,7 +144,7 @@ async function listProviderResources(provider) {
   }
   
   if (prov === 'coolify') {
-    const client = getCoolifyClient();
+    const client = await getCoolifyClient(tenantId);
     if (!client) {
       return { success: false, message: 'Coolify credentials are unset' };
     }

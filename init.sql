@@ -543,3 +543,27 @@ CREATE TRIGGER set_timestamp_devops_pipelines
 BEFORE UPDATE ON devops_pipelines
 FOR EACH ROW
 EXECUTE FUNCTION trigger_set_timestamp();
+
+-- =========================================================================
+-- DEVOPS CREDENTIALS ADDITIONS
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS devops_credentials (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL,
+    secret_encrypted BYTEA NOT NULL,
+    base_url VARCHAR(255),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE (tenant_id, provider)
+);
+
+CREATE INDEX IF NOT EXISTS idx_devops_credentials_tenant ON devops_credentials(tenant_id);
+
+-- Attach standard updated_at trigger
+DROP TRIGGER IF EXISTS set_timestamp_devops_credentials ON devops_credentials;
+CREATE TRIGGER set_timestamp_devops_credentials
+BEFORE UPDATE ON devops_credentials
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();

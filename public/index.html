@@ -1671,6 +1671,114 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- DevOps Connections Panel -->
+                    <div class="mt-12 pt-8 border-t border-slate-800/80">
+                        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                            🔑 DEVOPS CREDENTIAL CONNECTIONS
+                        </h3>
+                        <p class="text-slate-400 text-sm mb-6">
+                            Securely link per-tenant credentials for individual providers to override global fallbacks.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <!-- GitHub Card -->
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-5 flex flex-col justify-between" id="connection-card-github">
+                                <div>
+                                    <div class="flex items-center justify-between mb-4">
+                                        <span class="font-bold text-md text-white">GitHub</span>
+                                        <span id="connection-status-github" class="px-2 py-0.5 rounded text-xxs font-bold uppercase tracking-wider bg-red-950/40 border border-red-800 text-red-400">Not Linked</span>
+                                    </div>
+                                    <div class="space-y-3 mb-4">
+                                        <div>
+                                            <label class="block text-xxs font-bold uppercase tracking-wider text-slate-400 mb-1">Base URL (Optional)</label>
+                                            <input type="text" id="connection-url-github" class="w-full bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-slate-100" placeholder="https://api.github.com">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xxs font-bold uppercase tracking-wider text-slate-400 mb-1">Token / Key</label>
+                                            <input type="password" id="connection-secret-github" class="w-full bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-slate-100" placeholder="ghp_xxxxxxxxxxxx">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded transition" onclick="linkCredential('github')">Link</button>
+                                    <button class="py-1.5 px-3 bg-red-800 hover:bg-red-700 text-white text-xs font-bold rounded transition" onclick="unlinkCredential('github')">Unlink</button>
+                                </div>
+                            </div>
+
+                            <!-- Vultr Card -->
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-5 flex flex-col justify-between" id="connection-card-vultr">
+                                <div>
+                                    <div class="flex items-center justify-between mb-4">
+                                        <span class="font-bold text-md text-white">Vultr</span>
+                                        <span id="connection-status-vultr" class="px-2 py-0.5 rounded text-xxs font-bold uppercase tracking-wider bg-red-950/40 border border-red-800 text-red-400">Not Linked</span>
+                                    </div>
+                                    <div class="space-y-3 mb-4">
+                                        <div>
+                                            <label class="block text-xxs font-bold uppercase tracking-wider text-slate-400 mb-1">Base URL (Optional)</label>
+                                            <input type="text" id="connection-url-vultr" class="w-full bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-slate-100" placeholder="https://api.vultr.com/v2">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xxs font-bold uppercase tracking-wider text-slate-400 mb-1">API Key</label>
+                                            <input type="password" id="connection-secret-vultr" class="w-full bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-slate-100" placeholder="Enter Vultr API Key">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded transition" onclick="linkCredential('vultr')">Link</button>
+                                    <button class="py-1.5 px-3 bg-red-800 hover:bg-red-700 text-white text-xs font-bold rounded transition" onclick="unlinkCredential('vultr')">Unlink</button>
+                                </div>
+                            </div>
+
+                            <!-- HostGator Card -->
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-5 flex flex-col justify-between" id="connection-card-hostgator">
+                                <div>
+                                    <div class="flex items-center justify-between mb-4">
+                                        <span class="font-bold text-md text-white">HostGator</span>
+                                        <span id="connection-status-hostgator" class="px-2 py-0.5 rounded text-xxs font-bold uppercase tracking-wider bg-red-950/40 border border-red-800 text-red-400">Not Linked</span>
+                                    </div>
+                                    <div class="space-y-3 mb-4">
+                                        <div>
+                                            <label class="block text-xxs font-bold uppercase tracking-wider text-slate-400 mb-1">Base URL (Optional)</label>
+                                            <input type="text" id="connection-url-hostgator" class="w-full bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-slate-100" placeholder="https://api.hostgator.com/v1">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xxs font-bold uppercase tracking-wider text-slate-400 mb-1">API Key</label>
+                                            <input type="password" id="connection-secret-hostgator" class="w-full bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-slate-100" placeholder="Enter HostGator API Key">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded transition" onclick="linkCredential('hostgator')">Link</button>
+                                    <button class="py-1.5 px-3 bg-red-800 hover:bg-red-700 text-white text-xs font-bold rounded transition" onclick="unlinkCredential('hostgator')">Unlink</button>
+                                </div>
+                            </div>
+
+                            <!-- Coolify Card -->
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-5 flex flex-col justify-between" id="connection-card-coolify">
+                                <div>
+                                    <div class="flex items-center justify-between mb-4">
+                                        <span class="font-bold text-md text-white">Coolify</span>
+                                        <span id="connection-status-coolify" class="px-2 py-0.5 rounded text-xxs font-bold uppercase tracking-wider bg-red-950/40 border border-red-800 text-red-400">Not Linked</span>
+                                    </div>
+                                    <div class="space-y-3 mb-4">
+                                        <div>
+                                            <label class="block text-xxs font-bold uppercase tracking-wider text-slate-400 mb-1">Base URL (Optional)</label>
+                                            <input type="text" id="connection-url-coolify" class="w-full bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-slate-100" placeholder="https://app.coolify.io/api/v1">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xxs font-bold uppercase tracking-wider text-slate-400 mb-1">API Key</label>
+                                            <input type="password" id="connection-secret-coolify" class="w-full bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-slate-100" placeholder="Enter Coolify API Key">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded transition" onclick="linkCredential('coolify')">Link</button>
+                                    <button class="py-1.5 px-3 bg-red-800 hover:bg-red-700 text-white text-xs font-bold rounded transition" onclick="unlinkCredential('coolify')">Unlink</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
@@ -1757,7 +1865,10 @@
                 }
                 if (moduleId === 'sales') fetchSalesLeads();
                 if (moduleId === 'workspace') fetchWorkspaceData();
-                if (moduleId === 'devops') fetchNodes();
+                if (moduleId === 'devops') {
+                    fetchNodes();
+                    fetchCredentials();
+                }
                 if (moduleId === 'fees') {
                     fetchFees();
                 }
@@ -4214,6 +4325,108 @@
         }
 
         // DEVOPS MODULE OPERATIONS
+        async function fetchCredentials() {
+            try {
+                const response = await fetch('/api/devops/credentials', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to fetch credentials.', 'error');
+                    return;
+                }
+
+                data.forEach(item => {
+                    const statusBadge = document.getElementById(`connection-status-${item.provider}`);
+                    const urlInput = document.getElementById(`connection-url-${item.provider}`);
+                    const secretInput = document.getElementById(`connection-secret-${item.provider}`);
+
+                    if (statusBadge) {
+                        if (item.linked) {
+                            statusBadge.className = 'px-2 py-0.5 rounded text-xxs font-bold uppercase tracking-wider bg-emerald-950/40 border border-emerald-800 text-emerald-400';
+                            statusBadge.textContent = 'Linked';
+                            if (urlInput) {
+                                urlInput.value = item.base_url || '';
+                            }
+                            if (secretInput) {
+                                secretInput.placeholder = 'Linked (Encrypted)';
+                                secretInput.value = '';
+                            }
+                        } else {
+                            statusBadge.className = 'px-2 py-0.5 rounded text-xxs font-bold uppercase tracking-wider bg-red-950/40 border border-red-800 text-red-400';
+                            statusBadge.textContent = 'Not Linked';
+                            if (urlInput) {
+                                urlInput.value = '';
+                            }
+                            if (secretInput) {
+                                secretInput.placeholder = 'Enter secret/token';
+                                secretInput.value = '';
+                            }
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to credentials API.', 'error');
+            }
+        }
+
+        async function linkCredential(provider) {
+            const secret = document.getElementById(`connection-secret-${provider}`).value.trim();
+            const baseUrl = document.getElementById(`connection-url-${provider}`).value.trim();
+
+            if (!secret) {
+                showToast('Secret/token is required to link connection.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/devops/credentials', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ provider, secret, baseUrl: baseUrl || null })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || `Failed to link ${provider}.`, 'error');
+                    return;
+                }
+
+                showToast(`${provider.toUpperCase()} credentials linked successfully!`, 'success');
+                fetchCredentials();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to link credential.', 'error');
+            }
+        }
+
+        async function unlinkCredential(provider) {
+            if (!confirm(`Are you sure you want to unlink ${provider} credentials?`)) return;
+
+            try {
+                const response = await fetch(`/api/devops/credentials/${provider}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || `Failed to unlink ${provider}.`, 'error');
+                    return;
+                }
+
+                showToast(`${provider.toUpperCase()} credentials unlinked!`, 'success');
+                fetchCredentials();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to unlink credential.', 'error');
+            }
+        }
+
         async function fetchNodes() {
             try {
                 const response = await fetch('/devops/nodes', {

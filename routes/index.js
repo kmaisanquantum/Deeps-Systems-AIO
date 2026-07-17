@@ -222,6 +222,10 @@ router.post('/intent/process', requireTenant, intentController.processNaturalLan
 // -----------------------------------------------------------------
 // DevOps Engine Module
 // -----------------------------------------------------------------
+router.get('/api/devops/credentials', requireTenant, devopsController.listCredentials);
+router.post('/api/devops/credentials', requireTenant, devopsController.saveCredential);
+router.delete('/api/devops/credentials/:provider', requireTenant, devopsController.deleteCredential);
+
 router.get('/devops/nodes', requireTenant, devopsController.listNodes);
 router.post('/devops/nodes', requireTenant, devopsController.createNode);
 router.patch('/devops/nodes/:id', requireTenant, devopsController.updateNode);

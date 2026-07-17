@@ -134,7 +134,7 @@ async function syncNode(req, res) {
     const node = findRows[0];
 
     // Attempt to verify resources with provider to simulate a sync check
-    const syncResult = await devopsService.listProviderResources(node.provider);
+    const syncResult = await devopsService.listProviderResources(node.provider, tenantId);
     const newStatus = syncResult.success ? 'active' : 'failed';
 
     const updateQuery = `
@@ -169,8 +169,112 @@ async function listProviderResources(req, res) {
       return res.status(400).json({ error: 'Provider parameter is required' });
     }
 
-    const result = await devopsService.listProviderResources(provider);
+    const result = await devopsService.listProviderResources(provider, tenantId);
     return res.status(200).json(result);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+async function listCredentials(req, res) {
+  try {
+    const tenantId = req.tenantId;
+    if (!tenantId) {
+      return res.status(400).json({ error: 'Tenant ID is required' });
+    }
+
+    const query = 'SELECT provider, base_url FROM devops_credentials WHERE tenant_id = $1';
+    const { rows } = await db.query(query, [tenantId]);
+
+    const supportedProviders = ['github', 'vultr', 'hostgator', 'coolify'];
+    const linkedMap = {};
+    rows.forEach(r => {
+      linkedMap[r.provider.toLowerCase()] = r.base_url;
+    });
+
+    const credentials = supportedProviders.map(prov => {
+      const linked = Object.prototype.hasOwnProperty.call(linkedMap, prov);
+      return {
+        provider: prov,
+        base_url: linked ? linkedMap[prov] : null,
+        linked
+      };
+    });
+
+    return res.status(200).json(credentials);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+async function saveCredential(req, res) {
+  try {
+    const tenantId = req.tenantId;
+    if (!tenantId) {
+      return res.status(400).json({ error: 'Tenant ID is required' });
+    }
+
+    const key = process.env.CREDENTIALS_ENCRYPTION_KEY;
+    if (!key) {
+      return res.status(503).json({ error: 'Credentials encryption key is unconfigured on the server' });
+    }
+
+    const { provider, secret, baseUrl } = req.body;
+    if (!provider || !secret) {
+      return res.status(400).json({ error: 'Provider and secret are required fields' });
+    }
+
+    const provLower = provider.toLowerCase();
+    const supportedProviders = ['github', 'vultr', 'hostgator', 'coolify'];
+    if (!supportedProviders.includes(provLower)) {
+      return res.status(400).json({ error: `Unsupported provider: ${provider}` });
+    }
+
+    const query = `
+      INSERT INTO devops_credentials (tenant_id, provider, secret_encrypted, base_url)
+      VALUES ($1, $2, pgp_sym_encrypt($3, $4), $5)
+      ON CONFLICT (tenant_id, provider) DO UPDATE
+      SET secret_encrypted = pgp_sym_encrypt($3, $4),
+          base_url = $5,
+          updated_at = NOW()
+      RETURNING provider, base_url
+    `;
+    const { rows } = await db.query(query, [tenantId, provLower, secret, key, baseUrl || null]);
+
+    return res.status(200).json({
+      message: 'Credential linked successfully',
+      credential: {
+        provider: rows[0].provider,
+        base_url: rows[0].base_url,
+        linked: true
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+async function deleteCredential(req, res) {
+  try {
+    const tenantId = req.tenantId;
+    if (!tenantId) {
+      return res.status(400).json({ error: 'Tenant ID is required' });
+    }
+
+    const { provider } = req.params;
+    if (!provider) {
+      return res.status(400).json({ error: 'Provider is required' });
+    }
+
+    const provLower = provider.toLowerCase();
+    const query = 'DELETE FROM devops_credentials WHERE tenant_id = $1 AND LOWER(provider) = $2 RETURNING *';
+    const { rowCount } = await db.query(query, [tenantId, provLower]);
+
+    if (rowCount === 0) {
+      return res.status(404).json({ error: 'Credential not found' });
+    }
+
+    return res.status(200).json({ message: 'Credential unlinked successfully' });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
@@ -367,6 +471,9 @@ module.exports = {
   updateNode,
   syncNode,
   listProviderResources,
+  listCredentials,
+  saveCredential,
+  deleteCredential,
   listPipelines,
   createPipeline,
   deletePipeline,

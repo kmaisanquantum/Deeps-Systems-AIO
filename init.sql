@@ -407,3 +407,61 @@ CREATE INDEX IF NOT EXISTS idx_devops_nodes_tenant_id ON devops_nodes (tenant_id
 DROP TRIGGER IF EXISTS set_updated_at_devops_nodes ON devops_nodes;
 CREATE TRIGGER set_updated_at_devops_nodes BEFORE UPDATE ON devops_nodes
     FOR EACH ROW EXECUTE FUNCTION trigger_set_updated_at();
+
+-- =========================================================================
+-- LEARNING PATHWAY ADDITIONS
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS learning_resources (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    title VARCHAR(255) NOT NULL,
+    url TEXT NOT NULL,
+    category VARCHAR(100),
+    description TEXT,
+    provider VARCHAR(150),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_learning_resources_tenant_id ON learning_resources(tenant_id);
+
+CREATE TABLE IF NOT EXISTS study_schedule (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    title VARCHAR(255) NOT NULL,
+    topic VARCHAR(255),
+    resource_id UUID REFERENCES learning_resources(id) ON DELETE SET NULL,
+    scheduled_at TIMESTAMPTZ,
+    duration_minutes INTEGER,
+    status VARCHAR(50) NOT NULL DEFAULT 'Planned',
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_study_schedule_tenant_id ON study_schedule(tenant_id);
+
+-- Helper trigger function if not exists
+CREATE OR REPLACE FUNCTION trigger_set_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Attach standard updated_at triggers
+DROP TRIGGER IF EXISTS set_timestamp_learning_resources ON learning_resources;
+CREATE TRIGGER set_timestamp_learning_resources
+BEFORE UPDATE ON learning_resources
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+DROP TRIGGER IF EXISTS set_timestamp_study_schedule ON study_schedule;
+CREATE TRIGGER set_timestamp_study_schedule
+BEFORE UPDATE ON study_schedule
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();

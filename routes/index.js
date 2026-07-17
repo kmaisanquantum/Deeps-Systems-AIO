@@ -227,6 +227,7 @@ router.post('/devops/nodes', requireTenant, devopsController.createNode);
 router.patch('/devops/nodes/:id', requireTenant, devopsController.updateNode);
 router.patch('/devops/nodes/:id/sync', requireTenant, devopsController.syncNode);
 router.get('/devops/providers/:provider/resources', requireTenant, devopsController.listProviderResources);
+router.delete('/devops/nodes/:id', requireTenant, devopsController.deleteNode);
 
 router.get('/devops/pipelines', requireTenant, devopsController.listPipelines);
 router.post('/devops/pipelines', requireTenant, devopsController.createPipeline);

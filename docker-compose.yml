@@ -124,6 +124,8 @@ services:
       VULTR_API_KEY: ${VULTR_API_KEY}
       HOSTGATOR_API_BASE_URL: ${HOSTGATOR_API_BASE_URL}
       HOSTGATOR_API_KEY: ${HOSTGATOR_API_KEY}
+      COOLIFY_API_BASE_URL: ${COOLIFY_API_BASE_URL}
+      COOLIFY_API_KEY: ${COOLIFY_API_KEY}
     networks:
       - aio-internal
     ports:

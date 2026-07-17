@@ -45,6 +45,20 @@ function getHostgatorClient() {
   });
 }
 
+function getCoolifyClient() {
+  const baseURL = process.env.COOLIFY_API_BASE_URL || 'https://app.coolify.io/api/v1';
+  const apiKey = process.env.COOLIFY_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+  return axios.create({
+    baseURL,
+    headers: {
+      Authorization: `Bearer ${apiKey}`
+    }
+  });
+}
+
 async function listProviderResources(provider) {
   const prov = (provider || '').toLowerCase();
   
@@ -96,6 +110,22 @@ async function listProviderResources(provider) {
     }
   }
   
+  if (prov === 'coolify') {
+    const client = getCoolifyClient();
+    if (!client) {
+      return { success: false, message: 'Coolify credentials are unset' };
+    }
+    try {
+      const response = await client.get('/servers');
+      return { success: true, resources: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Coolify API error: ${error.message}`
+      };
+    }
+  }
+
   return { success: false, message: `Unsupported provider: ${provider}` };
 }
 

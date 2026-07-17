@@ -465,3 +465,33 @@ CREATE TRIGGER set_timestamp_study_schedule
 BEFORE UPDATE ON study_schedule
 FOR EACH ROW
 EXECUTE FUNCTION trigger_set_timestamp();
+
+-- =========================================================================
+-- SERVICE FEES (OPERATIONS) ADDITIONS
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS service_fees (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    fee_name VARCHAR(255) NOT NULL,
+    provider VARCHAR(150),
+    category VARCHAR(100) NOT NULL DEFAULT 'OTHER', -- HOSTING, IPA, IRC, DOMAIN, OTHER
+    amount NUMERIC(14,2) NOT NULL DEFAULT 0.00 CHECK (amount >= 0),
+    currency VARCHAR(3) NOT NULL DEFAULT 'PGK',
+    billing_cycle VARCHAR(20) NOT NULL DEFAULT 'MONTHLY', -- MONTHLY, QUARTERLY, ANNUAL, ONE_OFF
+    next_due_date DATE,
+    status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE', -- ACTIVE, PAID, OVERDUE, CANCELLED
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_service_fees_tenant_id ON service_fees (tenant_id);
+
+-- Attach standard updated_at modification trigger
+DROP TRIGGER IF EXISTS set_timestamp_service_fees ON service_fees;
+CREATE TRIGGER set_timestamp_service_fees
+BEFORE UPDATE ON service_fees
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();

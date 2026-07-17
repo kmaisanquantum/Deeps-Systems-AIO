@@ -23,6 +23,7 @@ const superadminController = require('../controllers/superadminController');
 const logisticsService = require('../services/logisticsService');
 const devopsController = require('../controllers/devopsController');
 const learningController = require('../controllers/learningController');
+const feesController = require('../controllers/feesController');
 
 // -----------------------------------------------------------------
 // Authentication
@@ -239,6 +240,15 @@ router.get('/learning/schedules', requireTenant, learningController.listSchedule
 router.post('/learning/schedules', requireTenant, learningController.createSchedule);
 router.patch('/learning/schedules/:id', requireTenant, learningController.updateSchedule);
 router.delete('/learning/schedules/:id', requireTenant, learningController.deleteSchedule);
+
+// -----------------------------------------------------------------
+// Service Fees Module
+// -----------------------------------------------------------------
+router.get('/service-fees', requireTenant, feesController.listFees);
+router.post('/service-fees', requireTenant, feesController.createFee);
+router.patch('/service-fees/:id', requireTenant, feesController.updateFee);
+router.delete('/service-fees/:id', requireTenant, feesController.deleteFee);
+router.post('/service-fees/:id/pay', requireTenant, feesController.payFee);
 
 // Health check (unscoped — used by Coolify/Docker health probes)
 // -----------------------------------------------------------------

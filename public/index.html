@@ -132,11 +132,64 @@
             background-color: #ef4444;
             box-shadow: 0 0 8px #ef4444;
         }
+
+        /* Light Mode Overrides */
+        body.light-mode {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+        body.light-mode .card,
+        body.light-mode .panel,
+        body.light-mode .view-section,
+        body.light-mode form,
+        body.light-mode .bg-slate-900\/60,
+        body.light-mode .bg-slate-900\/80,
+        body.light-mode .bg-slate-950\/60 {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05) !important;
+        }
+        body.light-mode input,
+        body.light-mode select,
+        body.light-mode textarea {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+        body.light-mode .bg-slate-950,
+        body.light-mode .bg-slate-900 { background-color: #ffffff !important; }
+        body.light-mode .text-white { color: #0f172a !important; }
+        body.light-mode .text-slate-400 { color: #64748b !important; }
+
+        /* Rich Animations & Interconnects */
+        @media (prefers-reduced-motion: no-preference) {
+            .status-light.online {
+                animation: pulse-glow 2s infinite alternate ease-in-out;
+            }
+            @keyframes pulse-glow {
+                0% { transform: scale(1); box-shadow: 0 0 4px #10b981; }
+                100% { transform: scale(1.2); box-shadow: 0 0 14px #34d399, 0 0 20px #059669; }
+            }
+            .strike {
+                animation: card-flash 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            }
+            @keyframes card-flash {
+                0% { filter: brightness(2) contrast(1.2); box-shadow: 0 0 30px #3b82f6; }
+                100% { filter: brightness(1) contrast(1); }
+            }
+            .data-flow-track {
+                position: absolute; width: 100%; height: 2px;
+                background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.4), transparent);
+                z-index: -10; pointer-events: none;
+            }
+        }
     </style>
     <!-- Tailwind Play CDN in head right before closing head tag -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-950 text-white font-sans min-h-screen relative">
+    <button id="theme-toggle" class="fixed top-4 right-4 z-[9999] p-2 rounded-full border bg-slate-800 text-white dark:bg-white dark:text-slate-900 pointer-events-auto shadow-lg transition-all hover:scale-105" onclick="toggleTheme()" aria-label="Toggle Theme">🌓 Light Mode</button>
 
     <!-- Ambient Glowing Background Blobs -->
     <div class="absolute top-10 left-10 w-96 h-96 bg-cyan-500/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
@@ -175,8 +228,12 @@
                     </p>
                 </div>
 
-                <!-- CARD MATRIX GRID -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+                <!-- CARD MATRIX GRID WITH MOVING DATA FLOWS -->
+                <div class="relative">
+                    <div class="data-flow-track top-12"></div>
+                    <div class="data-flow-track top-1/2"></div>
+                    <div class="data-flow-track bottom-12"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
 
                     <!-- Card 1: Omnichannel Comms -->
                     <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-6 shadow-xl flex flex-col justify-between hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(6,182,212,0.3)] hover:border-cyan-500/30 cursor-pointer" onclick="routeToModule('comms')">
@@ -405,6 +462,7 @@
 
                 </div>
 
+                </div>
                 <!-- Laser Interconnect Line Decor -->
                 <div class="max-w-6xl mx-auto h-[1px] bg-gradient-to-r from-cyan-500/10 via-purple-500/40 to-cyan-500/10 mt-16 shadow-[0_0_8px_rgba(34,211,238,0.2)]"></div>
             </section>
@@ -1804,14 +1862,26 @@
                 const lightEl = document.getElementById(`light-${mod}`);
                 if (!textEl || !lightEl) return;
 
+                const cardEl = lightEl ? (lightEl.closest('.card') || lightEl.closest('.cursor-pointer')) : null;
+
                 if (!authToken) {
                     textEl.textContent = 'OFFLINE';
                     textEl.className = 'text-xs font-mono uppercase tracking-wider text-red-500';
-                    lightEl.className = 'status-light offline';
+                    if (lightEl) {
+                        lightEl.classList.remove('online');
+                        lightEl.classList.add('offline');
+                    }
                 } else {
                     textEl.textContent = 'ONLINE';
                     textEl.className = 'text-xs font-mono uppercase tracking-wider text-emerald-400';
-                    lightEl.className = 'status-light online';
+                    if (lightEl && !lightEl.classList.contains('online')) {
+                        lightEl.classList.remove('offline');
+                        lightEl.classList.add('online');
+                        if (cardEl) {
+                            cardEl.classList.add('strike');
+                            setTimeout(() => cardEl.classList.remove('strike'), 600);
+                        }
+                    }
                 }
             });
         }
@@ -4234,6 +4304,28 @@
                 output.className = 'bg-slate-900 border border-slate-800 p-4 rounded-md text-xs font-mono text-red-400 overflow-auto max-h-60';
             }
         }
+
+        // GLOBAL THEME TOGGLE OPERATIONS
+        function toggleTheme() {
+            const body = document.body;
+            body.classList.toggle('light-mode');
+            const isLight = body.classList.contains('light-mode');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            document.getElementById('theme-toggle').innerHTML = isLight ? '🌙 Dark Mode' : '☀️ Light Mode';
+        }
+
+        // Immediate Paint Check
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                // Use setTimeout or directly update text since element is in DOM
+                window.addEventListener('DOMContentLoaded', () => {
+                    const btn = document.getElementById('theme-toggle');
+                    if (btn) btn.innerHTML = '🌙 Dark Mode';
+                });
+            }
+        })();
 
         // INITIALIZE CLIENT
         checkAuth();

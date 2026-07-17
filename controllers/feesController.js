@@ -171,13 +171,22 @@ async function payFee(req, res) {
 
     const fee = feeRes.rows[0];
 
-    // 2. Transition status of service fee to PAID
+    // 2. Transition status of service fee to PAID and roll-forward due date
     const updatedFeeRes = await client.query(
       `UPDATE service_fees
-          SET status = 'PAID', updated_at = NOW()
-        WHERE id = $1
-        RETURNING *`,
-      [id]
+       SET
+           status = 'PAID',
+           next_due_date = CASE
+               WHEN billing_cycle = 'MONTHLY' THEN COALESCE(next_due_date, CURRENT_DATE) + INTERVAL '1 month'
+               WHEN billing_cycle = 'QUARTERLY' THEN COALESCE(next_due_date, CURRENT_DATE) + INTERVAL '3 months'
+               WHEN billing_cycle = 'ANNUAL' THEN COALESCE(next_due_date, CURRENT_DATE) + INTERVAL '1 year'
+               WHEN billing_cycle = 'YEARLY' THEN COALESCE(next_due_date, CURRENT_DATE) + INTERVAL '1 year'
+               ELSE next_due_date
+           END,
+           updated_at = NOW()
+       WHERE id = $1 AND tenant_id = $2
+       RETURNING *`,
+      [id, tenantId]
     );
     const updatedFee = updatedFeeRes.rows[0];
 

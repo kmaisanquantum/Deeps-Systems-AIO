@@ -4133,6 +4133,12 @@
                     body: JSON.stringify({ text, sourceChannel })
                 });
 
+                if (response.status === 422) {
+                    const data = await response.json().catch(() => ({}));
+                    showToast(data.error || 'Failed to process AI command.', 'error');
+                    return;
+                }
+
                 if (response.status === 503) {
                     showToast('AI engine service URL is currently unconfigured.', 'error');
                     return;

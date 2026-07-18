@@ -182,7 +182,10 @@ function parseIntentLocally(text) {
 /**
  * Executes a Chat Completion request to Groq using the configured llama model to map natural language to structured actions.
  */
-async function parseIntentWithGroq(text) {
+/**
+ * Executes a Chat Completion request to Groq using the configured llama model and provides prior conversation turns.
+ */
+async function parseIntentWithLlama(text, history) {
   if (!GROQ_API_KEY) {
     return null;
   }
@@ -195,17 +198,19 @@ async function parseIntentWithGroq(text) {
   const completionsUrl = `${baseUrl}/chat/completions`;
 
   const systemPrompt = `You are the Deeps Systems AIO Conversational Workspace Assistant.
-Your task is to parse a free-form natural language user instruction and map it to one of our structured system actions.
+Your task is to parse a free-form natural language user instruction or query and map it to one of our structured system actions.
 You MUST respond with a valid JSON object matching this schema:
 {
   "action": "ACTION_NAME",
   "data": { ... }
 }
 
-If you cannot confidently match the user instruction to any of the supported actions, respond with:
+If the user query is a greeting, general workspace question, pure informational small talk, or conversational list summary, respond with action "ANSWER" and include the conversational answer in data.message:
 {
-  "action": null,
-  "data": null
+  "action": "ANSWER",
+  "data": {
+    "message": "Your helpful conversational assistant response..."
+  }
 }
 
 SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
@@ -229,18 +234,25 @@ SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
    - "currency": string (Default: "PGK")
    - "notes": string
 
-4. CREATE_SHIPMENT: Logistics shipment creation.
+4. LIST_TRANSACTIONS: List financial transactions or expenses.
+   Fields:
+   - "transactionType": "EXPENSE", "INCOME" or "ALL" (optional)
+
+5. CREATE_SHIPMENT: Logistics shipment creation.
    Fields:
    - "carrier": "POST_PNG" or "DHL" (Default: "POST_PNG")
    - "originAddress": string
    - "destinationAddress": string (required)
    - "weightKg": number (optional)
 
-5. UPDATE_SHIPMENT_STATUS: Trace or update shipment status.
+6. LIST_SHIPMENTS: View shipment list.
+   Fields: {}
+
+7. UPDATE_SHIPMENT_STATUS: Trace or update shipment status.
    Fields:
    - "shipmentId": string (required)
 
-6. CREATE_HR_PROFILE: Create employee HR record.
+8. CREATE_HR_PROFILE: Create employee HR record. (Admin/Superadmin only)
    Fields:
    - "fullName": string (required)
    - "positionTitle": string (required)
@@ -248,38 +260,72 @@ SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
    - "salaryCurrency": string (Default: "PGK")
    - "hireDate": string (date format "YYYY-MM-DD", e.g. "2026-07-18")
 
-7. UPDATE_HR_STATUS: Terminate or update existing employee HR status.
-   Fields:
-   - "profileId": string (required)
-   - "isActive": boolean (required, true or false)
-   - "terminationDate": string (date format "YYYY-MM-DD" or null)
-   - "positionTitle": string (optional)
-
-8. PULL_HR_PROFILE: List employee HR records.
+9. LIST_HR_PROFILES: View employee HR profiles. (Admin/Superadmin only)
    Fields: {}
 
-9. CREATE_LEAD: Create sales lead.
-   Fields:
-   - "fullName": string (required)
-   - "email": string (optional, default "lead@sales.com")
-   - "dealValue": number (optional, default 0)
-   - "stage": string (optional, default "Prospect")
+10. UPDATE_HR_STATUS: Terminate, activate or update employee details. (Admin/Superadmin only)
+    Fields:
+    - "profileId": string (UUID format, optional if employeeName is provided)
+    - "employeeName": string (optional, name to resolve and locate)
+    - "isActive": boolean (optional)
+    - "terminationDate": string (date format "YYYY-MM-DD" or null)
+    - "positionTitle": string (optional)
+    - "salaryAmount": number (optional)
 
-10. CREATE_STORE_ITEM: Web store product item.
+11. DELETE_HR_PROFILE: Delete employee HR record. (Admin/Superadmin only)
+    Fields:
+    - "profileId": string (optional)
+    - "employeeName": string (optional)
+
+12. CREATE_LEAD: Create sales lead.
+    Fields:
+    - "fullName": string (required)
+    - "email": string (optional, default "lead@sales.com")
+    - "dealValue": number (optional, default 0)
+    - "stage": string (optional, default "Prospect")
+
+13. LIST_LEADS: View sales leads list.
+    Fields: {}
+
+14. UPDATE_LEAD: Update details or stage of a lead.
+    Fields:
+    - "leadId": string (UUID, optional if leadName is provided)
+    - "leadName": string (optional, name to resolve and locate)
+    - "fullName": string (optional)
+    - "email": string (optional)
+    - "dealValue": number (optional)
+    - "stage": string (optional, e.g. "Prospect", "Won", "Lost")
+
+15. DELETE_LEAD: Delete sales lead.
+    Fields:
+    - "leadId": string (optional)
+    - "leadName": string (optional)
+
+16. CREATE_STORE_ITEM: Web store product item.
     Fields:
     - "title": string (required)
     - "price": number (optional, default 0)
     - "description": string (optional)
     - "inventoryCount": number (optional, default 0)
 
-11. CREATE_STORE_PAGE: Web store page.
-    Fields:
-    - "title": string (required)
-    - "slug": string (required, URL friendly, e.g. "about-us")
-    - "content": string (required)
-    - "isPublished": boolean (optional, default true)
+17. LIST_STORE_ITEMS: List web store items.
+    Fields: {}
 
-12. CREATE_WORKSPACE_TASK: Create team workspace task.
+18. UPDATE_STORE_ITEM: Update product item details.
+    Fields:
+    - "itemId": string (UUID, optional if itemName is provided)
+    - "itemName": string (optional)
+    - "title": string (optional)
+    - "price": number (optional)
+    - "inventoryCount": number (optional)
+    - "description": string (optional)
+
+19. DELETE_STORE_ITEM: Delete web store product item.
+    Fields:
+    - "itemId": string (optional)
+    - "itemName": string (optional)
+
+20. CREATE_WORKSPACE_TASK: Create team workspace task.
     Fields:
     - "title": string (required)
     - "description": string (optional)
@@ -288,25 +334,24 @@ SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
     - "priority": "LOW", "NORMAL", "HIGH" (optional, default "NORMAL")
     - "dueDate": string (date format "YYYY-MM-DD")
 
-13. CREATE_WORKSPACE_EVENT: Create calendar event.
-    Fields:
-    - "title": string (required)
-    - "description": string (optional)
-    - "startsAt": string (ISO datetime string)
-    - "endsAt": string (ISO datetime string)
-    - "location": string (optional)
-    - "organizerUserId": string (optional)
+21. LIST_WORKSPACE_TASKS: List team tasks.
+    Fields: {}
 
-14. CREATE_WORKSPACE_DOCUMENT: Create document template.
+22. UPDATE_WORKSPACE_TASK: Update task title, status, or details.
     Fields:
-    - "title": string (required)
-    - "category": string (e.g. "Finance", "HR", "Logistics", "Sales")
-    - "url": string (optional)
-    - "content": string (optional)
-    - "status": "DRAFT" or "PUBLISHED" (Default: "DRAFT")
-    - "notes": string (optional)
+    - "taskId": string (UUID, optional if taskTitle is provided)
+    - "taskTitle": string (optional, current task title to search/match)
+    - "title": string (optional, new title)
+    - "status": "TODO" | "IN_PROGRESS" | "DONE" (optional)
+    - "priority": "LOW" | "NORMAL" | "HIGH" (optional)
+    - "assigneeUserId": string (optional)
 
-15. CONVERT_LEAD_AND_TASK: Lead conversion to won and extra task trigger.
+23. DELETE_WORKSPACE_TASK: Delete team task.
+    Fields:
+    - "taskId": string (optional)
+    - "taskTitle": string (optional)
+
+24. CONVERT_LEAD_AND_TASK: Lead conversion to won and extra task trigger.
     Fields:
     - "leadId": string (required, UUID of the lead)
     - "taskTitle": string (optional, default onboarding title)
@@ -318,15 +363,26 @@ CRITICAL INSTRUCTIONS:
 - No conversational preamble, explanation, markdown blocks, or surrounding text. Just valid JSON.
 `;
 
+  const messages = [
+    { role: 'system', content: systemPrompt }
+  ];
+
+  if (Array.isArray(history)) {
+    history.forEach(turn => {
+      if (turn && (turn.role === 'user' || turn.role === 'assistant') && turn.content) {
+        messages.push({ role: turn.role, content: turn.content });
+      }
+    });
+  }
+
+  messages.push({ role: 'user', content: text });
+
   try {
     const response = await axios.post(
       completionsUrl,
       {
         model: GROQ_MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: text }
-        ],
+        messages,
         response_format: { type: 'json_object' }
       },
       {
@@ -346,7 +402,7 @@ CRITICAL INSTRUCTIONS:
           return parsed;
         }
       } catch (parseErr) {
-        console.warn('[intentController] Failed to parse JSON content from Groq:', parseErr.message, rawContent);
+        console.warn('[intentController] Failed to parse JSON content from Groq Llama:', parseErr.message, rawContent);
       }
     }
   } catch (err) {
@@ -359,7 +415,7 @@ CRITICAL INSTRUCTIONS:
 async function processNaturalLanguageIntent(req, res) {
   const tenantId = req.tenantId;
   const branchId = req.branchId || null;
-  const { text, sourceChannel = 'INTERNAL' } = req.body || {};
+  const { text, history = [], sourceChannel = 'INTERNAL' } = req.body || {};
 
   if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
   if (!text || typeof text !== 'string' || !text.trim()) {
@@ -368,33 +424,37 @@ async function processNaturalLanguageIntent(req, res) {
 
   let aiResult = null;
 
-  // 1. Try Groq completion if configured
-  if (GROQ_API_KEY) {
-    console.log('[intentController] Processing intent using Groq & Llama model...');
-    aiResult = await parseIntentWithGroq(text);
+  // 1. First choice: AI_ENGINE_SERVICE_URL if configured
+  if (AI_ENGINE_SERVICE_URL) {
+    try {
+      console.log('[intentController] First Choice: AI_ENGINE_SERVICE_URL...');
+      const aiResp = await aiClient.post('/parse-intent', {
+        text,
+        tenantId,
+        branchId,
+        sourceChannel,
+      });
+      aiResult = aiResp.data;
+    } catch (err) {
+      const detail = err.response ? JSON.stringify(err.response.data) : err.message;
+      console.warn('[intentController] AI_ENGINE_SERVICE_URL call failed, falling back to other parser:', detail);
+    }
   }
 
-  // 2. Try legacy AI engine service url if Groq was not used or failed
-  if (!aiResult || !aiResult.action) {
-    if (AI_ENGINE_SERVICE_URL) {
-      try {
-        console.log('[intentController] Falling back to AI_ENGINE_SERVICE_URL...');
-        const aiResp = await aiClient.post('/parse-intent', {
-          text,
-          tenantId,
-          branchId,
-          sourceChannel,
-        });
-        aiResult = aiResp.data;
-      } catch (err) {
-        const detail = err.response ? JSON.stringify(err.response.data) : err.message;
-        console.warn('[intentController] AI orchestration call failed, falling back to local parser:', detail);
-        aiResult = parseIntentLocally(text);
-      }
-    } else {
-      // 3. Absolute local rule-based regex fallback
-      aiResult = parseIntentLocally(text);
+  // 2. Second choice: GROQ_API_KEY calling parseIntentWithLlama
+  if ((!aiResult || !aiResult.action) && GROQ_API_KEY) {
+    try {
+      console.log('[intentController] Second Choice: parseIntentWithLlama using Groq...');
+      aiResult = await parseIntentWithLlama(text, history);
+    } catch (err) {
+      console.warn('[intentController] Groq completions call failed, falling back to local parser:', err.message);
     }
+  }
+
+  // 3. Third choice: parseIntentLocally fallback
+  if (!aiResult || !aiResult.action) {
+    console.log('[intentController] Third Choice: parseIntentLocally fallback...');
+    aiResult = parseIntentLocally(text);
   }
 
   if (!aiResult || !aiResult.action) {
@@ -434,6 +494,23 @@ async function processNaturalLanguageIntent(req, res) {
 async function executeIntentAction(aiResult, context) {
   const { action, data = {} } = aiResult;
   const { tenantId, branchId, authUser } = context;
+
+  const adminOnlyActions = [
+    'CREATE_HR_PROFILE',
+    'UPDATE_HR_STATUS',
+    'PULL_HR_PROFILE',
+    'LIST_HR_PROFILES',
+    'DELETE_HR_PROFILE'
+  ];
+  if (adminOnlyActions.includes(action)) {
+    const role = authUser ? authUser.role : null;
+    if (role !== 'admin' && role !== 'superadmin') {
+      return {
+        statusCode: 403,
+        body: { error: 'Forbidden: Admin access required.' }
+      };
+    }
+  }
 
   const fakeReq = {
     tenantId,
@@ -655,6 +732,190 @@ async function executeIntentAction(aiResult, context) {
           task: resTask.capture.body
         }
       };
+    }
+
+    case 'ANSWER': {
+      return {
+        statusCode: 200,
+        body: { message: data.message || 'I am ready to assist you.' }
+      };
+    }
+
+    case 'LIST_TRANSACTIONS':
+    case 'LIST_EXPENSES': {
+      const res = createCapturingResponse();
+      await financeController.listTransactions(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_LEADS': {
+      const res = createCapturingResponse();
+      await salesController.listLeads(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_LEAD': {
+      let leadId = data.leadId || data.id;
+      if (!leadId && (data.leadName || data.fullName)) {
+        const nameToMatch = (data.leadName || data.fullName).toLowerCase().trim();
+        const leadList = await db.query('SELECT id, full_name FROM sales_leads WHERE tenant_id = $1', [tenantId]);
+        const found = leadList.rows.find(r => r.full_name.toLowerCase().includes(nameToMatch));
+        if (found) leadId = found.id;
+      }
+      if (!leadId) {
+        throw new Error('Could not resolve Lead record ID by name.');
+      }
+      fakeReq.params = { id: leadId };
+      fakeReq.body = {
+        full_name: data.fullName || data.full_name,
+        email: data.email,
+        deal_value: data.dealValue !== undefined ? data.dealValue : data.deal_value,
+        stage: data.stage
+      };
+      const res = createCapturingResponse();
+      await salesController.updateLead(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_LEAD': {
+      let leadId = data.leadId || data.id;
+      if (!leadId && (data.leadName || data.fullName)) {
+        const nameToMatch = (data.leadName || data.fullName).toLowerCase().trim();
+        const leadList = await db.query('SELECT id, full_name FROM sales_leads WHERE tenant_id = $1', [tenantId]);
+        const found = leadList.rows.find(r => r.full_name.toLowerCase().includes(nameToMatch));
+        if (found) leadId = found.id;
+      }
+      if (!leadId) {
+        throw new Error('Could not resolve Lead record ID by name.');
+      }
+      fakeReq.params = { id: leadId };
+      const res = createCapturingResponse();
+      await salesController.deleteLead(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_STORE_ITEMS': {
+      const res = createCapturingResponse();
+      await storeController.listItems(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_STORE_ITEM': {
+      let itemId = data.itemId || data.id;
+      if (!itemId && (data.itemName || data.title)) {
+        const nameToMatch = (data.itemName || data.title).toLowerCase().trim();
+        const itemList = await db.query('SELECT id, title FROM store_items WHERE tenant_id = $1', [tenantId]);
+        const found = itemList.rows.find(r => r.title.toLowerCase().includes(nameToMatch));
+        if (found) itemId = found.id;
+      }
+      if (!itemId) {
+        throw new Error('Could not resolve Store Item record ID by name.');
+      }
+      fakeReq.params = { id: itemId };
+      fakeReq.body = {
+        title: data.title || data.title,
+        price: data.price,
+        inventoryCount: data.inventoryCount !== undefined ? data.inventoryCount : data.inventory_count,
+        description: data.description
+      };
+      const res = createCapturingResponse();
+      await storeController.updateItem(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_STORE_ITEM': {
+      let itemId = data.itemId || data.id;
+      if (!itemId && (data.itemName || data.title)) {
+        const nameToMatch = (data.itemName || data.title).toLowerCase().trim();
+        const itemList = await db.query('SELECT id, title FROM store_items WHERE tenant_id = $1', [tenantId]);
+        const found = itemList.rows.find(r => r.title.toLowerCase().includes(nameToMatch));
+        if (found) itemId = found.id;
+      }
+      if (!itemId) {
+        throw new Error('Could not resolve Store Item record ID by name.');
+      }
+      fakeReq.params = { id: itemId };
+      const res = createCapturingResponse();
+      await storeController.deleteItem(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_WORKSPACE_TASKS': {
+      const res = createCapturingResponse();
+      await workspaceController.listTasks(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_WORKSPACE_TASK': {
+      let taskId = data.taskId || data.id;
+      if (!taskId && (data.taskTitle || data.title)) {
+        const nameToMatch = (data.taskTitle || data.title).toLowerCase().trim();
+        const taskList = await db.query('SELECT id, title FROM workspace_tasks WHERE tenant_id = $1', [tenantId]);
+        const found = taskList.rows.find(r => r.title.toLowerCase().includes(nameToMatch));
+        if (found) taskId = found.id;
+      }
+      if (!taskId) {
+        throw new Error('Could not resolve Workspace Task ID by title.');
+      }
+      fakeReq.params = { id: taskId };
+      fakeReq.body = {
+        status: data.status,
+        title: data.title,
+        priority: data.priority,
+        assigneeUserId: data.assigneeUserId || data.assignee_user_id
+      };
+      const res = createCapturingResponse();
+      await workspaceController.updateTaskStatus(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_WORKSPACE_TASK': {
+      let taskId = data.taskId || data.id;
+      if (!taskId && (data.taskTitle || data.title)) {
+        const nameToMatch = (data.taskTitle || data.title).toLowerCase().trim();
+        const taskList = await db.query('SELECT id, title FROM workspace_tasks WHERE tenant_id = $1', [tenantId]);
+        const found = taskList.rows.find(r => r.title.toLowerCase().includes(nameToMatch));
+        if (found) taskId = found.id;
+      }
+      if (!taskId) {
+        throw new Error('Could not resolve Workspace Task ID by title.');
+      }
+      fakeReq.params = { id: taskId };
+      const res = createCapturingResponse();
+      await workspaceController.deleteTask(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_HR_PROFILES': {
+      fakeReq.query = { branchId };
+      const res = createCapturingResponse();
+      await hrController.listProfiles(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_HR_PROFILE': {
+      let profileId = data.profileId || data.id;
+      if (!profileId && (data.employeeName || data.fullName)) {
+        const nameToMatch = (data.employeeName || data.fullName).toLowerCase().trim();
+        const profileList = await db.query('SELECT id, full_name FROM hr_profiles WHERE tenant_id = $1', [tenantId]);
+        const found = profileList.rows.find(r => r.full_name.toLowerCase().includes(nameToMatch));
+        if (found) profileId = found.id;
+      }
+      if (!profileId) {
+        throw new Error('Could not resolve HR Profile ID by employee name.');
+      }
+      fakeReq.params = { id: profileId };
+      const res = createCapturingResponse();
+      await hrController.deleteProfile(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_SHIPMENTS': {
+      const result = await db.query(
+        'SELECT * FROM logistics_shipments WHERE tenant_id = $1 ORDER BY created_at DESC',
+        [tenantId]
+      );
+      return { statusCode: 200, body: result.rows };
     }
 
     default:

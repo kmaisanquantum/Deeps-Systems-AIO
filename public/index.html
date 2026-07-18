@@ -2153,9 +2153,7 @@
                     aiBar.style.display = 'block';
                 }
             } else {
-                nav.innerHTML = `
-                    <button class="text-xs uppercase tracking-widest font-extrabold border border-cyan-500/40 text-cyan-400 hover:bg-cyan-500 hover:text-slate-950 px-5 py-2 rounded-full transition-all duration-200 shadow-[0_0_10px_rgba(34,211,238,0.2)]" onclick="routeToView('view-auth')">Sign In</button>
-                `;
+                nav.innerHTML = '';
                 if (adminCard) {
                     adminCard.style.display = 'none';
                 }

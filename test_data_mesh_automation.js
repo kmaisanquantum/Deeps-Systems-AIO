@@ -11,6 +11,12 @@ db.query = async (text, params) => {
   if (text.includes('INSERT INTO contacts')) {
     return { rowCount: 1, rows: [{ id: 'mock-contact-uuid-111' }] };
   }
+  if (text.includes('INSERT INTO workspace_tasks')) {
+    return { rowCount: 1, rows: [{ id: 'mock-task-uuid-222' }] };
+  }
+  if (text.includes('INSERT INTO financial_transactions')) {
+    return { rowCount: 1, rows: [{ id: 'mock-tx-uuid-333' }] };
+  }
   return { rowCount: 1, rows: [{ id: 'mock-uuid-999' }] };
 };
 
@@ -51,14 +57,18 @@ async function runDataMeshTests() {
     assert.strictEqual(leadUpdate.params[0], 'mock-contact-uuid-111');
     assert.strictEqual(leadUpdate.params[1], 'mock-lead-uuid-123');
 
-    // Verify task creation query
+    // Verify task creation query (run via workspaceController)
     const taskInsert = queriesExecuted.find(q => q.text.includes('INSERT INTO workspace_tasks'));
     assert(taskInsert, 'sales.lead_won must trigger workspace_tasks follow-up task creation.');
     assert.strictEqual(taskInsert.params[0], tenantId);
-    assert(taskInsert.params[1].includes('John Galt'));
-    assert.strictEqual(taskInsert.params[3], 'mock-lead-uuid-123');
-    assert.strictEqual(taskInsert.params[4], 'sales');
-    assert.strictEqual(taskInsert.params[5], 'mock-lead-uuid-123');
+    assert.strictEqual(taskInsert.params[2], 'Follow up with John Galt');
+
+    // Verify task update query with lead_id tracer
+    const taskUpdate = queriesExecuted.find(q => q.text.includes('UPDATE workspace_tasks'));
+    assert(taskUpdate, 'sales.lead_won must trigger update on workspace_tasks to link lead_id and source_module.');
+    assert.strictEqual(taskUpdate.params[0], 'mock-lead-uuid-123');
+    assert.strictEqual(taskUpdate.params[1], 'mock-lead-uuid-123');
+    assert.strictEqual(taskUpdate.params[2], 'mock-task-uuid-222');
 
     console.log('✓ sales.lead_won trigger flow verified successfully.');
   }
@@ -88,13 +98,19 @@ async function runDataMeshTests() {
     assert.strictEqual(shipmentInsert.params[1], 'mock-checkout-uuid-456');
     assert(shipmentInsert.params[2].includes('customer@galt.com'));
 
-    // Verify finance incoming transaction ledger entry
-    const financeInsert = queriesExecuted.find(q => q.text.includes('INSERT INTO financial_transactions'));
+    // Verify finance incoming transaction ledger entry (run via financeController)
+    const financeInsert = queriesExecuted.find(q => q.text.includes('INSERT INTO financial_transactions') && q.text.includes('INSERT'));
     assert(financeInsert, 'store.checkout_completed must log financial_transactions INCOME ledger entry.');
     assert.strictEqual(financeInsert.params[0], tenantId);
-    assert.strictEqual(financeInsert.params[1], 350.00);
-    assert.strictEqual(financeInsert.params[2], 'PGK');
-    assert.strictEqual(financeInsert.params[4], 'mock-checkout-uuid-456');
+    assert.strictEqual(financeInsert.params[3], 'INCOME');
+    assert.strictEqual(financeInsert.params[4], 350.00);
+    assert.strictEqual(financeInsert.params[5], 'PGK');
+
+    // Verify finance update query with checkout tracer
+    const financeUpdate = queriesExecuted.find(q => q.text.includes('UPDATE financial_transactions'));
+    assert(financeUpdate, 'store.checkout_completed must update financial_transactions with store source_module tracer.');
+    assert.strictEqual(financeUpdate.params[0], 'mock-checkout-uuid-456');
+    assert.strictEqual(financeUpdate.params[1], 'mock-tx-uuid-333');
 
     console.log('✓ store.checkout_completed trigger flow verified successfully.');
   }
@@ -117,14 +133,19 @@ async function runDataMeshTests() {
     // Wait a brief tick
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    // Verify finance collection transaction query
-    const feeFinanceInsert = queriesExecuted.find(q => q.text.includes('INSERT INTO financial_transactions'));
+    // Verify finance collection transaction query (run via financeController)
+    const feeFinanceInsert = queriesExecuted.find(q => q.text.includes('INSERT INTO financial_transactions') && q.text.includes('INSERT'));
     assert(feeFinanceInsert, 'fees.invoice_cleared must log a financial_transactions collection entry.');
     assert.strictEqual(feeFinanceInsert.params[0], tenantId);
-    assert.strictEqual(feeFinanceInsert.params[1], 1500.00);
-    assert.strictEqual(feeFinanceInsert.params[2], 'PGK');
-    assert(feeFinanceInsert.params[3].includes('Tuition Payment'));
-    assert.strictEqual(feeFinanceInsert.params[4], 'mock-fee-uuid-789');
+    assert.strictEqual(feeFinanceInsert.params[3], 'INCOME');
+    assert.strictEqual(feeFinanceInsert.params[4], 1500.00);
+    assert.strictEqual(feeFinanceInsert.params[5], 'PGK');
+
+    // Verify finance update query with fee tracer
+    const feeFinanceUpdate = queriesExecuted.find(q => q.text.includes('UPDATE financial_transactions'));
+    assert(feeFinanceUpdate, 'fees.invoice_cleared must update financial_transactions with fees source_module tracer.');
+    assert.strictEqual(feeFinanceUpdate.params[0], 'mock-fee-uuid-789');
+    assert.strictEqual(feeFinanceUpdate.params[1], 'mock-tx-uuid-333');
 
     console.log('✓ fees.invoice_cleared trigger flow verified successfully.');
   }

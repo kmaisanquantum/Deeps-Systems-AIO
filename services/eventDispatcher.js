@@ -29,6 +29,27 @@ class EventDispatcher extends EventEmitter {
       console.error('[eventDispatcher] delivery error', err.message);
     });
 
+    // Capturing Response Helper to wrap simulated Express HTTP requests in listeners
+    function createCapturingResponse() {
+      const capture = { statusCode: 200, body: null };
+      return {
+        capture,
+        status(code) {
+          capture.statusCode = code;
+          return this;
+        },
+        json(payload) {
+          capture.body = payload;
+          return this;
+        },
+        sendStatus(code) {
+          capture.statusCode = code;
+          capture.body = null;
+          return this;
+        }
+      };
+    }
+
     // In-process cross-module triggers
     this.on('sales.lead_won', async (tenantId, payload) => {
       if (typeof tenantId === 'object' && tenantId.tenantId) {
@@ -36,6 +57,7 @@ class EventDispatcher extends EventEmitter {
         tenantId = tenantId.tenantId;
       }
       const db = require('../db');
+      const workspaceController = require('../controllers/workspaceController');
       try {
         const { lead } = payload || {};
         if (!lead) return;
@@ -60,12 +82,28 @@ class EventDispatcher extends EventEmitter {
           [contactId, lead.id]
         );
 
-        // 2. Workspace follow-up assignment (workspace_tasks table)
-        await db.query(
-          `INSERT INTO workspace_tasks (tenant_id, title, description, lead_id, source_module, source_record_id)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [tenantId, `Follow up with ${lead.full_name || 'Won Lead'}`, `Configure onboarding and deployment for won lead`, lead.id, 'sales', lead.id]
-        );
+        // 2. Workspace follow-up assignment (workspace_tasks table) using workspaceController.createTask
+        const fakeReq = {
+          tenantId,
+          body: {
+            title: `Follow up with ${lead.full_name || 'Won Lead'}`,
+            description: `Configure onboarding and deployment for won lead`,
+            status: 'TODO',
+            priority: 'NORMAL'
+          }
+        };
+        const fakeRes = createCapturingResponse();
+        await workspaceController.createTask(fakeReq, fakeRes);
+
+        const createdTask = fakeRes.capture.body;
+        if (createdTask && createdTask.id) {
+          await db.query(
+            `UPDATE workspace_tasks
+                SET lead_id = $1, source_module = 'sales', source_record_id = $2
+              WHERE id = $3 AND tenant_id = $4`,
+            [lead.id, lead.id, createdTask.id, tenantId]
+          );
+        }
         console.log(`[eventDispatcher] [Reaction] sales.lead_won handled for lead ${lead.id}`);
       } catch (err) {
         console.error('[eventDispatcher] sales.lead_won reaction error:', err);
@@ -78,6 +116,7 @@ class EventDispatcher extends EventEmitter {
         tenantId = tenantId.tenantId;
       }
       const db = require('../db');
+      const financeController = require('../controllers/financeController');
       try {
         const { checkout } = payload || {};
         if (!checkout) return;
@@ -89,13 +128,29 @@ class EventDispatcher extends EventEmitter {
           [tenantId, checkout.id, `Deliver to ${checkout.email || 'customer@store.com'}`]
         );
 
-        // 2. Log a Finance incoming ledger entry
-        await db.query(
-          `INSERT INTO financial_transactions
-              (tenant_id, transaction_type, amount, currency, description, is_manual, verification_status, payment_gateway, source_module, source_record_id)
-           VALUES ($1, 'INCOME', $2, $3, $4, TRUE, 'VERIFIED', 'BSP_PAY', 'store', $5)`,
-          [tenantId, checkout.amount, checkout.currency || 'PGK', `Store checkout completed for ${checkout.email || 'customer@store.com'}`, checkout.id]
-        );
+        // 2. Log a Finance incoming ledger entry using financeController.logTransaction
+        const fakeReq = {
+          tenantId,
+          body: {
+            transactionType: 'INCOME',
+            amount: checkout.amount,
+            currency: checkout.currency || 'PGK',
+            description: `Store checkout completed for ${checkout.email || 'customer@store.com'}`,
+            paymentGateway: 'BSP_PAY'
+          }
+        };
+        const fakeRes = createCapturingResponse();
+        await financeController.logTransaction(fakeReq, fakeRes);
+
+        const createdTx = fakeRes.capture.body;
+        if (createdTx && createdTx.id) {
+          await db.query(
+            `UPDATE financial_transactions
+                SET source_module = 'store', source_record_id = $1
+              WHERE id = $2 AND tenant_id = $3`,
+            [checkout.id, createdTx.id, tenantId]
+          );
+        }
         console.log(`[eventDispatcher] [Reaction] store.checkout_completed handled for checkout ${checkout.id}`);
       } catch (err) {
         console.error('[eventDispatcher] store.checkout_completed reaction error:', err);
@@ -108,17 +163,34 @@ class EventDispatcher extends EventEmitter {
         tenantId = tenantId.tenantId;
       }
       const db = require('../db');
+      const financeController = require('../controllers/financeController');
       try {
         const { fee } = payload || {};
         if (!fee) return;
 
-        // Populate a Finance collection transaction
-        await db.query(
-          `INSERT INTO financial_transactions
-              (tenant_id, transaction_type, amount, currency, description, is_manual, verification_status, payment_gateway, source_module, source_record_id)
-           VALUES ($1, 'INCOME', $2, $3, $4, TRUE, 'VERIFIED', 'BSP_PAY', 'fees', $5)`,
-          [tenantId, fee.amount, fee.currency || 'PGK', `Administrative fee cleared: ${fee.fee_name}`, fee.id]
-        );
+        // Log a Finance collection transaction using financeController.logTransaction
+        const fakeReq = {
+          tenantId,
+          body: {
+            transactionType: 'INCOME',
+            amount: fee.amount,
+            currency: fee.currency || 'PGK',
+            description: `Administrative fee cleared: ${fee.fee_name}`,
+            paymentGateway: 'BSP_PAY'
+          }
+        };
+        const fakeRes = createCapturingResponse();
+        await financeController.logTransaction(fakeReq, fakeRes);
+
+        const createdTx = fakeRes.capture.body;
+        if (createdTx && createdTx.id) {
+          await db.query(
+            `UPDATE financial_transactions
+                SET source_module = 'fees', source_record_id = $1
+              WHERE id = $2 AND tenant_id = $3`,
+            [fee.id, createdTx.id, tenantId]
+          );
+        }
         console.log(`[eventDispatcher] [Reaction] fees.invoice_cleared handled for fee ${fee.id}`);
       } catch (err) {
         console.error('[eventDispatcher] fees.invoice_cleared reaction error:', err);

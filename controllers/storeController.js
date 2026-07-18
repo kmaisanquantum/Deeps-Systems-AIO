@@ -447,9 +447,49 @@ async function checkSite(req, res) {
     let status = 'offline';
 
     try {
-      const response = await axios.get(site.url, { timeout: 5000 });
-      if (response.status >= 200 && response.status < 400) {
+      // Primary Check (/healthz Probe)
+      let baseUrl = site.url || '';
+      if (baseUrl.endsWith('/')) {
+        baseUrl = baseUrl.slice(0, -1);
+      }
+      const healthUrl = `${baseUrl}/healthz`;
+
+      const response = await axios.get(healthUrl, {
+        timeout: 5000,
+        validateStatus: () => true
+      });
+
+      let isHealthy = false;
+      if (response.status === 200 && response.data !== null && response.data !== undefined) {
+        const data = response.data;
+        if (typeof data === 'object') {
+          if (data.status === 'ok' || data.ok === true || data.status === 'healthy') {
+            isHealthy = true;
+          } else {
+            const stringified = JSON.stringify(data).toLowerCase();
+            if (stringified.includes('ok') || stringified.includes('healthy')) {
+              isHealthy = true;
+            }
+          }
+        } else {
+          const lowerData = String(data).toLowerCase();
+          if (lowerData.includes('ok') || lowerData.includes('healthy')) {
+            isHealthy = true;
+          }
+        }
+      }
+
+      if (isHealthy) {
         status = 'online';
+      } else {
+        // Secondary Check (Soft Fallback)
+        const fallbackResponse = await axios.get(site.url, {
+          timeout: 5000,
+          validateStatus: () => true
+        });
+        if (fallbackResponse.status >= 200 && fallbackResponse.status < 400) {
+          status = 'online';
+        }
       }
     } catch (axiosErr) {
       console.warn(`[storeController] checkSite ping failed for ${site.url}:`, axiosErr.message);

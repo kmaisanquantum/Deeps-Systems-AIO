@@ -70,6 +70,9 @@ services:
 
       # --- AI orchestration engine ---
       AI_ENGINE_SERVICE_URL: ${AI_ENGINE_SERVICE_URL}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
+      GROQ_BASE_URL: ${GROQ_BASE_URL:-https://api.groq.com/openai/v1}
 
       # --- WhatsApp Business Cloud API ---
       WHATSAPP_API_TOKEN: ${WHATSAPP_API_TOKEN}

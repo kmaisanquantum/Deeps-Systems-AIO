@@ -19,6 +19,10 @@ const workspaceController = require('./workspaceController');
 
 const AI_ENGINE_SERVICE_URL = process.env.AI_ENGINE_SERVICE_URL;
 
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+const GROQ_BASE_URL = process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1';
+
 const aiClient = axios.create({
   baseURL: AI_ENGINE_SERVICE_URL,
   timeout: 15000,
@@ -175,6 +179,183 @@ function parseIntentLocally(text) {
   return null;
 }
 
+/**
+ * Executes a Chat Completion request to Groq using the configured llama model to map natural language to structured actions.
+ */
+async function parseIntentWithGroq(text) {
+  if (!GROQ_API_KEY) {
+    return null;
+  }
+
+  // Clean trailing/leading slashes from base URL
+  let baseUrl = GROQ_BASE_URL.trim();
+  if (baseUrl.endsWith('/')) {
+    baseUrl = baseUrl.slice(0, -1);
+  }
+  const completionsUrl = `${baseUrl}/chat/completions`;
+
+  const systemPrompt = `You are the Deeps Systems AIO Conversational Workspace Assistant.
+Your task is to parse a free-form natural language user instruction and map it to one of our structured system actions.
+You MUST respond with a valid JSON object matching this schema:
+{
+  "action": "ACTION_NAME",
+  "data": { ... }
+}
+
+If you cannot confidently match the user instruction to any of the supported actions, respond with:
+{
+  "action": null,
+  "data": null
+}
+
+SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
+
+1. CREATE_EXPENSE: Log a financial expense transaction.
+   Fields:
+   - "amount": number (required, e.g. 250)
+   - "currency": string (e.g. "PGK", "USD", "AUD". Default: "PGK")
+   - "notes": string (e.g. "Office supplies")
+
+2. CREATE_INCOME: Log a financial income transaction.
+   Fields:
+   - "amount": number (required)
+   - "currency": string (Default: "PGK")
+   - "notes": string
+
+3. LOG_MANUAL_TRANSACTION: Manual financial transaction entry.
+   Fields:
+   - "transactionType": "EXPENSE" or "INCOME" (required)
+   - "amount": number (required)
+   - "currency": string (Default: "PGK")
+   - "notes": string
+
+4. CREATE_SHIPMENT: Logistics shipment creation.
+   Fields:
+   - "carrier": "POST_PNG" or "DHL" (Default: "POST_PNG")
+   - "originAddress": string
+   - "destinationAddress": string (required)
+   - "weightKg": number (optional)
+
+5. UPDATE_SHIPMENT_STATUS: Trace or update shipment status.
+   Fields:
+   - "shipmentId": string (required)
+
+6. CREATE_HR_PROFILE: Create employee HR record.
+   Fields:
+   - "fullName": string (required)
+   - "positionTitle": string (required)
+   - "salaryAmount": number (required)
+   - "salaryCurrency": string (Default: "PGK")
+   - "hireDate": string (date format "YYYY-MM-DD", e.g. "2026-07-18")
+
+7. UPDATE_HR_STATUS: Terminate or update existing employee HR status.
+   Fields:
+   - "profileId": string (required)
+   - "isActive": boolean (required, true or false)
+   - "terminationDate": string (date format "YYYY-MM-DD" or null)
+   - "positionTitle": string (optional)
+
+8. PULL_HR_PROFILE: List employee HR records.
+   Fields: {}
+
+9. CREATE_LEAD: Create sales lead.
+   Fields:
+   - "fullName": string (required)
+   - "email": string (optional, default "lead@sales.com")
+   - "dealValue": number (optional, default 0)
+   - "stage": string (optional, default "Prospect")
+
+10. CREATE_STORE_ITEM: Web store product item.
+    Fields:
+    - "title": string (required)
+    - "price": number (optional, default 0)
+    - "description": string (optional)
+    - "inventoryCount": number (optional, default 0)
+
+11. CREATE_STORE_PAGE: Web store page.
+    Fields:
+    - "title": string (required)
+    - "slug": string (required, URL friendly, e.g. "about-us")
+    - "content": string (required)
+    - "isPublished": boolean (optional, default true)
+
+12. CREATE_WORKSPACE_TASK: Create team workspace task.
+    Fields:
+    - "title": string (required)
+    - "description": string (optional)
+    - "assigneeUserId": string (optional)
+    - "status": string (optional, default "TODO")
+    - "priority": "LOW", "NORMAL", "HIGH" (optional, default "NORMAL")
+    - "dueDate": string (date format "YYYY-MM-DD")
+
+13. CREATE_WORKSPACE_EVENT: Create calendar event.
+    Fields:
+    - "title": string (required)
+    - "description": string (optional)
+    - "startsAt": string (ISO datetime string)
+    - "endsAt": string (ISO datetime string)
+    - "location": string (optional)
+    - "organizerUserId": string (optional)
+
+14. CREATE_WORKSPACE_DOCUMENT: Create document template.
+    Fields:
+    - "title": string (required)
+    - "category": string (e.g. "Finance", "HR", "Logistics", "Sales")
+    - "url": string (optional)
+    - "content": string (optional)
+    - "status": "DRAFT" or "PUBLISHED" (Default: "DRAFT")
+    - "notes": string (optional)
+
+15. CONVERT_LEAD_AND_TASK: Lead conversion to won and extra task trigger.
+    Fields:
+    - "leadId": string (required, UUID of the lead)
+    - "taskTitle": string (optional, default onboarding title)
+    - "taskDescription": string (optional)
+    - "dueDate": string (date format "YYYY-MM-DD")
+
+CRITICAL INSTRUCTIONS:
+- You must ONLY return a raw JSON object with keys "action" and "data".
+- No conversational preamble, explanation, markdown blocks, or surrounding text. Just valid JSON.
+`;
+
+  try {
+    const response = await axios.post(
+      completionsUrl,
+      {
+        model: GROQ_MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text }
+        ],
+        response_format: { type: 'json_object' }
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000
+      }
+    );
+
+    if (response && response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].message) {
+      const rawContent = response.data.choices[0].message.content;
+      try {
+        const parsed = JSON.parse(rawContent);
+        if (parsed && typeof parsed === 'object' && parsed.action) {
+          return parsed;
+        }
+      } catch (parseErr) {
+        console.warn('[intentController] Failed to parse JSON content from Groq:', parseErr.message, rawContent);
+      }
+    }
+  } catch (err) {
+    console.warn('[intentController] Groq completions call failed:', err.message);
+  }
+
+  return null;
+}
+
 async function processNaturalLanguageIntent(req, res) {
   const tenantId = req.tenantId;
   const branchId = req.branchId || null;
@@ -186,22 +367,34 @@ async function processNaturalLanguageIntent(req, res) {
   }
 
   let aiResult = null;
-  if (AI_ENGINE_SERVICE_URL) {
-    try {
-      const aiResp = await aiClient.post('/parse-intent', {
-        text,
-        tenantId,
-        branchId,
-        sourceChannel,
-      });
-      aiResult = aiResp.data;
-    } catch (err) {
-      const detail = err.response ? JSON.stringify(err.response.data) : err.message;
-      console.warn('[intentController] AI orchestration call failed, falling back to local parser:', detail);
+
+  // 1. Try Groq completion if configured
+  if (GROQ_API_KEY) {
+    console.log('[intentController] Processing intent using Groq & Llama model...');
+    aiResult = await parseIntentWithGroq(text);
+  }
+
+  // 2. Try legacy AI engine service url if Groq was not used or failed
+  if (!aiResult || !aiResult.action) {
+    if (AI_ENGINE_SERVICE_URL) {
+      try {
+        console.log('[intentController] Falling back to AI_ENGINE_SERVICE_URL...');
+        const aiResp = await aiClient.post('/parse-intent', {
+          text,
+          tenantId,
+          branchId,
+          sourceChannel,
+        });
+        aiResult = aiResp.data;
+      } catch (err) {
+        const detail = err.response ? JSON.stringify(err.response.data) : err.message;
+        console.warn('[intentController] AI orchestration call failed, falling back to local parser:', detail);
+        aiResult = parseIntentLocally(text);
+      }
+    } else {
+      // 3. Absolute local rule-based regex fallback
       aiResult = parseIntentLocally(text);
     }
-  } else {
-    aiResult = parseIntentLocally(text);
   }
 
   if (!aiResult || !aiResult.action) {

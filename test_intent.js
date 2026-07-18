@@ -200,8 +200,137 @@ async function runIntentTests() {
     console.log('✓ Non-matching commands trigger helpful 422 examples block.');
   }
 
+  // Test Stage C: Conversational AI Agent Integration via Groq & Llama 3.3
+  console.log('Running Conversational Groq & Llama 3.3 unit & integration assertions...');
+  const originalGroqApiKey = process.env.GROQ_API_KEY;
+  const originalGroqModel = process.env.GROQ_MODEL;
+  const originalGroqBaseUrl = process.env.GROQ_BASE_URL;
+
+  process.env.GROQ_API_KEY = 'gsk_mock_api_key_1234567890';
+  process.env.GROQ_MODEL = 'llama-3.3-70b-versatile';
+  process.env.GROQ_BASE_URL = 'https://api.groq.com/openai/v1/'; // with trailing slash to verify sanitization
+
+  // Reload intentController to pick up new env vars
+  try {
+    delete require.cache[require.resolve('./controllers/intentController')];
+  } catch (e) {}
+  const groqIntentController = require('./controllers/intentController');
+
+  // Mock axios.post globally for Groq completions
+  const originalAxiosPost = axios.post;
+  let groqMockResponse = null;
+  let lastPostUrl = null;
+  let lastPostData = null;
+
+  axios.post = async (url, data, config) => {
+    lastPostUrl = url;
+    lastPostData = data;
+    if (groqMockResponse === 'FORCE_FAILURE') {
+      throw new Error('Groq network timeout or rate limit exceeded');
+    }
+    return { data: groqMockResponse };
+  };
+
+  // 1. Verify successful Groq call and JSON parsing
+  {
+    groqMockResponse = {
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              action: 'CREATE_EXPENSE',
+              data: { amount: 375, currency: 'USD', notes: 'Server domain reservation' }
+            })
+          }
+        }
+      ]
+    };
+
+    const reqGroq = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'admin-id', role: 'admin' },
+      body: {
+        text: 'buy domain on USD 375',
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    const res = mockResponse();
+    queriesExecuted.length = 0;
+    await groqIntentController.processNaturalLanguageIntent(reqGroq, res);
+
+    assert.strictEqual(res.statusCode, 201);
+    assert.strictEqual(res.data.recognizedAction, 'CREATE_EXPENSE');
+    assert.strictEqual(res.data.data.amount, 375);
+    assert.strictEqual(res.data.data.currency, 'USD');
+    assert.strictEqual(res.data.data.notes, 'Server domain reservation');
+    assert.strictEqual(lastPostUrl, 'https://api.groq.com/openai/v1/chat/completions', 'URL trailing slashes must be cleanly sanitized');
+    assert.strictEqual(lastPostData.model, 'llama-3.3-70b-versatile', 'Model must match configured model');
+    console.log('✓ Groq & Llama 3.3 integration parsed and executed correctly.');
+  }
+
+  // 2. Verify fallback to rule-based parser when Groq returns non-JSON/invalid payload
+  {
+    groqMockResponse = {
+      choices: [
+        {
+          message: {
+            content: "I cannot parse this, but here's some text: invalid-json"
+          }
+        }
+      ]
+    };
+
+    const reqGroq = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'admin-id', role: 'admin' },
+      body: {
+        text: 'log expense 120 PGK printer paper',
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    const res = mockResponse();
+    queriesExecuted.length = 0;
+    await groqIntentController.processNaturalLanguageIntent(reqGroq, res);
+
+    assert.strictEqual(res.statusCode, 201, 'Should fall back gracefully and execute the fallback intent');
+    assert.strictEqual(res.data.recognizedAction, 'CREATE_EXPENSE');
+    assert.strictEqual(res.data.data.amount, 120);
+    assert.strictEqual(res.data.data.notes, 'printer paper');
+    console.log('✓ Fallback to local regex works when Groq returns non-JSON/invalid payload.');
+  }
+
+  // 3. Verify fallback to local regex parser when Groq API call fails completely (timeout/error)
+  {
+    groqMockResponse = 'FORCE_FAILURE';
+
+    const reqGroq = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'admin-id', role: 'admin' },
+      body: {
+        text: 'received 450 PGK from sale',
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    const res = mockResponse();
+    queriesExecuted.length = 0;
+    await groqIntentController.processNaturalLanguageIntent(reqGroq, res);
+
+    assert.strictEqual(res.statusCode, 201);
+    assert.strictEqual(res.data.recognizedAction, 'CREATE_INCOME');
+    assert.strictEqual(res.data.data.amount, 450);
+    assert.strictEqual(res.data.data.notes, 'from sale');
+    console.log('✓ Fallback to local regex works when Groq endpoint fails completely (timeout/network error).');
+  }
+
   // Restore state
   process.env.AI_ENGINE_SERVICE_URL = originalAiUrl;
+  process.env.GROQ_API_KEY = originalGroqApiKey;
+  process.env.GROQ_MODEL = originalGroqModel;
+  process.env.GROQ_BASE_URL = originalGroqBaseUrl;
+  axios.post = originalAxiosPost;
   axios.create = originalCreate;
   db.query = originalQuery;
 

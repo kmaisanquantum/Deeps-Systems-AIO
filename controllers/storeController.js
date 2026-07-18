@@ -460,7 +460,7 @@ async function checkSite(req, res) {
       });
 
       let isHealthy = false;
-      if (response.status === 200 && response.data !== null && response.data !== undefined) {
+      if (response && response.status === 200 && response.data !== null && response.data !== undefined) {
         const data = response.data;
         if (typeof data === 'object') {
           if (data.status === 'ok' || data.ok === true || data.status === 'healthy') {
@@ -487,7 +487,7 @@ async function checkSite(req, res) {
           timeout: 5000,
           validateStatus: () => true
         });
-        if (fallbackResponse.status >= 200 && fallbackResponse.status < 400) {
+        if (fallbackResponse && fallbackResponse.status >= 200 && fallbackResponse.status < 400) {
           status = 'online';
         }
       }

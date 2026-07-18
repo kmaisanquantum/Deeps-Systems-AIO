@@ -59,6 +59,122 @@ function createCapturingResponse() {
  * orchestration engine, and dispatches the resulting structured action
  * to the appropriate internal controller.
  */
+/**
+ * Rule-based local NLP parser that maps common phrases to structured intents.
+ * Returns { action, data } or null if no match found.
+ */
+function parseIntentLocally(text) {
+  if (!text || typeof text !== 'string') return null;
+  const cleaned = text.trim();
+  const standardCurrencies = ['PGK', 'USD', 'AUD', 'EUR', 'GBP', 'NZD'];
+
+  // 1. Expenses & Income
+  const expenseMatch = cleaned.match(/^(?:log\s+)?expense\s+([0-9]+(?:\.[0-9]+)?)(?:\s+([a-zA-Z]{3}))?(?:\s+(.+))?$/i);
+  if (expenseMatch) {
+    let amount = parseFloat(expenseMatch[1]);
+    let currency = 'PGK';
+    let notes = '';
+    if (expenseMatch[2]) {
+      const code = expenseMatch[2].toUpperCase();
+      if (standardCurrencies.includes(code)) {
+        currency = code;
+        notes = expenseMatch[3] ? expenseMatch[3].trim() : '';
+      } else {
+        notes = (expenseMatch[2] + (expenseMatch[3] ? ' ' + expenseMatch[3] : '')).trim();
+      }
+    } else {
+      notes = expenseMatch[3] ? expenseMatch[3].trim() : '';
+    }
+    return {
+      action: 'CREATE_EXPENSE',
+      data: { amount, currency, notes: notes || 'Logged via local regex parser' }
+    };
+  }
+
+  const incomeMatch = cleaned.match(/^(?:log\s+)?(?:income|received)\s+([0-9]+(?:\.[0-9]+)?)(?:\s+([a-zA-Z]{3}))?(?:\s+(.+))?$/i);
+  if (incomeMatch) {
+    let amount = parseFloat(incomeMatch[1]);
+    let currency = 'PGK';
+    let notes = '';
+    if (incomeMatch[2]) {
+      const code = incomeMatch[2].toUpperCase();
+      if (standardCurrencies.includes(code)) {
+        currency = code;
+        notes = incomeMatch[3] ? incomeMatch[3].trim() : '';
+      } else {
+        notes = (incomeMatch[2] + (incomeMatch[3] ? ' ' + incomeMatch[3] : '')).trim();
+      }
+    } else {
+      notes = incomeMatch[3] ? incomeMatch[3].trim() : '';
+    }
+    return {
+      action: 'CREATE_INCOME',
+      data: { amount, currency, notes: notes || 'Logged via local regex parser' }
+    };
+  }
+
+  // 2. Sales Leads
+  const leadMatch = cleaned.match(/^(?:create|add)\s+lead\s+(.+)$/i);
+  if (leadMatch) {
+    let remaining = leadMatch[1].trim();
+    let email = 'lead@sales.com';
+    let dealValue = 0;
+
+    const emailMatch = remaining.match(/email\s+(\S+)/i);
+    if (emailMatch) {
+      email = emailMatch[1];
+      remaining = remaining.replace(emailMatch[0], '').trim();
+    }
+
+    const valueMatch = remaining.match(/value\s+([0-9]+(?:\.[0-9]+)?)/i);
+    if (valueMatch) {
+      dealValue = parseFloat(valueMatch[1]);
+      remaining = remaining.replace(valueMatch[0], '').trim();
+    }
+
+    return {
+      action: 'CREATE_LEAD',
+      data: { fullName: remaining.trim(), email, dealValue }
+    };
+  }
+
+  // 3. Workspace Tasks
+  const taskMatch = cleaned.match(/^(?:add|create)\s+task\s+(.+)$/i);
+  if (taskMatch) {
+    return {
+      action: 'CREATE_WORKSPACE_TASK',
+      data: { title: taskMatch[1].trim() }
+    };
+  }
+
+  // 4. Store Inventory
+  const itemMatch = cleaned.match(/^(?:add\s+store\s+item|create\s+item)\s+(.+)$/i);
+  if (itemMatch) {
+    let remaining = itemMatch[1].trim();
+    let price = 0;
+    const priceMatch = remaining.match(/price\s+([0-9]+(?:\.[0-9]+)?)/i);
+    if (priceMatch) {
+      price = parseFloat(priceMatch[1]);
+      remaining = remaining.replace(priceMatch[0], '').trim();
+    }
+    return {
+      action: 'CREATE_STORE_ITEM',
+      data: { title: remaining.trim(), price }
+    };
+  }
+
+  // 5. Logistics Shipments
+  const shipmentMatch = cleaned.match(/^(?:create\s+shipment\s+to)\s+(.+)$/i);
+  if (shipmentMatch) {
+    return {
+      action: 'CREATE_SHIPMENT',
+      data: { destinationAddress: shipmentMatch[1].trim() }
+    };
+  }
+
+  return null;
+}
+
 async function processNaturalLanguageIntent(req, res) {
   const tenantId = req.tenantId;
   const branchId = req.branchId || null;
@@ -68,27 +184,28 @@ async function processNaturalLanguageIntent(req, res) {
   if (!text || typeof text !== 'string' || !text.trim()) {
     return res.status(400).json({ error: 'text is required and must be a non-empty string.' });
   }
-  if (!AI_ENGINE_SERVICE_URL) {
-    return res.status(503).json({ error: 'AI_ENGINE_SERVICE_URL is not configured.' });
-  }
 
-  let aiResult;
-  try {
-    const aiResp = await aiClient.post('/parse-intent', {
-      text,
-      tenantId,
-      branchId,
-      sourceChannel,
-    });
-    aiResult = aiResp.data;
-  } catch (err) {
-    const detail = err.response ? JSON.stringify(err.response.data) : err.message;
-    console.error('[intentController] AI orchestration call failed', detail);
-    return res.status(502).json({ error: 'AI intent engine is unavailable.', detail });
+  let aiResult = null;
+  if (AI_ENGINE_SERVICE_URL) {
+    try {
+      const aiResp = await aiClient.post('/parse-intent', {
+        text,
+        tenantId,
+        branchId,
+        sourceChannel,
+      });
+      aiResult = aiResp.data;
+    } catch (err) {
+      const detail = err.response ? JSON.stringify(err.response.data) : err.message;
+      console.warn('[intentController] AI orchestration call failed, falling back to local parser:', detail);
+      aiResult = parseIntentLocally(text);
+    }
+  } else {
+    aiResult = parseIntentLocally(text);
   }
 
   if (!aiResult || !aiResult.action) {
-    return res.status(422).json({ error: 'AI engine did not return a recognizable action.', aiResult });
+    return res.status(422).json({ error: "Try: 'log expense 250', 'create lead John Doe', or 'add task Call supplier'" });
   }
 
   try {

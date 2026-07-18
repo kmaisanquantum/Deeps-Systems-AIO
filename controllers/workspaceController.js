@@ -6,6 +6,7 @@
 'use strict';
 
 const db = require('../db');
+const eventDispatcher = require('../services/eventDispatcher');
 
 // ---------------------------------------------------------------------
 // Tasks Operations
@@ -110,7 +111,9 @@ async function createTask(req, res) {
         dueDate || null,
       ]
     );
-    return res.status(201).json(result.rows[0]);
+    const task = result.rows[0];
+    eventDispatcher.dispatchAsync('workspace.task_created', tenantId, { task });
+    return res.status(201).json(task);
   } catch (err) {
     console.error('[workspaceController] createTask Error:', err);
     return res.status(500).json({ error: 'Failed to create workspace task.' });
@@ -151,7 +154,10 @@ async function updateTaskStatus(req, res) {
       return res.status(404).json({ error: 'Workspace task not found or not in tenant scope.' });
     }
 
-    return res.status(200).json(result.rows[0]);
+    const task = result.rows[0];
+    eventDispatcher.dispatchAsync('workspace.task_updated', tenantId, { task });
+
+    return res.status(200).json(task);
   } catch (err) {
     console.error('[workspaceController] updateTaskStatus Error:', err);
     return res.status(500).json({ error: 'Failed to update workspace task status.' });

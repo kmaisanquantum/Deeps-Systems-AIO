@@ -691,3 +691,44 @@ CREATE TRIGGER set_timestamp_connected_sites
 BEFORE UPDATE ON connected_sites
 FOR EACH ROW
 EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- ---------------------------------------------------------------------
+-- CROSS-MODULE DATA MESH LINK SCHEMA DEFINITIONS
+-- ---------------------------------------------------------------------
+
+-- Create central contacts identity table containing tenant_id
+CREATE TABLE IF NOT EXISTS contacts (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    first_name      VARCHAR(100),
+    last_name       VARCHAR(100),
+    email           VARCHAR(255),
+    phone           VARCHAR(50),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_contacts_tenant_id ON contacts (tenant_id);
+
+-- Update existing tables defensively
+ALTER TABLE hr_profiles ADD COLUMN IF NOT EXISTS contact_id UUID REFERENCES contacts(id);
+ALTER TABLE sales_leads ADD COLUMN IF NOT EXISTS contact_id UUID REFERENCES contacts(id);
+ALTER TABLE store_checkouts ADD COLUMN IF NOT EXISTS contact_id UUID REFERENCES contacts(id);
+
+-- Add traceability links
+ALTER TABLE store_checkouts ADD COLUMN IF NOT EXISTS lead_id UUID REFERENCES sales_leads(id);
+ALTER TABLE store_checkouts ADD COLUMN IF NOT EXISTS hr_profile_id UUID REFERENCES hr_profiles(id);
+
+ALTER TABLE workspace_tasks ADD COLUMN IF NOT EXISTS lead_id UUID REFERENCES sales_leads(id);
+ALTER TABLE workspace_tasks ADD COLUMN IF NOT EXISTS hr_profile_id UUID REFERENCES hr_profiles(id);
+
+-- Add Polymorphic Origin Anchors
+ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS source_module VARCHAR(40);
+ALTER TABLE financial_transactions ADD COLUMN IF NOT EXISTS source_record_id UUID;
+
+ALTER TABLE logistics_shipments ADD COLUMN IF NOT EXISTS source_module VARCHAR(40);
+ALTER TABLE logistics_shipments ADD COLUMN IF NOT EXISTS source_record_id UUID;
+
+ALTER TABLE workspace_tasks ADD COLUMN IF NOT EXISTS source_module VARCHAR(40);
+ALTER TABLE workspace_tasks ADD COLUMN IF NOT EXISTS source_record_id UUID;

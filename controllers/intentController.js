@@ -304,6 +304,49 @@ async function executeIntentAction(aiResult, context) {
       return res.capture;
     }
 
+    case 'CONVERT_LEAD':
+    case 'CONVERT_LEAD_TO_CUSTOMER':
+    case 'CONVERT_LEAD_AND_TASK': {
+      const leadId = data.leadId || data.lead_id;
+      const db = require('../db');
+
+      const leadRes = await db.query(
+        'SELECT * FROM sales_leads WHERE id = $1 AND tenant_id = $2',
+        [leadId, tenantId]
+      );
+      if (leadRes.rowCount === 0) {
+        throw new Error(`Lead ${leadId} not found in scope.`);
+      }
+      const lead = leadRes.rows[0];
+
+      // Update lead to Won to trigger automatic flow
+      fakeReq.params = { id: leadId };
+      fakeReq.body = { stage: 'Won' };
+      const resStage = createCapturingResponse();
+      await salesController.updateLeadStage(fakeReq, resStage);
+
+      // Open an extra custom task (atomic follow-up)
+      fakeReq.params = {};
+      fakeReq.body = {
+        title: data.taskTitle || `AI: Extended follow up for ${lead.full_name}`,
+        description: data.taskDescription || 'Onboarding tasks generated via multi-action NLP command.',
+        dueDate: data.dueDate || data.due_date,
+        status: 'TODO',
+        priority: 'HIGH'
+      };
+      const resTask = createCapturingResponse();
+      await workspaceController.createTask(fakeReq, resTask);
+
+      return {
+        statusCode: 200,
+        body: {
+          message: 'Multi-action lead conversion and task creation executed successfully.',
+          lead: resStage.capture.body,
+          task: resTask.capture.body
+        }
+      };
+    }
+
     default:
       throw new Error(`Unrecognized or unsupported action "${action}" returned by AI engine.`);
   }

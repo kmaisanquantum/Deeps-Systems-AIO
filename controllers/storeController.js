@@ -5,6 +5,7 @@
 'use strict';
 
 const axios = require('axios');
+const eventDispatcher = require('../services/eventDispatcher');
 const db = require('../db');
 
 /**
@@ -298,7 +299,12 @@ async function createCheckout(req, res) {
     );
 
     await client.query('COMMIT');
-    return res.status(201).json(checkoutResult.rows[0]);
+    const checkout = checkoutResult.rows[0];
+    eventDispatcher.dispatchAsync('store.checkout_created', tenantId, { checkout });
+    if (checkout.status === 'COMPLETED') {
+      eventDispatcher.dispatchAsync('store.checkout_completed', tenantId, { checkout });
+    }
+    return res.status(201).json(checkout);
 
   } catch (err) {
     await client.query('ROLLBACK');
@@ -344,7 +350,13 @@ async function updateCheckoutStatus(req, res) {
       return res.status(404).json({ error: 'Checkout not found or not in tenant scope.' });
     }
 
-    return res.status(200).json(result.rows[0]);
+    const checkout = result.rows[0];
+    eventDispatcher.dispatchAsync('store.checkout_updated', tenantId, { checkout });
+    if (checkout.status === 'COMPLETED') {
+      eventDispatcher.dispatchAsync('store.checkout_completed', tenantId, { checkout });
+    }
+
+    return res.status(200).json(checkout);
   } catch (err) {
     console.error('[storeController] updateCheckoutStatus error:', err);
     return res.status(500).json({ error: 'Failed to update checkout status.' });

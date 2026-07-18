@@ -5,6 +5,7 @@
 'use strict';
 
 const db = require('../db');
+const eventDispatcher = require('../services/eventDispatcher');
 
 /**
  * GET /sales/leads
@@ -46,7 +47,12 @@ async function createLead(req, res) {
        RETURNING *`,
       [tenantId, fullName, email.toLowerCase(), dealValue, stage]
     );
-    return res.status(201).json(result.rows[0]);
+    const lead = result.rows[0];
+    eventDispatcher.dispatchAsync('sales.lead_created', tenantId, { lead });
+    if (lead.stage === 'Won') {
+      eventDispatcher.dispatchAsync('sales.lead_won', tenantId, { lead });
+    }
+    return res.status(201).json(lead);
   } catch (err) {
     console.error('[salesController] createLead failed', err);
     return res.status(500).json({ error: 'Failed to create sales lead.' });
@@ -83,7 +89,13 @@ async function updateLeadStage(req, res) {
       return res.status(404).json({ error: 'Lead not found or not in tenant scope.' });
     }
 
-    return res.status(200).json(result.rows[0]);
+    const lead = result.rows[0];
+    eventDispatcher.dispatchAsync('sales.lead_updated', tenantId, { lead });
+    if (lead.stage === 'Won') {
+      eventDispatcher.dispatchAsync('sales.lead_won', tenantId, { lead });
+    }
+
+    return res.status(200).json(lead);
   } catch (err) {
     console.error('[salesController] updateLeadStage error:', err);
     return res.status(500).json({ error: 'Failed to update lead stage.' });
@@ -127,7 +139,13 @@ async function updateLead(req, res) {
       return res.status(404).json({ error: 'Lead not found or not in tenant scope.' });
     }
 
-    return res.status(200).json(result.rows[0]);
+    const lead = result.rows[0];
+    eventDispatcher.dispatchAsync('sales.lead_updated', tenantId, { lead });
+    if (lead.stage === 'Won') {
+      eventDispatcher.dispatchAsync('sales.lead_won', tenantId, { lead });
+    }
+
+    return res.status(200).json(lead);
   } catch (err) {
     console.error('[salesController] updateLead error:', err);
     return res.status(500).json({ error: 'Failed to update lead.' });

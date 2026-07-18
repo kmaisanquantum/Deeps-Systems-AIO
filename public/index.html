@@ -2629,7 +2629,38 @@
                     return;
                 }
 
-                list.innerHTML = data.map(lead => `
+                // Fetch tasks, transactions, and shipments concurrently to build mesh links
+                const [tasksRes, txRes, shipRes] = await Promise.all([
+                    fetch('/workspace/tasks', { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.ok ? r.json() : []),
+                    fetch('/finance/transactions', { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.ok ? r.json() : []),
+                    fetch('/logistics/shipments', { headers: { 'Authorization': `Bearer ${authToken}` } }).then(r => r.ok ? r.json() : [])
+                ]);
+
+                list.innerHTML = data.map(lead => {
+                    const linkedTasks = tasksRes.filter(t => t.lead_id === lead.id || t.source_record_id === lead.id);
+                    const linkedTx = txRes.filter(tx => tx.source_record_id === lead.id);
+                    const linkedShip = shipRes.filter(s => s.source_record_id === lead.id);
+
+                    let relationHtml = '';
+                    if (linkedTasks.length > 0 || linkedTx.length > 0 || linkedShip.length > 0) {
+                        relationHtml += `<div class="mt-3 pt-2 border-t border-slate-800/60 text-[11px] text-slate-400 space-y-1.5 bg-slate-900/40 p-2 rounded">`;
+                        relationHtml += `<div class="font-extrabold uppercase tracking-wider text-cyan-400 text-[10px]">Mesh Relationships:</div>`;
+                        if (linkedTasks.length > 0) {
+                            relationHtml += `<div>📋 <span class="font-bold text-slate-300">Tasks:</span> ` +
+                                linkedTasks.map(t => `${t.title} (${t.status})`).join(', ') + `</div>`;
+                        }
+                        if (linkedTx.length > 0) {
+                            relationHtml += `<div>💰 <span class="font-bold text-slate-300">Transactions:</span> ` +
+                                linkedTx.map(t => `${t.amount} ${t.currency} [${t.transaction_type}]`).join(', ') + `</div>`;
+                        }
+                        if (linkedShip.length > 0) {
+                            relationHtml += `<div>🚚 <span class="font-bold text-slate-300">Shipments:</span> ` +
+                                linkedShip.map(s => `${s.carrier_name} - ${s.shipping_status}`).join(', ') + `</div>`;
+                        }
+                        relationHtml += `</div>`;
+                    }
+
+                    return `
                     <div class="bg-slate-950 border border-slate-800 rounded-md p-4 text-sm flex flex-col gap-1.5">
                         <div class="flex justify-between font-bold items-center">
                             <span>${lead.full_name}</span>
@@ -2646,9 +2677,11 @@
                         </div>
                         <div class="text-slate-300">Email: ${lead.email}</div>
                         <div class="text-slate-300 font-bold">Deal Value: ${lead.deal_value} PGK</div>
+                        ${relationHtml}
                         <div class="text-xs text-slate-500 border-t border-slate-900 pt-2 mt-1">Logged: ${new Date(lead.created_at).toLocaleDateString()}</div>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
             } catch (err) {
                 console.error(err);
                 list.innerHTML = `<p class="text-red-400 text-sm">Failed to retrieve CRM leads.</p>`;

@@ -5,6 +5,7 @@
 'use strict';
 
 const db = require('../db');
+const eventDispatcher = require('../services/eventDispatcher');
 
 /**
  * GET /service-fees
@@ -209,6 +210,9 @@ async function payFee(req, res) {
     );
 
     await client.query('COMMIT');
+
+    // Dispatch the fees.invoice_cleared event asynchronously so the reaction triggers in-process
+    eventDispatcher.dispatchAsync('fees.invoice_cleared', tenantId, { fee: updatedFee });
 
     return res.status(200).json({
       message: 'Service fee paid and recorded in core Finance ledger.',

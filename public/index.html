@@ -4220,6 +4220,15 @@
                     body: JSON.stringify({ text, history: aiChatHistory.slice(0, -1), sourceChannel })
                 });
 
+                if (response.status === 403) {
+                    const data = await response.json().catch(() => ({}));
+                    // Support nesting from executeIntentAction returning body wrapping
+                    const errorMsg = (data.result && data.result.error) || data.error || 'Forbidden: authentication and elevated role required.';
+                    aiChatHistory.push({ role: 'assistant', content: `Permission Denied: ${errorMsg}` });
+                    renderAiChat();
+                    return;
+                }
+
                 if (response.status === 422) {
                     const data = await response.json().catch(() => ({}));
                     const errorMsg = data.error || 'Failed to process AI command.';
@@ -4254,7 +4263,13 @@
                 let responseContent = '';
                 const action = data.recognizedAction;
 
-                if (action === 'ANSWER') {
+                if (action === 'OPEN_MODULE' && data.result && data.result.navigate) {
+                    const targetModule = data.result.navigate;
+                    responseContent = `Navigating to ${targetModule.toUpperCase()} module...`;
+                    if (typeof routeToView === 'function') {
+                        routeToView(`view-${targetModule}`);
+                    }
+                } else if (action === 'ANSWER') {
                     responseContent = data.result && data.result.message ? data.result.message : (data.data && data.data.message ? data.data.message : 'Action processed successfully.');
                 } else if (action) {
                     responseContent = `Recognized action "${action}". Action executed successfully!`;
@@ -4270,7 +4285,7 @@
 
                 // Programmatic data-fetching updates
                 if (action) {
-                    if (['CREATE_EXPENSE', 'CREATE_INCOME', 'LOG_MANUAL_TRANSACTION', 'LIST_TRANSACTIONS', 'LIST_EXPENSES'].includes(action)) {
+                    if (['CREATE_EXPENSE', 'CREATE_INCOME', 'LOG_MANUAL_TRANSACTION', 'LIST_TRANSACTIONS', 'LIST_EXPENSES', 'GET_FINANCE_SUMMARY'].includes(action)) {
                         if (typeof fetchTransactions === 'function') fetchTransactions();
                         if (typeof fetchFinanceSummary === 'function') fetchFinanceSummary();
                     }
@@ -4280,15 +4295,45 @@
                     if (['CREATE_LEAD', 'LIST_LEADS', 'UPDATE_LEAD', 'DELETE_LEAD'].includes(action)) {
                         if (typeof fetchSalesLeads === 'function') fetchSalesLeads();
                     }
-                    if (['CREATE_STORE_ITEM', 'CREATE_STORE_PAGE', 'LIST_STORE_ITEMS', 'UPDATE_STORE_ITEM', 'DELETE_STORE_ITEM'].includes(action)) {
+                    if (['CREATE_STORE_ITEM', 'CREATE_STORE_PAGE', 'LIST_STORE_ITEMS', 'UPDATE_STORE_ITEM', 'DELETE_STORE_ITEM', 'LIST_STORE_PAGES', 'UPDATE_STORE_PAGE', 'DELETE_STORE_PAGE', 'LIST_STORE_CHECKOUTS', 'CREATE_STORE_CHECKOUT', 'UPDATE_STORE_CHECKOUT_STATUS'].includes(action)) {
                         if (typeof fetchStoreItems === 'function') fetchStoreItems();
                         if (typeof fetchStorePages === 'function') fetchStorePages();
+                        if (typeof fetchStoreCheckouts === 'function') fetchStoreCheckouts();
                     }
-                    if (['CREATE_WORKSPACE_TASK', 'CREATE_WORKSPACE_EVENT', 'CREATE_WORKSPACE_DOCUMENT', 'LIST_WORKSPACE_TASKS', 'UPDATE_WORKSPACE_TASK', 'DELETE_WORKSPACE_TASK'].includes(action)) {
+                    if (['CREATE_WORKSPACE_TASK', 'CREATE_WORKSPACE_EVENT', 'CREATE_WORKSPACE_DOCUMENT', 'LIST_WORKSPACE_TASKS', 'UPDATE_WORKSPACE_TASK', 'DELETE_WORKSPACE_TASK', 'LIST_WORKSPACE_EVENTS', 'UPDATE_WORKSPACE_EVENT', 'DELETE_WORKSPACE_EVENT', 'LIST_WORKSPACE_DOCUMENTS', 'UPDATE_WORKSPACE_DOCUMENT', 'DELETE_WORKSPACE_DOCUMENT'].includes(action)) {
                         if (typeof fetchWorkspaceData === 'function') fetchWorkspaceData();
                     }
                     if (['CREATE_SHIPMENT', 'UPDATE_SHIPMENT_STATUS', 'LIST_SHIPMENTS'].includes(action)) {
                         if (typeof fetchShipments === 'function') fetchShipments();
+                    }
+                    if (['SEND_MESSAGE'].includes(action)) {
+                        if (typeof fetchComms === 'function') fetchComms();
+                    }
+                    if (['LIST_DEVOPS_NODES', 'CREATE_DEVOPS_NODE', 'DELETE_DEVOPS_NODE', 'LIST_PIPELINES', 'CREATE_PIPELINE', 'DELETE_PIPELINE', 'TRANSITION_PIPELINE_STAGE'].includes(action)) {
+                        if (typeof fetchNodes === 'function') fetchNodes();
+                        if (typeof fetchPipelines === 'function') fetchPipelines();
+                    }
+                    if (['LIST_LEARNING_RESOURCES', 'CREATE_LEARNING_RESOURCE', 'UPDATE_LEARNING_RESOURCE', 'DELETE_LEARNING_RESOURCE', 'LIST_LEARNING_SCHEDULES', 'CREATE_LEARNING_SCHEDULE'].includes(action)) {
+                        if (typeof fetchLearningResources === 'function') fetchLearningResources();
+                        if (typeof fetchStudySchedules === 'function') fetchStudySchedules();
+                    }
+                    if (['LIST_FEES', 'CREATE_FEE', 'UPDATE_FEE', 'DELETE_FEE', 'PAY_FEE'].includes(action)) {
+                        if (typeof fetchServiceFees === 'function') fetchServiceFees();
+                    }
+                    if (['LIST_USERS', 'CREATE_USER', 'UPDATE_USER', 'DELETE_USER', 'UPDATE_USER_ROLE', 'RESET_USER_PASSWORD', 'UPDATE_USER_STATUS'].includes(action)) {
+                        if (typeof fetchAdminUsers === 'function') fetchAdminUsers();
+                    }
+                    if (['LIST_BRANCHES', 'CREATE_BRANCH', 'UPDATE_BRANCH', 'DELETE_BRANCH'].includes(action)) {
+                        if (typeof fetchBranches === 'function') fetchBranches();
+                    }
+                    if (['GET_TENANT', 'UPDATE_TENANT'].includes(action)) {
+                        if (typeof fetchTenant === 'function') fetchTenant();
+                    }
+                    if (['LIST_TENANTS', 'CREATE_TENANT', 'UPDATE_TENANT_STATUS'].includes(action)) {
+                        if (typeof fetchSuperadminTenants === 'function') fetchSuperadminTenants();
+                    }
+                    if (['LIST_ALL_USERS', 'UPDATE_USER_TENANT_OR_ROLE'].includes(action)) {
+                        if (typeof fetchSuperadminUsers === 'function') fetchSuperadminUsers();
                     }
                 }
             } catch (err) {

@@ -227,9 +227,9 @@ router.post('/intent/process', requireTenant, requireAuth, intentController.proc
 // -----------------------------------------------------------------
 // DevOps Engine Module
 // -----------------------------------------------------------------
-router.get('/api/devops/credentials', requireTenant, devopsController.listCredentials);
-router.post('/api/devops/credentials', requireTenant, devopsController.saveCredential);
-router.delete('/api/devops/credentials/:provider', requireTenant, devopsController.deleteCredential);
+router.get('/devops/credentials', requireTenant, devopsController.listCredentials);
+router.post('/devops/credentials', requireTenant, devopsController.saveCredential);
+router.delete('/devops/credentials/:provider', requireTenant, devopsController.deleteCredential);
 
 router.get('/devops/nodes', requireTenant, devopsController.listNodes);
 router.post('/devops/nodes', requireTenant, devopsController.createNode);

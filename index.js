@@ -15,6 +15,7 @@ const path = require('path');
 const db = require('./db');
 const { tenantResolver } = require('./middleware/tenantResolver');
 const routes = require('./routes/index');
+const { startAutonomousMonitor, stopAutonomousMonitor } = require('./services/autonomousMonitor');
 
 const app = express();
 
@@ -95,6 +96,7 @@ async function startServer() {
   app.listen(PORT, () => {
     console.log(`[deeps-systems-aio] listening on port ${PORT}`);
   });
+  startAutonomousMonitor();
 }
 
 startServer();
@@ -102,6 +104,16 @@ startServer();
 // Cleanly handle shut down of db pools on termination
 process.on('SIGTERM', () => {
   console.log('[app] SIGTERM received. Closing database pool...');
+  stopAutonomousMonitor();
+  db.pool.end(() => {
+    console.log('[app] Database pool closed.');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('[app] SIGINT received. Closing database pool...');
+  stopAutonomousMonitor();
   db.pool.end(() => {
     console.log('[app] Database pool closed.');
     process.exit(0);

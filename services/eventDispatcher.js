@@ -196,6 +196,15 @@ class EventDispatcher extends EventEmitter {
         console.error('[eventDispatcher] fees.invoice_cleared reaction error:', err);
       }
     });
+
+    this.on('autonomous.alert', async (tenantId, payload) => {
+      if (typeof tenantId === 'object' && tenantId.tenantId) {
+        payload = tenantId.payload;
+        tenantId = tenantId.tenantId;
+      }
+      const { type, detail } = payload || {};
+      console.log(`[autonomous.alert] [LOG] Tenant "${tenantId}" issued autonomous alert type "${type}": ${detail}`);
+    });
   }
 
   /**

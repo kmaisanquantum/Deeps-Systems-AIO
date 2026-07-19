@@ -205,18 +205,10 @@ class EventDispatcher extends EventEmitter {
       const { type, detail } = payload || {};
       console.log(`[autonomous.alert] [LOG] Tenant "${tenantId}" issued autonomous alert type "${type}": ${detail}`);
 
-      const alertChannel = (process.env.ALERT_CHANNEL || 'NONE').toUpperCase().trim();
-      if (alertChannel === 'NONE') {
-        return;
-      }
+      const alertChannel = (process.env.ALERT_CHANNEL || '').toLowerCase().trim();
+      const alertRecipient = process.env.ALERT_RECIPIENT || '67579452732';
 
-      let alertRecipient = process.env.ALERT_RECIPIENT || '';
-      if (alertChannel === 'EMAIL' && !alertRecipient) {
-        alertRecipient = 'wokman@dspng.tech';
-      }
-
-      if (!alertRecipient) {
-        console.warn(`[autonomous.alert] Alert recipient not specified for channel: ${alertChannel}`);
+      if (!alertChannel) {
         return;
       }
 
@@ -227,33 +219,71 @@ Impacted Tenant ID: ${tenantId}
 System Timestamp: ${new Date().toISOString()}`;
 
       try {
-        if (['EMAIL', 'WHATSAPP', 'SMS'].includes(alertChannel)) {
-          const communicationController = require('../controllers/communicationController');
-          const fakeReq = {
-            tenantId,
-            authUser: { userId: 'system-monitor', role: 'superadmin' },
-            body: {
-              channel: alertChannel,
-              to: alertRecipient,
-              subject,
-              message
-            }
-          };
-          const fakeRes = createCapturingResponse();
-          await communicationController.dispatchOutboundMessage(fakeReq, fakeRes);
-          console.log(`[autonomous.alert] Dispatched outbound alert through channel "${alertChannel}". HTTP Status: ${fakeRes.capture.statusCode}`);
-        } else if (alertChannel === 'WEBHOOK') {
-          await this.httpClient.post(alertRecipient, {
-            event: 'autonomous.alert',
-            tenantId,
-            type,
-            detail,
-            at: new Date().toISOString()
-          });
-          console.log(`[autonomous.alert] Dispatched alert webhook to: ${alertRecipient}`);
+        if (alertChannel === 'whatsapp') {
+          if (!alertRecipient) {
+            console.warn('[autonomous.alert] Alert recipient not specified for WhatsApp channel.');
+            return;
+          }
+
+          // Circular require prevention: Lazily load communication dependency
+          const commsController = require('../controllers/communicationController');
+          const whatsappMsg = `Deeps Systems Alert [${type}]: ${detail}`;
+
+          let status = 'SENT';
+          try {
+            await commsController.sendWhatsAppMessage(alertRecipient, whatsappMsg);
+            console.log(`[autonomous.alert] Direct WhatsApp alert dispatched to: ${alertRecipient}`);
+          } catch (apiErr) {
+            status = 'FAILED';
+            console.error('[autonomous.alert] Direct WhatsApp alert delivery failed:', apiErr.message);
+          }
+
+          // DB Audit Trail Logging
+          const db = require('../db');
+          try {
+            await db.query(
+              `INSERT INTO communication_logs (tenant_id, channel, direction, recipient, status, subject, message)
+               VALUES ($1, 'WHATSAPP', 'OUTBOUND', $2, $3, $4, $5)`,
+              [tenantId, alertRecipient, status, `WhatsApp Alert: ${type}`, whatsappMsg]
+            );
+          } catch (dbErr) {
+            console.error('[autonomous.alert] failed to persist communication log:', dbErr.message);
+          }
+
+          if (status === 'FAILED') {
+            throw new Error('API delivery failed');
+          }
+        } else {
+          // Fallback other channel delivery routines (EMAIL, SMS, WEBHOOK)
+          const legacyChannel = alertChannel.toUpperCase();
+          if (['EMAIL', 'SMS'].includes(legacyChannel)) {
+            const communicationController = require('../controllers/communicationController');
+            const fakeReq = {
+              tenantId,
+              authUser: { userId: 'system-monitor', role: 'superadmin' },
+              body: {
+                channel: legacyChannel,
+                to: alertRecipient,
+                subject,
+                message
+              }
+            };
+            const fakeRes = createCapturingResponse();
+            await communicationController.dispatchOutboundMessage(fakeReq, fakeRes);
+            console.log(`[autonomous.alert] Dispatched outbound alert through channel "${legacyChannel}". HTTP Status: ${fakeRes.capture.statusCode}`);
+          } else if (legacyChannel === 'WEBHOOK') {
+            await this.httpClient.post(alertRecipient, {
+              event: 'autonomous.alert',
+              tenantId,
+              type,
+              detail,
+              at: new Date().toISOString()
+            });
+            console.log(`[autonomous.alert] Dispatched alert webhook to: ${alertRecipient}`);
+          }
         }
       } catch (err) {
-        console.error(`[autonomous.alert] Delivery failed for channel "${alertChannel}":`, err.message);
+        console.error(`[autonomous.alert] delivery failed: ${err.message}`);
       }
     });
   }

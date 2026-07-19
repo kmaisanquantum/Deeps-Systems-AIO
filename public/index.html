@@ -4228,6 +4228,14 @@
                     return;
                 }
 
+                if (response.status === 502) {
+                    const data = await response.json().catch(() => ({}));
+                    const errorMsg = data.error || 'AI engine (Groq) call failed.';
+                    aiChatHistory.push({ role: 'assistant', content: `Error: ${errorMsg}` });
+                    renderAiChat();
+                    return;
+                }
+
                 if (response.status === 503) {
                     aiChatHistory.push({ role: 'assistant', content: 'AI engine service URL is currently unconfigured.' });
                     renderAiChat();

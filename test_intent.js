@@ -231,6 +231,14 @@ async function runIntentTests() {
     if (groqMockResponse === 'FORCE_FAILURE') {
       throw new Error('Groq network timeout or rate limit exceeded');
     }
+    if (groqMockResponse === 'FORCE_401_UNAUTHORIZED') {
+      const axiosError = new Error('Request failed with status code 401');
+      axiosError.response = {
+        status: 401,
+        data: { error: { message: "Invalid API Key" } }
+      };
+      throw axiosError;
+    }
     return { data: groqMockResponse };
   };
 
@@ -535,6 +543,29 @@ async function runIntentTests() {
     // Restore hrController mock
     hrController.createProfile = originalCreateProfile;
     console.log('✓ Admin actions allow authorized roles (HTTP 201).');
+  }
+
+  // 8. Verify Groq 401 Rejection and HTTP 502 Bubble up
+  {
+    groqMockResponse = 'FORCE_401_UNAUTHORIZED';
+
+    const reqGroq = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'admin-id', role: 'admin' },
+      body: {
+        text: 'unrecognized random word format that does not match local regex',
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    const res = mockResponse();
+    queriesExecuted.length = 0;
+    await groqIntentController.processNaturalLanguageIntent(reqGroq, res);
+
+    assert.strictEqual(res.statusCode, 502, 'Should return Bad Gateway when Groq fails and regex match also fails');
+    assert(res.data.error.includes('401'), 'Should contain the HTTP 401 status code in response details');
+    assert(res.data.error.includes('Invalid API Key'), 'Should contain the short error message from Groq in response details');
+    console.log('✓ Groq 401 Unauthorized API error successfully bubbles up HTTP 502 with precise details.');
   }
 
   // Restore state

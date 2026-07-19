@@ -23,6 +23,8 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 const GROQ_BASE_URL = process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1';
 
+console.log(`[intentController] Startup Configuration: GROQ_API_KEY configured: ${!!GROQ_API_KEY}, GROQ_MODEL: "${GROQ_MODEL}", GROQ_BASE_URL: "${GROQ_BASE_URL}"`);
+
 const aiClient = axios.create({
   baseURL: AI_ENGINE_SERVICE_URL,
   timeout: 15000,
@@ -400,16 +402,23 @@ CRITICAL INSTRUCTIONS:
         const parsed = JSON.parse(rawContent);
         if (parsed && typeof parsed === 'object' && parsed.action) {
           return parsed;
+        } else {
+          return { error: true, details: 'Response JSON is missing structured action field' };
         }
       } catch (parseErr) {
         console.warn('[intentController] Failed to parse JSON content from Groq Llama:', parseErr.message, rawContent);
+        return { error: true, details: `JSON parse error: ${parseErr.message}` };
       }
     }
+    return { error: true, details: 'Empty or malformed completions choice payload returned by Groq' };
   } catch (err) {
-    console.warn('[intentController] Groq completions call failed:', err.message);
+    let errMsg = err.message;
+    if (err.response) {
+      errMsg = JSON.stringify(err.response.status) + ' ' + JSON.stringify(err.response.data);
+    }
+    console.warn('[intentController] Groq completions call failed: ' + errMsg);
+    return { error: true, details: errMsg };
   }
-
-  return null;
 }
 
 async function processNaturalLanguageIntent(req, res) {
@@ -441,12 +450,21 @@ async function processNaturalLanguageIntent(req, res) {
     }
   }
 
+  let groqErrorDetails = null;
+
   // 2. Second choice: GROQ_API_KEY calling parseIntentWithLlama
   if ((!aiResult || !aiResult.action) && GROQ_API_KEY) {
     try {
       console.log('[intentController] Second Choice: parseIntentWithLlama using Groq...');
-      aiResult = await parseIntentWithLlama(text, history);
+      const responseObj = await parseIntentWithLlama(text, history);
+      if (responseObj && responseObj.error === true) {
+        groqErrorDetails = responseObj.details;
+        aiResult = null;
+      } else {
+        aiResult = responseObj;
+      }
     } catch (err) {
+      groqErrorDetails = err.message;
       console.warn('[intentController] Groq completions call failed, falling back to local parser:', err.message);
     }
   }
@@ -458,6 +476,12 @@ async function processNaturalLanguageIntent(req, res) {
   }
 
   if (!aiResult || !aiResult.action) {
+    if (GROQ_API_KEY && groqErrorDetails) {
+      return res.status(502).json({
+        success: false,
+        error: `AI engine (Groq) call failed: ${groqErrorDetails}. Falling back was unsuccessful.`
+      });
+    }
     return res.status(422).json({ error: "Try: 'log expense 250', 'create lead John Doe', or 'add task Call supplier'" });
   }
 

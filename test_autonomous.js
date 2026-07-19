@@ -227,6 +227,71 @@ async function runAutonomousTests() {
     db.query = originalQuery;
   }
 
+  // 4. Verify Autonomous Alert Delivery options and fallbacks
+  {
+    console.log('  Running Autonomous Alert Delivery and channel option assertions...');
+
+    const originalAlertChannel = process.env.ALERT_CHANNEL;
+    const originalAlertRecipient = process.env.ALERT_RECIPIENT;
+
+    // Test Case 4a: ALERT_CHANNEL=EMAIL (Should trigger communicationController.dispatchOutboundMessage)
+    process.env.ALERT_CHANNEL = 'EMAIL';
+    process.env.ALERT_RECIPIENT = 'alert-recipient@test.com';
+
+    const communicationController = require('./controllers/communicationController');
+    const originalDispatchMessage = communicationController.dispatchOutboundMessage;
+
+    let dispatchMessageCalledWith = null;
+    communicationController.dispatchOutboundMessage = async (req, res) => {
+      dispatchMessageCalledWith = req.body;
+      return res.status(200).json({ success: true });
+    };
+
+    // Emit event locally to trigger handler
+    await eventDispatcher.dispatch('autonomous.alert', 'tenant-auto-777', {
+      type: 'SIMULATED_ALERT',
+      detail: 'This is a simulation'
+    });
+
+    assert(dispatchMessageCalledWith, 'EMAIL channel must trigger outbound dispatch');
+    assert.strictEqual(dispatchMessageCalledWith.channel, 'EMAIL');
+    assert.strictEqual(dispatchMessageCalledWith.to, 'alert-recipient@test.com');
+    assert.strictEqual(dispatchMessageCalledWith.subject, 'Deeps AIO Autonomous Alert: SIMULATED_ALERT');
+    assert(dispatchMessageCalledWith.message.includes('This is a simulation'));
+    console.log('    ✓ EMAIL alert channel correctly formats and dispatches outbound alerts.');
+
+    // Test Case 4b: ALERT_CHANNEL=NONE (Should never trigger mock)
+    dispatchMessageCalledWith = null;
+    process.env.ALERT_CHANNEL = 'NONE';
+
+    await eventDispatcher.dispatch('autonomous.alert', 'tenant-auto-777', {
+      type: 'SIMULATED_ALERT',
+      detail: 'This is a simulation'
+    });
+
+    assert.strictEqual(dispatchMessageCalledWith, null, 'NONE channel must never trigger outbound dispatch');
+    console.log('    ✓ NONE/absent alert channel skips outbound dispatch successfully.');
+
+    // Test Case 4c: Verify simulated failure is safely absorbed inside try/catch without crashing event loop
+    process.env.ALERT_CHANNEL = 'EMAIL';
+    communicationController.dispatchOutboundMessage = async (req, res) => {
+      throw new Error('Simulated network breakdown inside SMS/EMAIL transporter');
+    };
+
+    // This must resolve successfully without throwing to our parent thread
+    await eventDispatcher.dispatch('autonomous.alert', 'tenant-auto-777', {
+      type: 'SIMULATED_ALERT',
+      detail: 'This is a simulation'
+    });
+
+    console.log('    ✓ Simulated messaging errors are safely caught and absorbed without crashing event loop.');
+
+    // Restore
+    communicationController.dispatchOutboundMessage = originalDispatchMessage;
+    process.env.ALERT_CHANNEL = originalAlertChannel;
+    process.env.ALERT_RECIPIENT = originalAlertRecipient;
+  }
+
   console.log('--- ALL AUTONOMOUS MONITOR & DEVOPS INTEGRATION TESTS PASSED ---');
 }
 

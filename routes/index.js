@@ -221,7 +221,7 @@ router.patch('/logistics/shipments/:id/status', requireTenant, async (req, res) 
 // -----------------------------------------------------------------
 // Talk-to-Options AI intent engine
 // -----------------------------------------------------------------
-router.post('/intent/process', requireTenant, intentController.processNaturalLanguageIntent);
+router.post('/intent/process', requireTenant, requireAuth, intentController.processNaturalLanguageIntent);
 
 // -----------------------------------------------------------------
 // -----------------------------------------------------------------

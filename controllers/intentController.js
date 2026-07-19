@@ -17,6 +17,14 @@ const salesController = require('./salesController');
 const storeController = require('./storeController');
 const workspaceController = require('./workspaceController');
 
+const communicationController = require('./communicationController');
+const devopsController = require('./devopsController');
+const learningController = require('./learningController');
+const feesController = require('./feesController');
+const bankingController = require('./bankingController');
+const adminController = require('./adminController');
+const superadminController = require('./superadminController');
+
 const AI_ENGINE_SERVICE_URL = process.env.AI_ENGINE_SERVICE_URL;
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -178,6 +186,38 @@ function parseIntentLocally(text) {
     };
   }
 
+  // 6. Navigation: "open <module>"
+  const openMatch = cleaned.match(/^(?:open|navigate\s+to)\s+(.+)$/i);
+  if (openMatch) {
+    return {
+      action: 'OPEN_MODULE',
+      data: { module: openMatch[1].trim().toLowerCase() }
+    };
+  }
+
+  // 7. Communication: "send email to <target>"
+  const emailToMatch = cleaned.match(/^send\s+email\s+to\s+(\S+)(?:\s+(.+))?$/i);
+  if (emailToMatch) {
+    return {
+      action: 'SEND_MESSAGE',
+      data: {
+        channel: 'EMAIL',
+        to: emailToMatch[1].trim(),
+        subject: 'AI Message',
+        message: emailToMatch[2] ? emailToMatch[2].trim() : 'Hello from Deeps AI local fallback.'
+      }
+    };
+  }
+
+  // 8. Admin: "list users"
+  const listUsersMatch = cleaned.match(/^list\s+users$/i);
+  if (listUsersMatch) {
+    return {
+      action: 'LIST_USERS',
+      data: {}
+    };
+  }
+
   return null;
 }
 
@@ -217,55 +257,69 @@ If the user query is a greeting, general workspace question, pure informational 
 
 SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
 
-1. CREATE_EXPENSE: Log a financial expense transaction.
+1. OPEN_MODULE: Navigation routing to a frontend module view.
+   Fields:
+   - "module": string (required, one of: "comms", "hr", "finance", "logistics", "store", "sales", "workspace", "admin", "superadmin", "devops", "learning")
+
+2. SEND_MESSAGE: Send communication logs.
+   Fields:
+   - "channel": "WHATSAPP", "EMAIL", or "SMS" (required)
+   - "to": string (required, phone number or email address)
+   - "subject": string (optional, for email)
+   - "message": string (required)
+
+3. GET_FINANCE_SUMMARY: Retrieve finance dashboard statistics.
+   Fields: {}
+
+4. CREATE_EXPENSE: Log a financial expense transaction.
    Fields:
    - "amount": number (required, e.g. 250)
    - "currency": string (e.g. "PGK", "USD", "AUD". Default: "PGK")
    - "notes": string (e.g. "Office supplies")
 
-2. CREATE_INCOME: Log a financial income transaction.
+5. CREATE_INCOME: Log a financial income transaction.
    Fields:
    - "amount": number (required)
    - "currency": string (Default: "PGK")
    - "notes": string
 
-3. LOG_MANUAL_TRANSACTION: Manual financial transaction entry.
+6. LOG_MANUAL_TRANSACTION: Manual financial transaction entry.
    Fields:
    - "transactionType": "EXPENSE" or "INCOME" (required)
    - "amount": number (required)
    - "currency": string (Default: "PGK")
    - "notes": string
 
-4. LIST_TRANSACTIONS: List financial transactions or expenses.
+7. LIST_TRANSACTIONS: List financial transactions or expenses.
    Fields:
    - "transactionType": "EXPENSE", "INCOME" or "ALL" (optional)
 
-5. CREATE_SHIPMENT: Logistics shipment creation.
+8. CREATE_SHIPMENT: Logistics shipment creation.
    Fields:
    - "carrier": "POST_PNG" or "DHL" (Default: "POST_PNG")
    - "originAddress": string
    - "destinationAddress": string (required)
    - "weightKg": number (optional)
 
-6. LIST_SHIPMENTS: View shipment list.
+9. LIST_SHIPMENTS: View shipment list.
    Fields: {}
 
-7. UPDATE_SHIPMENT_STATUS: Trace or update shipment status.
-   Fields:
-   - "shipmentId": string (required)
+10. UPDATE_SHIPMENT_STATUS: Trace or update shipment status.
+    Fields:
+    - "shipmentId": string (required)
 
-8. CREATE_HR_PROFILE: Create employee HR record. (Admin/Superadmin only)
-   Fields:
-   - "fullName": string (required)
-   - "positionTitle": string (required)
-   - "salaryAmount": number (required)
-   - "salaryCurrency": string (Default: "PGK")
-   - "hireDate": string (date format "YYYY-MM-DD", e.g. "2026-07-18")
+11. CREATE_HR_PROFILE: Create employee HR record. (Admin/Superadmin only)
+    Fields:
+    - "fullName": string (required)
+    - "positionTitle": string (required)
+    - "salaryAmount": number (required)
+    - "salaryCurrency": string (Default: "PGK")
+    - "hireDate": string (date format "YYYY-MM-DD", e.g. "2026-07-18")
 
-9. LIST_HR_PROFILES: View employee HR profiles. (Admin/Superadmin only)
-   Fields: {}
+12. LIST_HR_PROFILES: View employee HR profiles. (Admin/Superadmin only)
+    Fields: {}
 
-10. UPDATE_HR_STATUS: Terminate, activate or update employee details. (Admin/Superadmin only)
+13. UPDATE_HR_STATUS: Terminate, activate or update employee details. (Admin/Superadmin only)
     Fields:
     - "profileId": string (UUID format, optional if employeeName is provided)
     - "employeeName": string (optional, name to resolve and locate)
@@ -274,22 +328,22 @@ SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
     - "positionTitle": string (optional)
     - "salaryAmount": number (optional)
 
-11. DELETE_HR_PROFILE: Delete employee HR record. (Admin/Superadmin only)
+14. DELETE_HR_PROFILE: Delete employee HR record. (Admin/Superadmin only)
     Fields:
     - "profileId": string (optional)
     - "employeeName": string (optional)
 
-12. CREATE_LEAD: Create sales lead.
+15. CREATE_LEAD: Create sales lead.
     Fields:
     - "fullName": string (required)
     - "email": string (optional, default "lead@sales.com")
     - "dealValue": number (optional, default 0)
     - "stage": string (optional, default "Prospect")
 
-13. LIST_LEADS: View sales leads list.
+16. LIST_LEADS: View sales leads list.
     Fields: {}
 
-14. UPDATE_LEAD: Update details or stage of a lead.
+17. UPDATE_LEAD: Update details or stage of a lead.
     Fields:
     - "leadId": string (UUID, optional if leadName is provided)
     - "leadName": string (optional, name to resolve and locate)
@@ -298,22 +352,29 @@ SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
     - "dealValue": number (optional)
     - "stage": string (optional, e.g. "Prospect", "Won", "Lost")
 
-15. DELETE_LEAD: Delete sales lead.
+18. DELETE_LEAD: Delete sales lead.
     Fields:
     - "leadId": string (optional)
     - "leadName": string (optional)
 
-16. CREATE_STORE_ITEM: Web store product item.
+19. CONVERT_LEAD_AND_TASK: Lead conversion to won and extra task trigger.
+    Fields:
+    - "leadId": string (required, UUID of the lead)
+    - "taskTitle": string (optional, default onboarding title)
+    - "taskDescription": string (optional)
+    - "dueDate": string (date format "YYYY-MM-DD")
+
+20. CREATE_STORE_ITEM: Web store product item.
     Fields:
     - "title": string (required)
     - "price": number (optional, default 0)
     - "description": string (optional)
     - "inventoryCount": number (optional, default 0)
 
-17. LIST_STORE_ITEMS: List web store items.
+21. LIST_STORE_ITEMS: List web store items.
     Fields: {}
 
-18. UPDATE_STORE_ITEM: Update product item details.
+22. UPDATE_STORE_ITEM: Update product item details.
     Fields:
     - "itemId": string (UUID, optional if itemName is provided)
     - "itemName": string (optional)
@@ -322,12 +383,48 @@ SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
     - "inventoryCount": number (optional)
     - "description": string (optional)
 
-19. DELETE_STORE_ITEM: Delete web store product item.
+23. DELETE_STORE_ITEM: Delete web store product item.
     Fields:
     - "itemId": string (optional)
     - "itemName": string (optional)
 
-20. CREATE_WORKSPACE_TASK: Create team workspace task.
+24. LIST_STORE_PAGES: List web store pages.
+    Fields: {}
+
+25. CREATE_STORE_PAGE: Web store page.
+    Fields:
+    - "title": string (required)
+    - "slug": string (required, URL friendly, e.g. "about-us")
+    - "content": string (required)
+    - "isPublished": boolean (optional, default true)
+
+26. UPDATE_STORE_PAGE: Update web store page details.
+    Fields:
+    - "pageId": string (required, UUID)
+    - "title": string (optional)
+    - "slug": string (optional)
+    - "content": string (optional)
+
+27. DELETE_STORE_PAGE: Delete web store page.
+    Fields:
+    - "pageId": string (required, UUID)
+
+28. LIST_STORE_CHECKOUTS: List customer checkouts.
+    Fields: {}
+
+29. CREATE_STORE_CHECKOUT: Create web store checkout.
+    Fields:
+    - "itemId": string (required, UUID)
+    - "quantity": number (optional, default 1)
+    - "customerEmail": string (required)
+    - "notes": string (optional)
+
+30. UPDATE_STORE_CHECKOUT_STATUS: Update customer checkout status.
+    Fields:
+    - "checkoutId": string (required, UUID)
+    - "status": "PENDING", "COMPLETED", or "CANCELLED" (required)
+
+31. CREATE_WORKSPACE_TASK: Create team workspace task.
     Fields:
     - "title": string (required)
     - "description": string (optional)
@@ -336,10 +433,10 @@ SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
     - "priority": "LOW", "NORMAL", "HIGH" (optional, default "NORMAL")
     - "dueDate": string (date format "YYYY-MM-DD")
 
-21. LIST_WORKSPACE_TASKS: List team tasks.
+32. LIST_WORKSPACE_TASKS: List team tasks.
     Fields: {}
 
-22. UPDATE_WORKSPACE_TASK: Update task title, status, or details.
+33. UPDATE_WORKSPACE_TASK: Update task title, status, or details.
     Fields:
     - "taskId": string (UUID, optional if taskTitle is provided)
     - "taskTitle": string (optional, current task title to search/match)
@@ -348,18 +445,237 @@ SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
     - "priority": "LOW" | "NORMAL" | "HIGH" (optional)
     - "assigneeUserId": string (optional)
 
-23. DELETE_WORKSPACE_TASK: Delete team task.
+34. DELETE_WORKSPACE_TASK: Delete team task.
     Fields:
     - "taskId": string (optional)
     - "taskTitle": string (optional)
 
-24. CONVERT_LEAD_AND_TASK: Lead conversion to won and extra task trigger.
-    Fields:
-    - "leadId": string (required, UUID of the lead)
-    - "taskTitle": string (optional, default onboarding title)
-    - "taskDescription": string (optional)
-    - "dueDate": string (date format "YYYY-MM-DD")
+35. LIST_WORKSPACE_EVENTS: List workspace calendar events.
+    Fields: {}
 
+36. CREATE_WORKSPACE_EVENT: Create calendar event.
+    Fields:
+    - "title": string (required)
+    - "description": string (optional)
+    - "startsAt": string (ISO datetime string)
+    - "endsAt": string (ISO datetime string)
+    - "location": string (optional)
+    - "organizerUserId": string (optional)
+
+37. UPDATE_WORKSPACE_EVENT: Update calendar event.
+    Fields:
+    - "eventId": string (required, UUID)
+    - "title": string (optional)
+    - "description": string (optional)
+    - "startsAt": string (optional, ISO datetime string)
+    - "endsAt": string (optional, ISO datetime string)
+    - "location": string (optional)
+
+38. DELETE_WORKSPACE_EVENT: Delete calendar event.
+    Fields:
+    - "eventId": string (required, UUID)
+
+39. LIST_WORKSPACE_DOCUMENTS: List workspace documents.
+    Fields: {}
+
+40. CREATE_WORKSPACE_DOCUMENT: Create document template.
+    Fields:
+    - "title": string (required)
+    - "category": string (e.g. "Finance", "HR", "Logistics", "Sales")
+    - "url": string (optional)
+    - "content": string (optional)
+    - "status": "DRAFT" or "PUBLISHED" (Default: "DRAFT")
+    - "notes": string (optional)
+
+41. UPDATE_WORKSPACE_DOCUMENT: Update workspace document details.
+    Fields:
+    - "documentId": string (required, UUID)
+    - "title": string (optional)
+    - "category": string (optional)
+    - "content": string (optional)
+    - "status": string (optional)
+
+42. DELETE_WORKSPACE_DOCUMENT: Delete workspace document.
+    Fields:
+    - "documentId": string (required, UUID)
+
+43. LIST_DEVOPS_NODES: List infrastructure servers/nodes.
+    Fields: {}
+
+44. CREATE_DEVOPS_NODE: Create infrastructure server/node. (Admin/Superadmin only)
+    Fields:
+    - "name": string (required)
+    - "ipAddress": string (required)
+    - "provider": string (optional, default "VULTR")
+
+45. DELETE_DEVOPS_NODE: Delete server node. (Admin/Superadmin only)
+    Fields:
+    - "nodeId": string (required, UUID)
+
+46. LIST_PIPELINES: List DevOps pipelines.
+    Fields: {}
+
+47. CREATE_PIPELINE: Create DevOps pipeline. (Admin/Superadmin only)
+    Fields:
+    - "name": string (required)
+    - "branch": string (required)
+
+48. DELETE_PIPELINE: Delete pipeline. (Admin/Superadmin only)
+    Fields:
+    - "pipelineId": string (required, UUID)
+
+49. TRANSITION_PIPELINE_STAGE: Move pipeline to next stage. (Admin/Superadmin only)
+    Fields:
+    - "pipelineId": string (required, UUID)
+    - "targetStage": string (required, e.g. "BUILD", "TEST", "PROD")
+
+50. LIST_LEARNING_RESOURCES: List learning resources.
+    Fields: {}
+
+51. CREATE_LEARNING_RESOURCE: Create learning resource.
+    Fields:
+    - "title": string (required)
+    - "category": string (optional)
+    - "url": string (optional)
+
+52. UPDATE_LEARNING_RESOURCE: Update learning resource details.
+    Fields:
+    - "resourceId": string (required, UUID)
+    - "title": string (optional)
+    - "category": string (optional)
+    - "url": string (optional)
+
+53. DELETE_LEARNING_RESOURCE: Delete learning resource.
+    Fields:
+    - "resourceId": string (required, UUID)
+
+54. LIST_LEARNING_SCHEDULES: List study/learning schedules.
+    Fields: {}
+
+55. CREATE_LEARNING_SCHEDULE: Create a study schedule.
+    Fields:
+    - "resourceId": string (required, UUID)
+    - "studentUserId": string (required, UUID)
+    - "scheduleDate": string (required, YYYY-MM-DD)
+
+56. LIST_FEES: List service fees invoices.
+    Fields: {}
+
+57. CREATE_FEE: Create a service fee invoice. (Admin/Superadmin only)
+    Fields:
+    - "title": string (required)
+    - "amount": number (required)
+    - "studentUserId": string (required, UUID)
+
+58. UPDATE_FEE: Update service fee details. (Admin/Superadmin only)
+    Fields:
+    - "feeId": string (required, UUID)
+    - "amount": number (optional)
+    - "status": "PENDING" or "PAID" (optional)
+
+59. DELETE_FEE: Delete fee record. (Admin/Superadmin only)
+    Fields:
+    - "feeId": string (required, UUID)
+
+60. PAY_FEE: Log a payment against a service fee invoice.
+    Fields:
+    - "feeId": string (required, UUID)
+    - "amountPaid": number (required)
+    - "paymentMethod": string (required, e.g. "CASH", "CARD", "BSP_PAY", "KINA_IPG")
+
+61. INITIATE_BSP_CHECKOUT: Initiate a BSP Pay IPG session. (Admin/Superadmin only)
+    Fields:
+    - "checkoutId": string (required, UUID)
+    - "amount": number (required)
+    - "currency": string (optional, default "PGK")
+
+62. RECONCILE_MANUAL_TRANSFER: Reconcile manual bank transfer. (Admin/Superadmin only)
+    Fields:
+    - "checkoutId": string (required, UUID)
+    - "bankReference": string (required)
+
+63. LIST_USERS: List users of the current tenant. (Admin/Superadmin only)
+    Fields: {}
+
+64. CREATE_USER: Create a tenant user. (Admin/Superadmin only)
+    Fields:
+    - "username": string (required)
+    - "email": string (required)
+    - "rawPassword": string (required)
+    - "role": "admin", "staff", "student" or "employee" (required)
+
+65. UPDATE_USER: Update tenant user details. (Admin/Superadmin only)
+    Fields:
+    - "userId": string (required, UUID)
+    - "username": string (optional)
+    - "email": string (optional)
+
+66. DELETE_USER: Delete tenant user. (Admin/Superadmin only)
+    Fields:
+    - "userId": string (required, UUID)
+
+67. UPDATE_USER_ROLE: Update tenant user role. (Admin/Superadmin only)
+    Fields:
+    - "userId": string (required, UUID)
+    - "role": "admin", "staff", etc. (required)
+
+68. RESET_USER_PASSWORD: Reset user password. (Admin/Superadmin only)
+    Fields:
+    - "userId": string (required, UUID)
+    - "newPassword": string (required)
+
+69. UPDATE_USER_STATUS: Activate/deactivate user status. (Admin/Superadmin only)
+    Fields:
+    - "userId": string (required, UUID)
+    - "isActive": boolean (required)
+
+70. LIST_BRANCHES: List tenant branches. (Admin/Superadmin only)
+    Fields: {}
+
+71. CREATE_BRANCH: Create tenant branch. (Admin/Superadmin only)
+    Fields:
+    - "name": string (required)
+    - "location": string (optional)
+
+72. UPDATE_BRANCH: Update tenant branch details. (Admin/Superadmin only)
+    Fields:
+    - "branchId": string (required, UUID)
+    - "name": string (optional)
+    - "location": string (optional)
+
+73. DELETE_BRANCH: Delete branch. (Admin/Superadmin only)
+    Fields:
+    - "branchId": string (required, UUID)
+
+74. GET_TENANT: View details of the active tenant. (Admin/Superadmin only)
+    Fields: {}
+
+75. UPDATE_TENANT: Update active tenant configurations. (Admin/Superadmin only)
+    Fields:
+    - "name": string (optional)
+    - "baseDomain": string (optional)
+
+76. LIST_TENANTS: List all platform tenants. (Superadmin only)
+    Fields: {}
+
+77. CREATE_TENANT: Create a new platform tenant. (Superadmin only)
+    Fields:
+    - "name": string (required)
+    - "subdomain": string (required)
+
+78. UPDATE_TENANT_STATUS: Enable/disable tenant status. (Superadmin only)
+    Fields:
+    - "tenantId": string (required, UUID)
+    - "isActive": boolean (required)
+
+79. LIST_ALL_USERS: List all global platform users. (Superadmin only)
+    Fields: {}
+
+80. UPDATE_USER_TENANT_OR_ROLE: Change user tenant scope or role. (Superadmin only)
+    Fields:
+    - "userId": string (required, UUID)
+    - "tenantId": string (optional, UUID)
+    - "role": string (optional)
 CRITICAL INSTRUCTIONS:
 - You must ONLY return a raw JSON object with keys "action" and "data".
 - No conversational preamble, explanation, markdown blocks, or surrounding text. Just valid JSON.
@@ -482,7 +798,7 @@ async function processNaturalLanguageIntent(req, res) {
         error: `AI engine (Groq) call failed: ${groqErrorDetails}. Falling back was unsuccessful.`
       });
     }
-    return res.status(422).json({ error: "Try: 'log expense 250', 'create lead John Doe', or 'add task Call supplier'" });
+    return res.status(422).json({ error: "Try: 'log expense 250', 'create lead John Doe', 'add task Call supplier', 'open devops', 'send email to user@test.com', or 'list users'" });
   }
 
   try {
@@ -519,20 +835,67 @@ async function executeIntentAction(aiResult, context) {
   const { action, data = {} } = aiResult;
   const { tenantId, branchId, authUser } = context;
 
-  const adminOnlyActions = [
+  const superadminActions = [
+    'LIST_TENANTS',
+    'CREATE_TENANT',
+    'UPDATE_TENANT_STATUS',
+    'LIST_ALL_USERS',
+    'UPDATE_USER_TENANT_OR_ROLE'
+  ];
+
+  const adminActions = [
     'CREATE_HR_PROFILE',
     'UPDATE_HR_STATUS',
     'PULL_HR_PROFILE',
     'LIST_HR_PROFILES',
-    'DELETE_HR_PROFILE'
+    'DELETE_HR_PROFILE',
+    'CREATE_DEVOPS_NODE',
+    'DELETE_DEVOPS_NODE',
+    'CREATE_PIPELINE',
+    'DELETE_PIPELINE',
+    'TRANSITION_PIPELINE_STAGE',
+    'INITIATE_BSP_CHECKOUT',
+    'RECONCILE_MANUAL_TRANSFER',
+    'CREATE_FEE',
+    'UPDATE_FEE',
+    'DELETE_FEE',
+    'LIST_USERS',
+    'CREATE_USER',
+    'UPDATE_USER',
+    'DELETE_USER',
+    'UPDATE_USER_ROLE',
+    'RESET_USER_PASSWORD',
+    'UPDATE_USER_STATUS',
+    'LIST_BRANCHES',
+    'CREATE_BRANCH',
+    'UPDATE_BRANCH',
+    'DELETE_BRANCH',
+    'GET_TENANT',
+    'UPDATE_TENANT'
   ];
-  if (adminOnlyActions.includes(action)) {
-    const role = authUser ? authUser.role : null;
-    if (role !== 'admin' && role !== 'superadmin') {
+
+  if (superadminActions.includes(action) || adminActions.includes(action)) {
+    if (!authUser || !authUser.role) {
       return {
         statusCode: 403,
-        body: { error: 'Forbidden: Admin access required.' }
+        body: { error: 'Forbidden: authentication and elevated role required.' }
       };
+    }
+    const role = authUser.role;
+    if (superadminActions.includes(action)) {
+      if (role !== 'superadmin') {
+        return {
+          statusCode: 403,
+          body: { error: 'Forbidden: authentication and elevated role required.' }
+        };
+      }
+    } else if (adminActions.includes(action)) {
+      if (role !== 'admin' && role !== 'superadmin') {
+        return {
+          statusCode: 403,
+          body: { error: 'Forbidden: authentication and elevated role required.' }
+        };
+      }
     }
   }
 
@@ -756,6 +1119,476 @@ async function executeIntentAction(aiResult, context) {
           task: resTask.capture.body
         }
       };
+    }
+
+    case 'OPEN_MODULE': {
+      return {
+        statusCode: 200,
+        body: { navigate: data.module }
+      };
+    }
+
+    case 'SEND_MESSAGE': {
+      fakeReq.body = {
+        channel: data.channel,
+        to: data.to,
+        subject: data.subject,
+        message: data.message
+      };
+      const res = createCapturingResponse();
+      await communicationController.dispatchOutboundMessage(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'GET_FINANCE_SUMMARY': {
+      const res = createCapturingResponse();
+      await financeController.getFinanceSummary(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_DEVOPS_NODES': {
+      const res = createCapturingResponse();
+      await devopsController.listNodes(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_DEVOPS_NODE': {
+      fakeReq.body = {
+        name: data.name,
+        ipAddress: data.ipAddress,
+        provider: data.provider || 'VULTR'
+      };
+      const res = createCapturingResponse();
+      await devopsController.createNode(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_DEVOPS_NODE': {
+      fakeReq.params = { id: data.nodeId };
+      const res = createCapturingResponse();
+      await devopsController.deleteNode(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_PIPELINES': {
+      const res = createCapturingResponse();
+      await devopsController.listPipelines(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_PIPELINE': {
+      fakeReq.body = {
+        name: data.name,
+        branch: data.branch
+      };
+      const res = createCapturingResponse();
+      await devopsController.createPipeline(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_PIPELINE': {
+      fakeReq.params = { id: data.pipelineId };
+      const res = createCapturingResponse();
+      await devopsController.deletePipeline(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'TRANSITION_PIPELINE_STAGE': {
+      fakeReq.params = { id: data.pipelineId };
+      fakeReq.body = { stage: data.targetStage };
+      const res = createCapturingResponse();
+      await devopsController.transitionStage(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_LEARNING_RESOURCES': {
+      const res = createCapturingResponse();
+      await learningController.listResources(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_LEARNING_RESOURCE': {
+      fakeReq.body = {
+        title: data.title,
+        category: data.category,
+        url: data.url
+      };
+      const res = createCapturingResponse();
+      await learningController.createResource(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_LEARNING_RESOURCE': {
+      fakeReq.params = { id: data.resourceId };
+      fakeReq.body = {
+        title: data.title,
+        category: data.category,
+        url: data.url
+      };
+      const res = createCapturingResponse();
+      await learningController.updateResource(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_LEARNING_RESOURCE': {
+      fakeReq.params = { id: data.resourceId };
+      const res = createCapturingResponse();
+      await learningController.deleteResource(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_LEARNING_SCHEDULES': {
+      const res = createCapturingResponse();
+      await learningController.listSchedules(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_LEARNING_SCHEDULE': {
+      fakeReq.body = {
+        resourceId: data.resourceId,
+        studentUserId: data.studentUserId,
+        scheduleDate: data.scheduleDate
+      };
+      const res = createCapturingResponse();
+      await learningController.createSchedule(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_FEES': {
+      const res = createCapturingResponse();
+      await feesController.listFees(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_FEE': {
+      fakeReq.body = {
+        title: data.title,
+        amount: data.amount,
+        studentUserId: data.studentUserId
+      };
+      const res = createCapturingResponse();
+      await feesController.createFee(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_FEE': {
+      fakeReq.params = { id: data.feeId };
+      fakeReq.body = {
+        amount: data.amount,
+        status: data.status
+      };
+      const res = createCapturingResponse();
+      await feesController.updateFee(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_FEE': {
+      fakeReq.params = { id: data.feeId };
+      const res = createCapturingResponse();
+      await feesController.deleteFee(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'PAY_FEE': {
+      fakeReq.params = { id: data.feeId };
+      fakeReq.body = {
+        amountPaid: data.amountPaid,
+        paymentMethod: data.paymentMethod
+      };
+      const res = createCapturingResponse();
+      await feesController.payFee(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'INITIATE_BSP_CHECKOUT': {
+      fakeReq.body = {
+        checkoutId: data.checkoutId,
+        amount: data.amount,
+        currency: data.currency || 'PGK'
+      };
+      const res = createCapturingResponse();
+      await bankingController.initiateBSPPayCheck(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'RECONCILE_MANUAL_TRANSFER': {
+      fakeReq.body = {
+        checkoutId: data.checkoutId,
+        bankReference: data.bankReference
+      };
+      const res = createCapturingResponse();
+      await bankingController.reconcileManualTransfer(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_STORE_PAGES': {
+      const res = createCapturingResponse();
+      await storeController.listPages(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_STORE_PAGE': {
+      fakeReq.params = { id: data.pageId };
+      fakeReq.body = {
+        title: data.title,
+        slug: data.slug,
+        content: data.content
+      };
+      const res = createCapturingResponse();
+      await storeController.updatePage(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_STORE_PAGE': {
+      fakeReq.params = { id: data.pageId };
+      const res = createCapturingResponse();
+      await storeController.deletePage(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_STORE_CHECKOUTS': {
+      const res = createCapturingResponse();
+      await storeController.listCheckouts(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_STORE_CHECKOUT': {
+      fakeReq.body = {
+        itemId: data.itemId,
+        quantity: data.quantity || 1,
+        customerEmail: data.customerEmail,
+        notes: data.notes
+      };
+      const res = createCapturingResponse();
+      await storeController.createCheckout(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_STORE_CHECKOUT_STATUS': {
+      fakeReq.params = { id: data.checkoutId };
+      fakeReq.body = {
+        status: data.status
+      };
+      const res = createCapturingResponse();
+      await storeController.updateCheckoutStatus(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_WORKSPACE_EVENTS': {
+      const res = createCapturingResponse();
+      await workspaceController.listEvents(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_WORKSPACE_EVENT': {
+      fakeReq.params = { id: data.eventId };
+      fakeReq.body = {
+        title: data.title,
+        description: data.description,
+        startsAt: data.startsAt,
+        endsAt: data.endsAt,
+        location: data.location
+      };
+      const res = createCapturingResponse();
+      await workspaceController.updateEvent(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_WORKSPACE_EVENT': {
+      fakeReq.params = { id: data.eventId };
+      const res = createCapturingResponse();
+      await workspaceController.deleteEvent(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_WORKSPACE_DOCUMENTS': {
+      const res = createCapturingResponse();
+      await workspaceController.listDocuments(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_WORKSPACE_DOCUMENT': {
+      fakeReq.params = { id: data.documentId };
+      fakeReq.body = {
+        title: data.title,
+        category: data.category,
+        content: data.content,
+        status: data.status
+      };
+      const res = createCapturingResponse();
+      await workspaceController.updateDocument(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_WORKSPACE_DOCUMENT': {
+      fakeReq.params = { id: data.documentId };
+      const res = createCapturingResponse();
+      await workspaceController.deleteDocument(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_USERS': {
+      const res = createCapturingResponse();
+      await adminController.listUsers(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_USER': {
+      fakeReq.body = {
+        username: data.username,
+        email: data.email,
+        rawPassword: data.rawPassword,
+        role: data.role
+      };
+      const res = createCapturingResponse();
+      await adminController.createUser(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_USER': {
+      fakeReq.params = { id: data.userId };
+      fakeReq.body = {
+        username: data.username,
+        email: data.email
+      };
+      const res = createCapturingResponse();
+      await adminController.updateUser(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_USER': {
+      fakeReq.params = { id: data.userId };
+      const res = createCapturingResponse();
+      await adminController.deleteUser(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_USER_ROLE': {
+      fakeReq.params = { id: data.userId };
+      fakeReq.body = {
+        role: data.role
+      };
+      const res = createCapturingResponse();
+      await adminController.updateUserRole(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'RESET_USER_PASSWORD': {
+      fakeReq.params = { id: data.userId };
+      fakeReq.body = {
+        newPassword: data.newPassword
+      };
+      const res = createCapturingResponse();
+      await adminController.resetUserPassword(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_USER_STATUS': {
+      fakeReq.params = { id: data.userId };
+      fakeReq.body = {
+        isActive: data.isActive
+      };
+      const res = createCapturingResponse();
+      await adminController.updateUserStatus(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_BRANCHES': {
+      const res = createCapturingResponse();
+      await adminController.listBranches(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_BRANCH': {
+      fakeReq.body = {
+        name: data.name,
+        location: data.location
+      };
+      const res = createCapturingResponse();
+      await adminController.createBranch(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_BRANCH': {
+      fakeReq.params = { id: data.branchId };
+      fakeReq.body = {
+        name: data.name,
+        location: data.location
+      };
+      const res = createCapturingResponse();
+      await adminController.updateBranch(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_BRANCH': {
+      fakeReq.params = { id: data.branchId };
+      const res = createCapturingResponse();
+      await adminController.deleteBranch(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'GET_TENANT': {
+      const res = createCapturingResponse();
+      await adminController.getTenant(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_TENANT': {
+      fakeReq.body = {
+        name: data.name,
+        baseDomain: data.baseDomain
+      };
+      const res = createCapturingResponse();
+      await adminController.updateTenant(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_TENANTS': {
+      fakeReq.tenantId = null; // Bypass containment
+      const res = createCapturingResponse();
+      await superadminController.listTenants(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'CREATE_TENANT': {
+      fakeReq.tenantId = null; // Bypass containment
+      fakeReq.body = {
+        name: data.name,
+        subdomain: data.subdomain
+      };
+      const res = createCapturingResponse();
+      await superadminController.createTenant(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_TENANT_STATUS': {
+      fakeReq.tenantId = null; // Bypass containment
+      fakeReq.params = { id: data.tenantId };
+      fakeReq.body = {
+        isActive: data.isActive
+      };
+      const res = createCapturingResponse();
+      await superadminController.updateTenantStatus(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_ALL_USERS': {
+      fakeReq.tenantId = null; // Bypass containment
+      const res = createCapturingResponse();
+      await superadminController.listAllUsers(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'UPDATE_USER_TENANT_OR_ROLE': {
+      fakeReq.tenantId = null; // Bypass containment
+      fakeReq.params = { id: data.userId };
+      fakeReq.body = {
+        tenantId: data.tenantId,
+        role: data.role
+      };
+      const res = createCapturingResponse();
+      await superadminController.updateUserTenantOrRole(fakeReq, res);
+      return res.capture;
     }
 
     case 'ANSWER': {

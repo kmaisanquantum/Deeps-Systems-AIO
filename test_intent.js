@@ -27,6 +27,12 @@ const db = require('./db');
 const financeController = require('./controllers/financeController');
 const salesController = require('./controllers/salesController');
 const hrController = require('./controllers/hrController');
+const superadminController = require('./controllers/superadminController');
+const devopsController = require('./controllers/devopsController');
+const feesController = require('./controllers/feesController');
+const learningController = require('./controllers/learningController');
+const communicationController = require('./controllers/communicationController');
+const adminController = require('./controllers/adminController');
 
 // Mock req and res builders
 function mockResponse() {
@@ -514,7 +520,7 @@ async function runIntentTests() {
     const resStaff = mockResponse();
     await groqIntentController.processNaturalLanguageIntent(reqStaff, resStaff);
     assert.strictEqual(resStaff.statusCode, 403);
-    assert.strictEqual(resStaff.data.result.error, 'Forbidden: Admin access required.');
+    assert.strictEqual(resStaff.data.result.error, 'Forbidden: authentication and elevated role required.');
     console.log('✓ Admin actions block unauthorized staff roles (HTTP 403).');
 
     // Turn 7b: Admin User (role 'admin') -> Expect Success
@@ -566,6 +572,251 @@ async function runIntentTests() {
     assert(res.data.error.includes('401'), 'Should contain the HTTP 401 status code in response details');
     assert(res.data.error.includes('Invalid API Key'), 'Should contain the short error message from Groq in response details');
     console.log('✓ Groq 401 Unauthorized API error successfully bubbles up HTTP 502 with precise details.');
+  }
+
+  // 9. Verify Superadmin Action Role Security (RBAC)
+  {
+    groqMockResponse = {
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              action: 'CREATE_TENANT',
+              data: { name: 'Acme Corp', subdomain: 'acme' }
+            })
+          }
+        }
+      ]
+    };
+
+    // Attempt with admin role -> Expected 403 Forbidden
+    const reqAdminUser = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'admin-id', role: 'admin' },
+      body: {
+        text: 'create tenant Acme subdomain acme',
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    const resAdminUser = mockResponse();
+    await groqIntentController.processNaturalLanguageIntent(reqAdminUser, resAdminUser);
+    assert.strictEqual(resAdminUser.statusCode, 403, 'Admin should be blocked from superadmin actions');
+    assert.strictEqual(resAdminUser.data.result.error, 'Forbidden: authentication and elevated role required.');
+    console.log('✓ RBAC successfully blocks Admin role from Superadmin actions (HTTP 403).');
+
+    // Attempt with superadmin role -> Expected Success
+    const reqSuperUser = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'super-id', role: 'superadmin' },
+      body: {
+        text: 'create tenant Acme subdomain acme',
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    const originalCreateTenant = superadminController.createTenant;
+    let createTenantCalled = false;
+    superadminController.createTenant = async (req, res) => {
+      createTenantCalled = true;
+      return res.status(201).json({ id: 'tenant-acme-uuid', name: 'Acme Corp' });
+    };
+
+    const resSuperUser = mockResponse();
+    await groqIntentController.processNaturalLanguageIntent(reqSuperUser, resSuperUser);
+    assert.strictEqual(resSuperUser.statusCode, 201, 'Superadmin role should be permitted to create tenants');
+    assert(createTenantCalled, 'Target superadminController.createTenant method must be invoked');
+
+    superadminController.createTenant = originalCreateTenant;
+    console.log('✓ RBAC successfully permits Superadmin role for Superadmin actions.');
+  }
+
+  // 10. Verify OPEN_MODULE intent and frontend navigation integration
+  {
+    groqMockResponse = {
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              action: 'OPEN_MODULE',
+              data: { module: 'devops' }
+            })
+          }
+        }
+      ]
+    };
+
+    const reqNav = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'admin-id', role: 'admin' },
+      body: {
+        text: 'open devops',
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    const resNav = mockResponse();
+    await groqIntentController.processNaturalLanguageIntent(reqNav, resNav);
+    assert.strictEqual(resNav.statusCode, 200);
+    assert.strictEqual(resNav.data.recognizedAction, 'OPEN_MODULE');
+    assert.strictEqual(resNav.data.result.navigate, 'devops');
+    console.log('✓ Navigation (OPEN_MODULE) intent handles routing without database operations.');
+  }
+
+  // 11. Verify Local Fallback Engine Regex expansion
+  {
+    // Temporarily unset GROQ_API_KEY to trigger local parser fallback
+    const tempApiKey = process.env.GROQ_API_KEY;
+    process.env.GROQ_API_KEY = '';
+
+    try {
+      delete require.cache[require.resolve('./controllers/intentController')];
+    } catch (e) {}
+    const localIntentController = require('./controllers/intentController');
+
+    const baseReq = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'admin-id', role: 'admin' },
+      body: {
+        text: '',
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    // Test Local Match 1: open learning
+    {
+      baseReq.body.text = 'open learning';
+      const res = mockResponse();
+      await localIntentController.processNaturalLanguageIntent(baseReq, res);
+      assert.strictEqual(res.statusCode, 200);
+      assert.strictEqual(res.data.recognizedAction, 'OPEN_MODULE');
+      assert.strictEqual(res.data.result.navigate, 'learning');
+      console.log('  ✓ Local Match 1 ("open <module>") verified.');
+    }
+
+    // Test Local Match 2: send email to target
+    {
+      baseReq.body.text = 'send email to user@test.com hello world from local';
+      const res = mockResponse();
+      const originalSend = communicationController.dispatchOutboundMessage;
+      let sendCalled = false;
+      communicationController.dispatchOutboundMessage = async (req, res) => {
+        sendCalled = true;
+        return res.status(200).json({ success: true });
+      };
+
+      await localIntentController.processNaturalLanguageIntent(baseReq, res);
+      assert.strictEqual(res.statusCode, 200);
+      assert.strictEqual(res.data.recognizedAction, 'SEND_MESSAGE');
+      assert.strictEqual(res.data.data.to, 'user@test.com');
+      assert.strictEqual(res.data.data.message, 'hello world from local');
+      assert(sendCalled);
+
+      communicationController.dispatchOutboundMessage = originalSend;
+      console.log('  ✓ Local Match 2 ("send email to <target>") verified.');
+    }
+
+    // Test Local Match 3: list users
+    {
+      baseReq.body.text = 'list users';
+      const res = mockResponse();
+      const originalList = adminController.listUsers;
+      let listCalled = false;
+      adminController.listUsers = async (req, res) => {
+        listCalled = true;
+        return res.status(200).json([{ id: 'u1', username: 'kmaisan' }]);
+      };
+
+      await localIntentController.processNaturalLanguageIntent(baseReq, res);
+      assert.strictEqual(res.statusCode, 200);
+      assert.strictEqual(res.data.recognizedAction, 'LIST_USERS');
+      assert(listCalled);
+
+      adminController.listUsers = originalList;
+      console.log('  ✓ Local Match 3 ("list users") verified.');
+    }
+
+    process.env.GROQ_API_KEY = tempApiKey;
+  }
+
+  // 12. Verify cross-module controller integrations
+  {
+    const crossActions = [
+      {
+        action: 'SEND_MESSAGE',
+        data: { channel: 'SMS', to: '+67570000000', message: 'Hi' },
+        controller: communicationController,
+        method: 'dispatchOutboundMessage',
+        status: 200
+      },
+      {
+        action: 'LIST_DEVOPS_NODES',
+        data: {},
+        controller: devopsController,
+        method: 'listNodes',
+        status: 200
+      },
+      {
+        action: 'LIST_PIPELINES',
+        data: {},
+        controller: devopsController,
+        method: 'listPipelines',
+        status: 200
+      },
+      {
+        action: 'LIST_FEES',
+        data: {},
+        controller: feesController,
+        method: 'listFees',
+        status: 200
+      },
+      {
+        action: 'LIST_LEARNING_RESOURCES',
+        data: {},
+        controller: learningController,
+        method: 'listResources',
+        status: 200
+      }
+    ];
+
+    for (const testCase of crossActions) {
+      groqMockResponse = {
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                action: testCase.action,
+                data: testCase.data
+              })
+            }
+          }
+        ]
+      };
+
+      const reqCross = {
+        tenantId: 'tenant-123',
+        authUser: { userId: 'admin-id', role: 'admin' },
+        body: {
+          text: 'trigger action',
+          sourceChannel: 'INTERNAL'
+        }
+      };
+
+      const originalMethod = testCase.controller[testCase.method];
+      let methodCalled = false;
+      testCase.controller[testCase.method] = async (req, res) => {
+        methodCalled = true;
+        return res.status(testCase.status).json({ mock: 'ok' });
+      };
+
+      const res = mockResponse();
+      await groqIntentController.processNaturalLanguageIntent(reqCross, res);
+      assert.strictEqual(res.statusCode, testCase.status);
+      assert(methodCalled, `Case ${testCase.action} must trigger ${testCase.method} on target controller`);
+
+      testCase.controller[testCase.method] = originalMethod;
+      console.log(`✓ Controller integration verified for action ${testCase.action}.`);
+    }
   }
 
   // Restore state

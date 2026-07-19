@@ -204,6 +204,57 @@ class EventDispatcher extends EventEmitter {
       }
       const { type, detail } = payload || {};
       console.log(`[autonomous.alert] [LOG] Tenant "${tenantId}" issued autonomous alert type "${type}": ${detail}`);
+
+      const alertChannel = (process.env.ALERT_CHANNEL || 'NONE').toUpperCase().trim();
+      if (alertChannel === 'NONE') {
+        return;
+      }
+
+      let alertRecipient = process.env.ALERT_RECIPIENT || '';
+      if (alertChannel === 'EMAIL' && !alertRecipient) {
+        alertRecipient = 'wokman@dspng.tech';
+      }
+
+      if (!alertRecipient) {
+        console.warn(`[autonomous.alert] Alert recipient not specified for channel: ${alertChannel}`);
+        return;
+      }
+
+      const subject = `Deeps AIO Autonomous Alert: ${type}`;
+      const message = `Autonomous alert of type "${type}" has been raised.
+Detail: ${detail}
+Impacted Tenant ID: ${tenantId}
+System Timestamp: ${new Date().toISOString()}`;
+
+      try {
+        if (['EMAIL', 'WHATSAPP', 'SMS'].includes(alertChannel)) {
+          const communicationController = require('../controllers/communicationController');
+          const fakeReq = {
+            tenantId,
+            authUser: { userId: 'system-monitor', role: 'superadmin' },
+            body: {
+              channel: alertChannel,
+              to: alertRecipient,
+              subject,
+              message
+            }
+          };
+          const fakeRes = createCapturingResponse();
+          await communicationController.dispatchOutboundMessage(fakeReq, fakeRes);
+          console.log(`[autonomous.alert] Dispatched outbound alert through channel "${alertChannel}". HTTP Status: ${fakeRes.capture.statusCode}`);
+        } else if (alertChannel === 'WEBHOOK') {
+          await this.httpClient.post(alertRecipient, {
+            event: 'autonomous.alert',
+            tenantId,
+            type,
+            detail,
+            at: new Date().toISOString()
+          });
+          console.log(`[autonomous.alert] Dispatched alert webhook to: ${alertRecipient}`);
+        }
+      } catch (err) {
+        console.error(`[autonomous.alert] Delivery failed for channel "${alertChannel}":`, err.message);
+      }
     });
   }
 

@@ -1894,14 +1894,14 @@
     <div class="toast" id="toast-notification"></div>
 
     <!-- AI CONVERSATIONAL PANEL -->
-    <div id="ai-command-bar" style="display: none;" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 z-50 flex flex-col gap-3">
+    <div id="ai-command-bar" style="display: none;" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-3xl px-4 z-50 flex flex-col gap-3">
         <!-- Chat Thread Panel -->
-        <div id="ai-chat-thread-panel" class="hidden flex-col bg-slate-950/95 backdrop-blur-lg border border-slate-800 rounded-2xl shadow-2xl p-4 max-h-72 overflow-hidden transition-all duration-300">
+        <div id="ai-chat-thread-panel" class="hidden flex-col bg-slate-950/95 backdrop-blur-lg border border-slate-800 rounded-2xl shadow-2xl p-4 max-h-[60vh] overflow-hidden transition-all duration-300">
             <!-- Header -->
             <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2 shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="flex h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                    <span class="text-xs font-semibold text-cyan-400 tracking-wider uppercase">Deeps AI Assistant</span>
+                    <span class="text-xs font-semibold text-cyan-400 tracking-wider uppercase">Your AI Assistant</span>
                 </div>
                 <button onclick="clearAiChat()" class="text-[10px] text-slate-500 hover:text-rose-400 transition-colors uppercase font-medium">
                     Clear History
@@ -1922,7 +1922,7 @@
                 </svg>
             </button>
             <!-- Input text -->
-            <input type="text" id="agent-input" onkeydown="handleAgentKeydown(event)" class="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none py-1.5" placeholder="Ask AI: e.g. 'log expense 250' or click mic to speak...">
+            <input type="text" id="agent-input" onkeydown="handleAgentKeydown(event)" class="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none py-1.5" placeholder="Type to ask, or tap the mic to speak">
             <!-- Send button -->
             <button id="agent-send-btn" onclick="submitAgentCommand()" class="p-2.5 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white transition-all duration-200 flex items-center justify-center shrink-0 shadow-md shadow-cyan-500/20" title="Send command">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">

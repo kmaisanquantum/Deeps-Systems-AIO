@@ -505,12 +505,47 @@ SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
 44. CREATE_DEVOPS_NODE: Create infrastructure server/node. (Admin/Superadmin only)
     Fields:
     - "name": string (required)
-    - "ipAddress": string (required)
+    - "ipAddress": string (required, placed inside nested config block)
     - "provider": string (optional, default "VULTR")
+    - "branchId": string (optional, UUID of the branch)
 
 45. DELETE_DEVOPS_NODE: Delete server node. (Admin/Superadmin only)
     Fields:
     - "nodeId": string (required, UUID)
+
+45a. UPDATE_DEVOPS_NODE: Update infrastructure node configurations. (Admin/Superadmin only)
+    Fields:
+    - "nodeId": string (required, UUID)
+    - "name": string (optional)
+    - "provider": string (optional)
+    - "ipAddress": string (optional)
+    - "status": string (optional, e.g. "active", "failed")
+    - "branchId": string (optional, UUID of the branch)
+
+45b. SYNC_DEVOPS_NODE: Sync infrastructure node connectivity.
+    Fields:
+    - "nodeId": string (required, UUID)
+
+45c. LIST_PROVIDER_RESOURCES: List resources for cloud provider.
+    Fields:
+    - "provider": string (optional, e.g. "VULTR")
+
+45d. LIST_DEVOPS_CREDENTIALS: List integrated devops cloud credentials.
+    Fields: {}
+
+45e. SAVE_DEVOPS_CREDENTIAL: Link/save credentials for a cloud provider. (Admin/Superadmin only)
+    Fields:
+    - "provider": string (required, e.g. "github", "vultr")
+    - "secret": string (required)
+    - "baseUrl": string (optional)
+
+45f. DELETE_DEVOPS_CREDENTIAL: Delete a cloud provider credentials profile. (Admin/Superadmin only)
+    Fields:
+    - "provider": string (required, e.g. "vultr")
+
+45g. LIST_PIPELINE_EVENTS: List execution logs/events for a DevOps pipeline.
+    Fields:
+    - "pipelineId": string (required, UUID)
 
 46. LIST_PIPELINES: List DevOps pipelines.
     Fields: {}
@@ -518,7 +553,8 @@ SUPPORTED ACTIONS AND EXPECTED "data" FIELDS:
 47. CREATE_PIPELINE: Create DevOps pipeline. (Admin/Superadmin only)
     Fields:
     - "name": string (required)
-    - "branch": string (required)
+    - "nodeId": string (optional, UUID of the associated node)
+    - "branchId": string (optional, UUID of the branch)
 
 48. DELETE_PIPELINE: Delete pipeline. (Admin/Superadmin only)
     Fields:
@@ -850,10 +886,13 @@ async function executeIntentAction(aiResult, context) {
     'LIST_HR_PROFILES',
     'DELETE_HR_PROFILE',
     'CREATE_DEVOPS_NODE',
+    'UPDATE_DEVOPS_NODE',
     'DELETE_DEVOPS_NODE',
     'CREATE_PIPELINE',
     'DELETE_PIPELINE',
     'TRANSITION_PIPELINE_STAGE',
+    'SAVE_DEVOPS_CREDENTIAL',
+    'DELETE_DEVOPS_CREDENTIAL',
     'INITIATE_BSP_CHECKOUT',
     'RECONCILE_MANUAL_TRANSFER',
     'CREATE_FEE',
@@ -1152,11 +1191,71 @@ async function executeIntentAction(aiResult, context) {
       return res.capture;
     }
 
+    case 'UPDATE_DEVOPS_NODE': {
+      fakeReq.params = { id: data.nodeId };
+      fakeReq.body = {
+        name: data.name,
+        provider: data.provider,
+        config: data.ipAddress ? { ipAddress: data.ipAddress } : data.config,
+        status: data.status,
+        branch_id: data.branchId || null
+      };
+      const res = createCapturingResponse();
+      await devopsController.updateNode(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'SYNC_DEVOPS_NODE': {
+      fakeReq.params = { id: data.nodeId };
+      const res = createCapturingResponse();
+      await devopsController.syncNode(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_PROVIDER_RESOURCES': {
+      fakeReq.params = { provider: data.provider || 'VULTR' };
+      const res = createCapturingResponse();
+      await devopsController.listProviderResources(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_DEVOPS_CREDENTIALS': {
+      const res = createCapturingResponse();
+      await devopsController.listCredentials(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'SAVE_DEVOPS_CREDENTIAL': {
+      fakeReq.body = {
+        provider: data.provider,
+        secret: data.secret,
+        baseUrl: data.baseUrl
+      };
+      const res = createCapturingResponse();
+      await devopsController.saveCredential(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'DELETE_DEVOPS_CREDENTIAL': {
+      fakeReq.params = { provider: data.provider };
+      const res = createCapturingResponse();
+      await devopsController.deleteCredential(fakeReq, res);
+      return res.capture;
+    }
+
+    case 'LIST_PIPELINE_EVENTS': {
+      fakeReq.params = { id: data.pipelineId };
+      const res = createCapturingResponse();
+      await devopsController.listPipelineEvents(fakeReq, res);
+      return res.capture;
+    }
+
     case 'CREATE_DEVOPS_NODE': {
       fakeReq.body = {
         name: data.name,
-        ipAddress: data.ipAddress,
-        provider: data.provider || 'VULTR'
+        provider: data.provider || 'VULTR',
+        config: { ipAddress: data.ipAddress },
+        branch_id: data.branchId || null
       };
       const res = createCapturingResponse();
       await devopsController.createNode(fakeReq, res);
@@ -1179,7 +1278,8 @@ async function executeIntentAction(aiResult, context) {
     case 'CREATE_PIPELINE': {
       fakeReq.body = {
         name: data.name,
-        branch: data.branch
+        node_id: data.nodeId || null,
+        branch_id: data.branchId || null
       };
       const res = createCapturingResponse();
       await devopsController.createPipeline(fakeReq, res);

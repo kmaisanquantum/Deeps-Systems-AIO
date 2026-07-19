@@ -24,6 +24,9 @@ try {
 
 const intentController = require('./controllers/intentController');
 const db = require('./db');
+const financeController = require('./controllers/financeController');
+const salesController = require('./controllers/salesController');
+const hrController = require('./controllers/hrController');
 
 // Mock req and res builders
 function mockResponse() {
@@ -323,6 +326,215 @@ async function runIntentTests() {
     assert.strictEqual(res.data.data.amount, 450);
     assert.strictEqual(res.data.data.notes, 'from sale');
     console.log('✓ Fallback to local regex works when Groq endpoint fails completely (timeout/network error).');
+  }
+
+  // 4. Verify conversational ANSWER action
+  {
+    groqMockResponse = {
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              action: 'ANSWER',
+              data: { message: 'I can assist you with HR, Sales, Store, and Workspace actions!' }
+            })
+          }
+        }
+      ]
+    };
+
+    const reqGroq = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'admin-id', role: 'admin' },
+      body: {
+        text: 'what can you do?',
+        history: [{ role: 'user', content: 'hello' }],
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    const res = mockResponse();
+    queriesExecuted.length = 0;
+    await groqIntentController.processNaturalLanguageIntent(reqGroq, res);
+
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.recognizedAction, 'ANSWER');
+    assert.strictEqual(res.data.result.message, 'I can assist you with HR, Sales, Store, and Workspace actions!');
+
+    // Check that history is correctly forwarded in the messages payload
+    assert(Array.isArray(lastPostData.messages), 'Messages sent to Groq must be an array');
+    assert.strictEqual(lastPostData.messages[1].role, 'user');
+    assert.strictEqual(lastPostData.messages[1].content, 'hello');
+    assert.strictEqual(lastPostData.messages[2].role, 'user', 'Current user turn is appended');
+    assert.strictEqual(lastPostData.messages[2].content, 'what can you do?');
+    console.log('✓ Conversational ANSWER actions and chat histories are parsed/forwarded correctly.');
+  }
+
+  // 5. Verify LIST_TRANSACTIONS read operation mapping
+  {
+    groqMockResponse = {
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              action: 'LIST_TRANSACTIONS',
+              data: {}
+            })
+          }
+        }
+      ]
+    };
+
+    const reqGroq = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'admin-id', role: 'admin' },
+      body: {
+        text: 'show my transactions',
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    const res = mockResponse();
+    queriesExecuted.length = 0;
+
+    // Mock financeController listTransactions
+    const originalListTx = financeController.listTransactions;
+    let listTransactionsCalled = false;
+    financeController.listTransactions = async (req, res) => {
+      listTransactionsCalled = true;
+      return res.status(200).json([{ id: 'tx-1', amount: 100 }]);
+    };
+
+    await groqIntentController.processNaturalLanguageIntent(reqGroq, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert(listTransactionsCalled, 'LIST_TRANSACTIONS action must invoke listTransactions controller method');
+
+    // Restore listTransactions mock
+    financeController.listTransactions = originalListTx;
+    console.log('✓ Read/List operations (LIST_TRANSACTIONS) are successfully mapped.');
+  }
+
+  // 6. Verify Record Resolution and Tenant Isolation in UPDATE_LEAD
+  {
+    groqMockResponse = {
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              action: 'UPDATE_LEAD',
+              data: { leadName: 'Steve Jobs', stage: 'Won' }
+            })
+          }
+        }
+      ]
+    };
+
+    const reqGroq = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'admin-id', role: 'admin' },
+      body: {
+        text: 'Steve Jobs won',
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    // Mock db.query to return a matching lead on search
+    const originalQueryForResolution = db.query;
+    db.query = async (sql, params) => {
+      if (sql.includes('SELECT id, full_name FROM sales_leads')) {
+        // Assert tenant_id is properly isolated
+        assert.strictEqual(params[0], 'tenant-123', 'Tenant isolation must be strictly enforced');
+        return {
+          rowCount: 1,
+          rows: [{ id: 'lead-steve-123', full_name: 'Steve Jobs' }]
+        };
+      }
+      return {
+        rowCount: 1,
+        rows: [{ id: 'lead-steve-123', full_name: 'Steve Jobs', stage: 'Won' }]
+      };
+    };
+
+    // Mock salesController updateLead
+    const originalUpdateLead = salesController.updateLead;
+    let updateLeadCalledWithId = null;
+    let updateLeadBody = null;
+    salesController.updateLead = async (req, res) => {
+      updateLeadCalledWithId = req.params.id;
+      updateLeadBody = req.body;
+      return res.status(200).json({ id: 'lead-steve-123', full_name: 'Steve Jobs', stage: 'Won' });
+    };
+
+    const res = mockResponse();
+    await groqIntentController.processNaturalLanguageIntent(reqGroq, res);
+
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(updateLeadCalledWithId, 'lead-steve-123', 'Record resolver must dynamically match and resolve entity names to IDs');
+    assert.strictEqual(updateLeadBody.stage, 'Won');
+
+    // Restore mocks
+    db.query = originalQueryForResolution;
+    salesController.updateLead = originalUpdateLead;
+    console.log('✓ Record resolution and tenant isolation verified on UPDATE_LEAD.');
+  }
+
+  // 7. Verify Admin authorization role checks
+  {
+    groqMockResponse = {
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              action: 'CREATE_HR_PROFILE',
+              data: { fullName: 'Bill Gates', positionTitle: 'Founder', salaryAmount: 1 }
+            })
+          }
+        }
+      ]
+    };
+
+    // Turn 7a: Standard User (role 'staff') -> Expect 403 Forbidden
+    const reqStaff = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'staff-id', role: 'staff' },
+      body: {
+        text: 'hire Bill Gates as Founder',
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    const resStaff = mockResponse();
+    await groqIntentController.processNaturalLanguageIntent(reqStaff, resStaff);
+    assert.strictEqual(resStaff.statusCode, 403);
+    assert.strictEqual(resStaff.data.result.error, 'Forbidden: Admin access required.');
+    console.log('✓ Admin actions block unauthorized staff roles (HTTP 403).');
+
+    // Turn 7b: Admin User (role 'admin') -> Expect Success
+    const reqAdmin = {
+      tenantId: 'tenant-123',
+      authUser: { userId: 'admin-id', role: 'admin' },
+      body: {
+        text: 'hire Bill Gates as Founder',
+        sourceChannel: 'INTERNAL'
+      }
+    };
+
+    // Mock hrController
+    const originalCreateProfile = hrController.createProfile;
+    let createProfileCalled = false;
+    hrController.createProfile = async (req, res) => {
+      createProfileCalled = true;
+      return res.status(201).json({ id: 'profile-bill-123', full_name: 'Bill Gates' });
+    };
+
+    const resAdmin = mockResponse();
+    await groqIntentController.processNaturalLanguageIntent(reqAdmin, resAdmin);
+    assert.strictEqual(resAdmin.statusCode, 201);
+    assert(createProfileCalled, 'Should invoke target controller for authorized admin roles');
+
+    // Restore hrController mock
+    hrController.createProfile = originalCreateProfile;
+    console.log('✓ Admin actions allow authorized roles (HTTP 201).');
   }
 
   // Restore state

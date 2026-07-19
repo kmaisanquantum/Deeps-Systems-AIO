@@ -230,4 +230,6 @@ module.exports = {
   handleWhatsAppWebhook,
   handleInboundEmailHook,
   dispatchOutboundMessage,
+  sendWhatsAppMessage,
+  sendEmailMessage,
 };

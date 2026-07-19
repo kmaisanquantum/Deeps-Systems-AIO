@@ -292,6 +292,85 @@ async function runAutonomousTests() {
     process.env.ALERT_RECIPIENT = originalAlertRecipient;
   }
 
+  // 5. Verify direct WhatsApp alert delivery (Meta Graph API) options and fallbacks
+  {
+    console.log('  Running direct WhatsApp Alert Delivery and circular require assertions...');
+
+    const originalAlertChannel = process.env.ALERT_CHANNEL;
+    const originalAlertRecipient = process.env.ALERT_RECIPIENT;
+
+    // Test Case 5a: ALERT_CHANNEL=whatsapp (Should trigger sendWhatsAppMessage)
+    process.env.ALERT_CHANNEL = 'whatsapp';
+    process.env.ALERT_RECIPIENT = '67579452732';
+
+    const communicationController = require('./controllers/communicationController');
+    const originalSendWhatsAppMessage = communicationController.sendWhatsAppMessage;
+
+    let sendWhatsAppMessageCalledWith = [];
+    communicationController.sendWhatsAppMessage = async (toNumber, message) => {
+      sendWhatsAppMessageCalledWith.push({ toNumber, message });
+      return { success: true };
+    };
+
+    // We also mock db.query to resolve successfully for insert communication logs
+    const originalQuery = db.query;
+    let logInserted = null;
+    db.query = async (sql, params) => {
+      if (sql.includes('INSERT INTO communication_logs')) {
+        logInserted = params;
+      }
+      return { rowCount: 1, rows: [] };
+    };
+
+    await eventDispatcher.dispatch('autonomous.alert', 'tenant-auto-777', {
+      type: 'SIMULATED_WHATSAPP_ALERT',
+      detail: 'This is a WhatsApp simulation'
+    });
+
+    assert.strictEqual(sendWhatsAppMessageCalledWith.length, 1, 'sendWhatsAppMessage must be invoked exactly once');
+    assert.strictEqual(sendWhatsAppMessageCalledWith[0].toNumber, '67579452732');
+    assert(sendWhatsAppMessageCalledWith[0].message.includes('SIMULATED_WHATSAPP_ALERT'));
+    assert(sendWhatsAppMessageCalledWith[0].message.includes('This is a WhatsApp simulation'));
+    assert(logInserted, 'Audit logs must be persisted in database');
+    assert.strictEqual(logInserted[2], 'SENT', 'Log status must be SENT upon execution success');
+    console.log('    ✓ whatsapp alert channel correctly formats and dispatches direct WhatsApp alerts via Meta API.');
+
+    // Test Case 5b: ALERT_CHANNEL="" (Should bypass direct WhatsApp message completely)
+    sendWhatsAppMessageCalledWith = [];
+    logInserted = null;
+    process.env.ALERT_CHANNEL = '';
+
+    await eventDispatcher.dispatch('autonomous.alert', 'tenant-auto-777', {
+      type: 'SIMULATED_WHATSAPP_ALERT',
+      detail: 'This is a WhatsApp simulation'
+    });
+
+    assert.strictEqual(sendWhatsAppMessageCalledWith.length, 0, 'sendWhatsAppMessage must not be invoked');
+    assert.strictEqual(logInserted, null, 'Audit logs must not be persisted');
+    console.log('    ✓ Empty/omitted alert channel skips direct WhatsApp message successfully.');
+
+    // Test Case 5c: Verify simulated failure is safely absorbed inside try/catch without crashing event loop
+    process.env.ALERT_CHANNEL = 'whatsapp';
+    communicationController.sendWhatsAppMessage = async (toNumber, message) => {
+      throw new Error('Simulated Meta Graph API breakdown');
+    };
+
+    // This must resolve successfully without throwing to our parent thread
+    await eventDispatcher.dispatch('autonomous.alert', 'tenant-auto-777', {
+      type: 'SIMULATED_WHATSAPP_ALERT',
+      detail: 'This is a WhatsApp simulation'
+    });
+
+    assert.strictEqual(logInserted[2], 'FAILED', 'Log status must be FAILED upon API failure');
+    console.log('    ✓ Simulated direct WhatsApp messaging errors are safely caught and absorbed without crashing event loop.');
+
+    // Restore
+    communicationController.sendWhatsAppMessage = originalSendWhatsAppMessage;
+    db.query = originalQuery;
+    process.env.ALERT_CHANNEL = originalAlertChannel;
+    process.env.ALERT_RECIPIENT = originalAlertRecipient;
+  }
+
   console.log('--- ALL AUTONOMOUS MONITOR & DEVOPS INTEGRATION TESTS PASSED ---');
 }
 

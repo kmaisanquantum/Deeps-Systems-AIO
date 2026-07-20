@@ -156,17 +156,20 @@ async function listSchedules(req, res) {
  */
 async function createSchedule(req, res) {
   const tenantId = req.tenantId;
-  const { title, topic, resourceId, scheduledAt, durationMinutes, status = 'Planned', notes, branchId } = req.body || {};
+  const { title, topic, resourceId, scheduledAt, durationMinutes, status = 'Planned', notes, branchId, reminderEmail, reminderLeadMinutes } = req.body || {};
 
   if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
   if (!title) return res.status(400).json({ error: 'title is required.' });
 
+  const emailToUse = (reminderEmail !== undefined && reminderEmail !== null && reminderEmail !== '') ? reminderEmail : 'kmaisan@dspng.tech';
+  const leadMinutesToUse = (reminderLeadMinutes !== undefined && reminderLeadMinutes !== null && reminderLeadMinutes !== '') ? parseInt(reminderLeadMinutes, 10) : 60;
+
   try {
     const result = await db.query(
-      `INSERT INTO study_schedule (tenant_id, branch_id, title, topic, resource_id, scheduled_at, duration_minutes, status, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO study_schedule (tenant_id, branch_id, title, topic, resource_id, scheduled_at, duration_minutes, status, notes, reminder_email, reminder_lead_minutes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
-      [tenantId, branchId || null, title, topic || null, resourceId || null, scheduledAt || null, durationMinutes || null, status, notes || null]
+      [tenantId, branchId || null, title, topic || null, resourceId || null, scheduledAt || null, durationMinutes || null, status, notes || null, emailToUse, leadMinutesToUse]
     );
     return res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -182,9 +185,11 @@ async function createSchedule(req, res) {
 async function updateSchedule(req, res) {
   const tenantId = req.tenantId;
   const { id } = req.params;
-  const { title, topic, resourceId, scheduledAt, durationMinutes, status, notes, branchId } = req.body || {};
+  const { title, topic, resourceId, scheduledAt, durationMinutes, status, notes, branchId, reminderEmail, reminderLeadMinutes } = req.body || {};
 
   if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  const parsedLeadMinutes = (reminderLeadMinutes !== undefined && reminderLeadMinutes !== null) ? parseInt(reminderLeadMinutes, 10) : null;
 
   try {
     const result = await db.query(
@@ -197,10 +202,12 @@ async function updateSchedule(req, res) {
               status = COALESCE($6, status),
               notes = COALESCE($7, notes),
               branch_id = COALESCE($8, branch_id),
+              reminder_email = COALESCE($9, reminder_email),
+              reminder_lead_minutes = COALESCE($10, reminder_lead_minutes),
               updated_at = NOW()
-        WHERE id = $9 AND tenant_id = $10
+        WHERE id = $11 AND tenant_id = $12
         RETURNING *`,
-      [title, topic, resourceId, scheduledAt, durationMinutes, status, notes, branchId, id, tenantId]
+      [title, topic, resourceId, scheduledAt, durationMinutes, status, notes, branchId, reminderEmail, parsedLeadMinutes, id, tenantId]
     );
 
     if (result.rowCount === 0) {

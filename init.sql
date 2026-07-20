@@ -438,6 +438,9 @@ CREATE TABLE IF NOT EXISTS study_schedule (
     duration_minutes INTEGER,
     status VARCHAR(50) NOT NULL DEFAULT 'Planned',
     notes TEXT,
+    reminder_email VARCHAR(255),
+    reminder_lead_minutes INTEGER DEFAULT 60,
+    reminded_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -732,3 +735,8 @@ ALTER TABLE logistics_shipments ADD COLUMN IF NOT EXISTS source_record_id UUID;
 
 ALTER TABLE workspace_tasks ADD COLUMN IF NOT EXISTS source_module VARCHAR(40);
 ALTER TABLE workspace_tasks ADD COLUMN IF NOT EXISTS source_record_id UUID;
+
+-- Idempotent migrations for study_schedule notifications
+ALTER TABLE study_schedule ADD COLUMN IF NOT EXISTS reminder_email VARCHAR(255);
+ALTER TABLE study_schedule ADD COLUMN IF NOT EXISTS reminder_lead_minutes INTEGER DEFAULT 60;
+ALTER TABLE study_schedule ADD COLUMN IF NOT EXISTS reminded_at TIMESTAMPTZ;

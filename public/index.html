@@ -1579,6 +1579,16 @@
                                             <input type="number" id="schedule-duration" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="60">
                                         </div>
                                     </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Reminder Email</label>
+                                            <input type="email" id="schedule-reminder-email" value="kmaisan@dspng.tech" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-xs" placeholder="kmaisan@dspng.tech">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Remind Me (Min Before)</label>
+                                            <input type="number" id="schedule-reminder-lead-minutes" value="60" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="60">
+                                        </div>
+                                    </div>
                                     <div>
                                         <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Notes</label>
                                         <textarea id="schedule-notes" rows="2" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-sm" placeholder="Important preparation notes..."></textarea>
@@ -4307,7 +4317,62 @@
             }
         }
 
+        function downloadCalendarInvite(id, event) {
+            if (event) event.preventDefault();
+            const sch = (window.currentSchedules || []).find(s => s.id === id);
+            if (!sch) return;
+
+            const start = new Date(sch.scheduled_at);
+            const duration = sch.duration_minutes || 60;
+            const end = new Date(start.getTime() + duration * 60 * 1000);
+
+            const formatUTCDate = (date) => {
+                return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            };
+
+            const escapeICS = (str) => {
+                if (!str) return '';
+                return str
+                    .replace(/\\/g, '\\\\')
+                    .replace(/;/g, '\\;')
+                    .replace(/,/g, '\\,')
+                    .replace(/\n/g, '\\n')
+                    .replace(/\r/g, '');
+            };
+
+            const descriptionParts = [];
+            if (sch.topic) descriptionParts.push(`Topic: ${sch.topic}`);
+            if (sch.notes) descriptionParts.push(`Notes: ${sch.notes}`);
+            const description = descriptionParts.join('\n');
+
+            const icsString = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//Deeps Systems//Study Schedule Reminder//EN',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH',
+                'BEGIN:VEVENT',
+                `UID:${sch.id}`,
+                `DTSTAMP:${formatUTCDate(new Date())}`,
+                `DTSTART:${formatUTCDate(start)}`,
+                `DTEND:${formatUTCDate(end)}`,
+                `SUMMARY:${escapeICS(sch.title)}`,
+                `DESCRIPTION:${escapeICS(description)}`,
+                'END:VEVENT',
+                'END:VCALENDAR'
+            ].join('\r\n');
+
+            const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', `${sch.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.ics`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         function renderStudySchedules(schedules) {
+            window.currentSchedules = schedules;
             const tbody = document.getElementById('study-schedule-list');
             tbody.innerHTML = '';
 
@@ -4344,6 +4409,8 @@
                     <td class="px-3 py-3 text-slate-400">
                         <div>${dateStr}</div>
                         <div class="text-xxs text-slate-500 mt-0.5">Duration: ${duration}</div>
+                        ${sch.scheduled_at ? `<div class="mt-1"><a href="#" class="text-xxs text-cyan-400 hover:underline font-bold" onclick="downloadCalendarInvite('${sch.id}', event)">Add to Calendar</a></div>` : ''}
+                        ${sch.reminded_at ? `<div class="text-xxs text-emerald-500 font-semibold mt-0.5">&#10003; Reminded</div>` : ''}
                     </td>
                     <td class="px-3 py-3">${statusBadge}</td>
                     <td class="px-3 py-3 text-center flex items-center justify-center gap-1.5">
@@ -4367,6 +4434,8 @@
             const resourceId = document.getElementById('schedule-resource').value || null;
             const scheduledAt = document.getElementById('schedule-date').value || null;
             const durationMinutes = parseInt(document.getElementById('schedule-duration').value) || null;
+            const reminderEmail = document.getElementById('schedule-reminder-email').value.trim();
+            const reminderLeadMinutes = parseInt(document.getElementById('schedule-reminder-lead-minutes').value) || null;
             const notes = document.getElementById('schedule-notes').value.trim();
 
             try {
@@ -4376,7 +4445,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({ title, topic, resourceId, scheduledAt, durationMinutes, status: 'Planned', notes, branchId: null })
+                    body: JSON.stringify({ title, topic, resourceId, scheduledAt, durationMinutes, reminderEmail, reminderLeadMinutes, status: 'Planned', notes, branchId: null })
                 });
 
                 const data = await response.json();
@@ -4391,6 +4460,8 @@
                 document.getElementById('schedule-resource').value = '';
                 document.getElementById('schedule-date').value = '';
                 document.getElementById('schedule-duration').value = '';
+                document.getElementById('schedule-reminder-email').value = 'kmaisan@dspng.tech';
+                document.getElementById('schedule-reminder-lead-minutes').value = '60';
                 document.getElementById('schedule-notes').value = '';
 
                 fetchStudySchedules();

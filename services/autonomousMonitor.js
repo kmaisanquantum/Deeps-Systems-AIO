@@ -10,6 +10,7 @@ const financeController = require('../controllers/financeController');
 const feesController = require('../controllers/feesController');
 const devopsController = require('../controllers/devopsController');
 const storeController = require('../controllers/storeController');
+const communicationController = require('../controllers/communicationController');
 
 let monitorIntervalId = null;
 
@@ -131,6 +132,89 @@ async function runMonitorTick() {
         }
       } catch (err) {
         console.warn(`[autonomousMonitor] store check failed for tenant ${tenantId}:`, err.message);
+      }
+
+      // 5. Study schedule reminders
+      if (process.env.HOSTGATOR_SMTP_HOST) {
+        try {
+          const schedulesRes = await db.query(
+            `SELECT * FROM study_schedule
+              WHERE tenant_id = $1
+                AND scheduled_at IS NOT NULL
+                AND reminded_at IS NULL
+                AND scheduled_at <= NOW() + (COALESCE(reminder_lead_minutes, 60) || ' minutes')::interval
+                AND scheduled_at > NOW()`,
+            [tenantId]
+          );
+
+          for (const row of schedulesRes.rows) {
+            try {
+              const start = new Date(row.scheduled_at);
+              const duration = row.duration_minutes || 60;
+              const end = new Date(start.getTime() + duration * 60 * 1000);
+
+              const formatUTCDate = (date) => {
+                return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+              };
+
+              const escapeICS = (str) => {
+                if (!str) return '';
+                return str
+                  .replace(/\\/g, '\\\\')
+                  .replace(/;/g, '\\;')
+                  .replace(/,/g, '\\,')
+                  .replace(/\n/g, '\\n')
+                  .replace(/\r/g, '');
+              };
+
+              const descriptionParts = [];
+              if (row.topic) descriptionParts.push(`Topic: ${row.topic}`);
+              if (row.notes) descriptionParts.push(`Notes: ${row.notes}`);
+              const description = descriptionParts.join('\n');
+
+              const icsString = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//Deeps Systems//Study Schedule Reminder//EN',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH',
+                'BEGIN:VEVENT',
+                `UID:${row.id}`,
+                `DTSTAMP:${formatUTCDate(new Date())}`,
+                `DTSTART:${formatUTCDate(start)}`,
+                `DTEND:${formatUTCDate(end)}`,
+                `SUMMARY:${escapeICS(row.title)}`,
+                `DESCRIPTION:${escapeICS(description)}`,
+                'END:VEVENT',
+                'END:VCALENDAR'
+              ].join('\r\n');
+
+              const toAddress = row.reminder_email || 'kmaisan@dspng.tech';
+              const subject = `Study Session Reminder: ${row.title}`;
+              const message = `This is a reminder for your upcoming study session:\n\nTitle: ${row.title}\nTopic: ${row.topic || 'N/A'}\nScheduled At: ${row.scheduled_at}\nDuration: ${duration} minutes\nNotes: ${row.notes || 'N/A'}\n\nPlease find the attached calendar invite.`;
+
+              const attachments = [
+                {
+                  filename: 'study.ics',
+                  content: icsString,
+                  contentType: 'text/calendar'
+                }
+              ];
+
+              await communicationController.sendEmailMessage(toAddress, subject, message, attachments);
+
+              // Mark as reminded
+              await db.query(
+                'UPDATE study_schedule SET reminded_at = NOW() WHERE id = $1',
+                [row.id]
+              );
+            } catch (sendErr) {
+              console.warn(`[autonomousMonitor] Failed to send reminder email for study schedule ${row.id}:`, sendErr.message);
+            }
+          }
+        } catch (sweepErr) {
+          console.warn(`[autonomousMonitor] Study schedule sweep failed for tenant ${tenantId}:`, sweepErr.message);
+        }
       }
     }
   } catch (err) {

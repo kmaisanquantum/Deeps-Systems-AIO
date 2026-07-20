@@ -204,13 +204,17 @@ async function sendWhatsAppMessage(toNumber, message) {
   return resp.data;
 }
 
-async function sendEmailMessage(toAddress, subject, message) {
-  return mailTransport.sendMail({
+async function sendEmailMessage(toAddress, subject, message, attachments) {
+  const mailOptions = {
     from: process.env.HOSTGATOR_SMTP_FROM || process.env.HOSTGATOR_SMTP_USER,
     to: toAddress,
     subject,
     text: message,
-  });
+  };
+  if (attachments) {
+    mailOptions.attachments = attachments;
+  }
+  return mailTransport.sendMail(mailOptions);
 }
 
 async function sendSmsMessage(toNumber, message) {

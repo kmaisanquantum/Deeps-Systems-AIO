@@ -1,6 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <!-- Solid dark background -->
   <rect width="512" height="512" fill="#020617"/>
-  <!-- Centered cyan "DS" initials -->
-  <text x="50%" y="50%" font-size="240" font-weight="bold" fill="#22d3ee" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" dominant-baseline="central">DS</text>
+  <!-- Centered cyan "DS" monogram vector artwork -->
+  <g fill="#22d3ee">
+    <!-- Letter D compound path -->
+    <path d="M100,116 L180,116 C220,116 240,140 240,180 L240,332 C240,372 220,396 180,396 L100,396 Z M145,160 L145,352 L175,352 C195,352 200,340 200,320 L200,192 C200,172 195,160 175,160 Z" />
+    <!-- Letter S continuous path -->
+    <path d="M380,116 C405,116 412,130 412,150 L412,175 C412,185 400,195 385,195 L345,195 C335,195 330,200 330,210 L330,220 C330,230 335,235 345,235 L380,235 C405,235 412,250 412,275 L412,362 C412,382 395,396 370,396 L300,396 C275,396 270,382 270,362 L270,337 C270,327 280,317 295,317 L335,317 C345,317 350,312 350,302 L350,292 C350,282 345,277 335,277 L300,277 C275,277 270,262 270,237 L270,150 C270,130 285,116 310,116 Z" />
+  </g>
 </svg>

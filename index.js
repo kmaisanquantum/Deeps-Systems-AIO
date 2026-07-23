@@ -42,6 +42,10 @@ app.use(
         'connect-src': ["'self'"],
         // Disable automatic HTTPS upgrades to maintain connectivity on the HTTP sslip.io environment
         'upgrade-insecure-requests': null,
+        // Allow the registration and activation of the PWA service worker
+        'worker-src': ["'self'"],
+        // Allow loading the web manifest
+        'manifest-src': ["'self'"],
       },
     },
   })

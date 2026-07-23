@@ -16,6 +16,7 @@ const db = require('./db');
 const { tenantResolver } = require('./middleware/tenantResolver');
 const routes = require('./routes/index');
 const { startAutonomousMonitor, stopAutonomousMonitor } = require('./services/autonomousMonitor');
+const { generateIcons } = require('./utils/generate_icons');
 
 const app = express();
 
@@ -86,6 +87,13 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 5000;
 
 async function startServer() {
+  // Dynamic generation of PWA icons on startup
+  try {
+    await generateIcons();
+  } catch (err) {
+    console.error('[app] warning: failed to generate PWA icons dynamically:', err);
+  }
+
   // Database initialization from init.sql
   console.log('[app] starting database schema initialization...');
   try {

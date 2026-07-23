@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deeps Systems AIO — Automation & Orchestration Hub</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#020617">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Deeps AIO">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <style>
         /* Custom Animations & Neon Tech Effects */
         body {
@@ -5068,6 +5074,12 @@
         // INITIALIZE CLIENT
         checkAuth();
         initVoiceRecognition();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(console.error);
+            });
+        }
     </script>
 </body>
 </html>

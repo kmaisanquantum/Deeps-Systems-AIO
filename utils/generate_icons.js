@@ -21,7 +21,7 @@ async function generateIcons() {
 
     console.log('[generate_icons] starting icon rasterization from SVG...');
 
-    // Read the SVG content into a buffer so sharp handles it correctly
+    // Read the SVG content into a buffer
     const svgBuffer = fs.readFileSync(svgPath);
 
     // 1. Generate icon-192.png (192x192)
@@ -38,7 +38,7 @@ async function generateIcons() {
       .toFile(path.join(iconsDir, 'icon-512.png'));
     console.log('[generate_icons] generated icon-512.png (512x512)');
 
-    // 3. Generate apple-touch-icon.png (180x180, flattened onto a solid #020617 background, no alpha transparency)
+    // 3. Generate apple-touch-icon.png (180x180, flattened onto solid #020617, no alpha)
     await sharp(svgBuffer)
       .resize(180, 180)
       .flatten({ background: '#020617' })

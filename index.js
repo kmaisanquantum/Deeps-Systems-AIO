@@ -58,7 +58,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static assets from public/ directory before routing or resolving tenants.
 // This allows the frontend landing page and assets to render cleanly and quickly.
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.webmanifest')) {
+      res.setHeader('Content-Type', 'application/manifest+json');
+    }
+  }
+}));
 
 // Resolve tenant/branch context on every request before hitting routes.
 app.use(tenantResolver);

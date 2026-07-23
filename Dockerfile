@@ -17,6 +17,9 @@ RUN npm ci
 # Copy the rest of the application code
 COPY . .
 
+# Generate raster PNG icons from SVG source of truth
+RUN npm run build:icons
+
 # Prune dev dependencies to keep production image light
 RUN npm prune --omit=dev
 

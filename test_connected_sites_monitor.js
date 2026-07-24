@@ -9,7 +9,7 @@ db.query = async (text, params) => {
   const queryNormalized = text.trim().replace(/\s+/g, ' ');
   if (queryNormalized.startsWith('SELECT')) {
     const id = params[0];
-    const url = id === '6' ? 'http://site6.com/' : `http://site${id}.com`;
+    const url = id === '8' ? '' : (id === '6' ? 'http://site6.com/' : `http://site${id}.com`);
     return {
       rowCount: 1,
       rows: [{ id: id, url: url }]
@@ -49,6 +49,12 @@ axios.get = async (url, config) => {
   }
   if (url === 'http://site6.com/healthz') {
     return { status: 200, data: { status: 'ok' } };
+  }
+  if (url === 'http://site7.com/healthz') {
+    return { status: 500, data: 'Error' };
+  }
+  if (url === 'http://site7.com') {
+    return { status: 401, data: 'Unauthorized' };
   }
   throw new Error('Unexpected URL: ' + url);
 };
@@ -145,6 +151,30 @@ async function runTests() {
     assert.strictEqual(lastSavedStatus, 'online');
     assert.strictEqual(res.data.last_status, 'online');
     console.log('✓ Test Case 6 passed: URL with trailing slash is properly sanitized to avoid double slashes like //healthz.');
+  }
+
+  // Test Case 7: Fallback 401 Unauthorized (< 500) results in online
+  {
+    const req = { tenantId: 'tenant-123', params: { id: '7' } };
+    const res = mockResponse();
+    lastSavedStatus = null;
+    await storeController.checkSite(req, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(lastSavedStatus, 'online');
+    assert.strictEqual(res.data.last_status, 'online');
+    console.log('✓ Test Case 7 passed: Fallback 401 status (< 500) results in online.');
+  }
+
+  // Test Case 8: Blank/empty URL results in unknown
+  {
+    const req = { tenantId: 'tenant-123', params: { id: '8' } };
+    const res = mockResponse();
+    lastSavedStatus = null;
+    await storeController.checkSite(req, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(lastSavedStatus, 'unknown');
+    assert.strictEqual(res.data.last_status, 'unknown');
+    console.log('✓ Test Case 8 passed: Empty/blank URL skips ping and results in unknown.');
   }
 
   // Restore axios

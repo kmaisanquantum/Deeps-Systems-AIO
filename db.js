@@ -76,31 +76,6 @@ async function query(text, params) {
         base_url: 'https://app.coolify.io/api/v1'
       }];
       rowCount = 1;
-    } else if (queryLower.includes('from connected_sites')) {
-      if (queryLower.includes('limit 1')) {
-        rows = [];
-        rowCount = 0;
-      } else {
-        rows = [
-          {
-            id: 'mock-site-1',
-            tenant_id: 'mock-tenant-id-123',
-            label: 'Storefront Portal',
-            url: 'https://store.deeps.systems',
-            last_status: 'online',
-            last_checked_at: new Date()
-          },
-          {
-            id: 'mock-site-2',
-            tenant_id: 'mock-tenant-id-123',
-            label: 'Coolify Backend',
-            url: 'https://coolify.deeps.systems',
-            last_status: 'offline',
-            last_checked_at: new Date()
-          }
-        ];
-        rowCount = 2;
-      }
     }
 
     return { rows, rowCount };

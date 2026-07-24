@@ -171,7 +171,15 @@ async function createSchedule(req, res) {
        RETURNING *`,
       [tenantId, branchId || null, title, topic || null, resourceId || null, scheduledAt || null, durationMinutes || null, status, notes || null, emailToUse, leadMinutesToUse]
     );
-    return res.status(201).json(result.rows[0]);
+
+    const schedule = result.rows[0];
+    const eventDispatcher = require('../services/eventDispatcher');
+    eventDispatcher.dispatchAsync('learning.schedule_created', tenantId, {
+      schedule,
+      studentUserId: req.body.studentUserId || req.body.userId || null
+    });
+
+    return res.status(201).json(schedule);
   } catch (err) {
     console.error('[learningController] createSchedule failed', err);
     return res.status(500).json({ error: 'Failed to create study schedule.' });

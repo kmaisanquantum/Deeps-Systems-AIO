@@ -71,6 +71,7 @@ router.get('/api/store/sites', requireTenant, storeController.listSites);
 router.post('/api/store/sites', requireTenant, storeController.createSite);
 router.delete('/api/store/sites/:id', requireTenant, storeController.deleteSite);
 router.post('/api/store/sites/:id/check', requireTenant, storeController.checkSite);
+router.post('/api/store/sites/sync-coolify', requireTenant, storeController.syncCoolifySites);
 
 router.get('/store/items', requireTenant, storeController.listItems);
 router.post('/store/items', requireTenant, storeController.createItem);

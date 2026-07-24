@@ -149,8 +149,101 @@ async function listProviderResources(provider, tenantId) {
       return { success: false, message: 'Coolify credentials are unset' };
     }
     try {
-      const response = await client.get('/servers');
-      return { success: true, resources: response.data };
+      const [appsResult, projectsResult, serversResult] = await Promise.allSettled([
+        client.get('/applications'),
+        client.get('/projects'),
+        client.get('/servers')
+      ]);
+
+      if (appsResult.status === 'rejected' && projectsResult.status === 'rejected') {
+        const errReason = appsResult.reason?.response?.data?.message || appsResult.reason?.message || 'Failed to fetch both applications and projects from Coolify';
+        return {
+          success: false,
+          message: `Coolify API error: ${errReason}`
+        };
+      }
+
+      let rawApplications = [];
+      if (appsResult.status === 'fulfilled' && Array.isArray(appsResult.value.data)) {
+        rawApplications = appsResult.value.data;
+      } else if (projectsResult.status === 'fulfilled' && Array.isArray(projectsResult.value.data)) {
+        for (const project of projectsResult.value.data) {
+          if (project.environments && Array.isArray(project.environments)) {
+            for (const env of project.environments) {
+              if (env.applications && Array.isArray(env.applications)) {
+                for (const app of env.applications) {
+                  if (app && !rawApplications.some(a => a.uuid === app.uuid)) {
+                    app.projectName = project.name;
+                    rawApplications.push(app);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      const appToProjectMap = {};
+      if (projectsResult.status === 'fulfilled' && Array.isArray(projectsResult.value.data)) {
+        for (const project of projectsResult.value.data) {
+          const projectName = project.name;
+          if (project.environments && Array.isArray(project.environments)) {
+            for (const env of project.environments) {
+              if (env.applications && Array.isArray(env.applications)) {
+                for (const app of env.applications) {
+                  if (app && app.uuid) {
+                    appToProjectMap[app.uuid] = projectName;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      const normalized = rawApplications.map(app => {
+        let fqdn = app.fqdn || app.domains || '';
+        let firstUrl = '';
+        if (fqdn) {
+          firstUrl = fqdn.split(',')[0].trim();
+          if (firstUrl) {
+            if (!/^https?:\/\//i.test(firstUrl)) {
+              firstUrl = 'https://' + firstUrl;
+            }
+          }
+        }
+
+        const projectName = app.projectName ||
+                            app.project?.name ||
+                            app.environment?.project?.name ||
+                            appToProjectMap[app.uuid] ||
+                            '';
+
+        return {
+          name: app.name || 'Unnamed Application',
+          uuid: app.uuid || '',
+          fqdn: firstUrl,
+          status: app.status || 'unknown',
+          projectName: projectName
+        };
+      });
+
+      const raw = (appsResult.status === 'fulfilled' ? appsResult.value.data : null) ||
+                  (projectsResult.status === 'fulfilled' ? projectsResult.value.data : null) ||
+                  (serversResult.status === 'fulfilled' ? serversResult.value.data : null);
+
+      const projects = projectsResult.status === 'fulfilled' ? projectsResult.value.data : null;
+      const servers = serversResult.status === 'fulfilled' ? serversResult.value.data : null;
+
+      return {
+        success: true,
+        resources: {
+          applications: normalized,
+          projects,
+          servers,
+          raw
+        }
+      };
     } catch (error) {
       return {
         success: false,
@@ -162,6 +255,96 @@ async function listProviderResources(provider, tenantId) {
   return { success: false, message: `Unsupported provider: ${provider}` };
 }
 
+async function getCoolifyApplications(tenantId) {
+  const client = await getCoolifyClient(tenantId);
+  if (!client) {
+    return { success: false, message: 'Coolify credentials are unset' };
+  }
+  try {
+    const [appsResult, projectsResult, serversResult] = await Promise.allSettled([
+      client.get('/applications'),
+      client.get('/projects'),
+      client.get('/servers')
+    ]);
+
+    if (appsResult.status === 'rejected' && projectsResult.status === 'rejected') {
+      const errReason = appsResult.reason?.response?.data?.message || appsResult.reason?.message || 'Failed to fetch both applications and projects from Coolify';
+      return {
+        success: false,
+        message: `Coolify API error: ${errReason}`
+      };
+    }
+
+    let rawApplications = [];
+    if (appsResult.status === 'fulfilled' && Array.isArray(appsResult.value.data)) {
+      rawApplications = appsResult.value.data;
+    } else if (projectsResult.status === 'fulfilled' && Array.isArray(projectsResult.value.data)) {
+      for (const project of projectsResult.value.data) {
+        if (project.environments && Array.isArray(project.environments)) {
+          for (const env of project.environments) {
+            if (env.applications && Array.isArray(env.applications)) {
+              for (const app of env.applications) {
+                if (app && !rawApplications.some(a => a.uuid === app.uuid)) {
+                  app.projectName = project.name;
+                  rawApplications.push(app);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const appToProjectMap = {};
+    if (projectsResult.status === 'fulfilled' && Array.isArray(projectsResult.value.data)) {
+      for (const project of projectsResult.value.data) {
+        const projectName = project.name;
+        if (project.environments && Array.isArray(project.environments)) {
+          for (const env of project.environments) {
+            if (env.applications && Array.isArray(env.applications)) {
+              for (const app of env.applications) {
+                if (app && app.uuid) {
+                  appToProjectMap[app.uuid] = projectName;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const normalized = rawApplications.map(app => {
+      let fqdn = app.fqdn || app.domains || '';
+      let firstUrl = '';
+      if (fqdn) {
+        firstUrl = fqdn.split(',')[0].trim();
+        if (firstUrl) {
+          if (!/^https?:\/\//i.test(firstUrl)) {
+            firstUrl = 'https://' + firstUrl;
+          }
+        }
+      }
+
+      return {
+        name: app.name || 'Unnamed Application',
+        fqdn: firstUrl || null,
+        status: app.status || 'unknown'
+      };
+    }).filter(app => app.fqdn !== null);
+
+    return {
+      success: true,
+      applications: normalized
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: `Coolify API error: ${error.message}`
+    };
+  }
+}
+
 module.exports = {
-  listProviderResources
+  listProviderResources,
+  getCoolifyApplications
 };

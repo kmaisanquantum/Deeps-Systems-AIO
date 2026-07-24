@@ -7,6 +7,7 @@
 const axios = require('axios');
 const eventDispatcher = require('../services/eventDispatcher');
 const db = require('../db');
+const devopsService = require('../services/devopsService');
 
 /**
  * GET /store/items
@@ -525,6 +526,67 @@ async function checkSite(req, res) {
   }
 }
 
+/**
+ * POST /api/store/sites/sync-coolify
+ * Sync all applications from Coolify as connected sites.
+ */
+async function syncCoolifySites(req, res) {
+  const tenantId = req.tenantId;
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const syncRes = await devopsService.getCoolifyApplications(tenantId);
+    if (!syncRes.success) {
+      return res.status(400).json({ error: syncRes.message });
+    }
+
+    const apps = syncRes.applications || [];
+    let syncedCount = 0;
+
+    for (const app of apps) {
+      let mappedStatus = null;
+      if (app.status) {
+        const lowerStatus = app.status.toLowerCase();
+        if (lowerStatus.includes('running') || lowerStatus.includes('healthy')) {
+          mappedStatus = 'online';
+        } else if (lowerStatus.includes('exited') || lowerStatus.includes('stopped') || lowerStatus.includes('failed')) {
+          mappedStatus = 'offline';
+        }
+      }
+
+      // SELECT existing site by tenant_id and (url OR label) to prevent duplication
+      const existingQuery = 'SELECT id FROM connected_sites WHERE tenant_id = $1 AND (url = $2 OR label = $3) LIMIT 1';
+      const existingRes = await db.query(existingQuery, [tenantId, app.fqdn, app.name]);
+
+      if (existingRes.rowCount > 0) {
+        // UPDATE existing site
+        const updateQuery = `
+          UPDATE connected_sites
+          SET label = $1, url = $2, last_status = $3, last_checked_at = now(), updated_at = now()
+          WHERE id = $4 AND tenant_id = $5
+        `;
+        await db.query(updateQuery, [app.name, app.fqdn, mappedStatus, existingRes.rows[0].id, tenantId]);
+      } else {
+        // INSERT new site
+        const insertQuery = `
+          INSERT INTO connected_sites (tenant_id, label, url, last_status, last_checked_at)
+          VALUES ($1, $2, $3, $4, now())
+        `;
+        await db.query(insertQuery, [tenantId, app.name, app.fqdn, mappedStatus]);
+      }
+      syncedCount++;
+    }
+
+    return res.status(200).json({
+      message: `Successfully synced ${syncedCount} applications from Coolify!`,
+      count: syncedCount
+    });
+  } catch (err) {
+    console.error('[storeController] syncCoolifySites failed', err);
+    return res.status(500).json({ error: 'Failed to sync Coolify applications.' });
+  }
+}
+
 module.exports = {
   listItems,
   createItem,
@@ -541,4 +603,5 @@ module.exports = {
   createSite,
   deleteSite,
   checkSite,
+  syncCoolifySites,
 };

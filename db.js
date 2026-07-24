@@ -32,7 +32,78 @@ if (process.env.MOCK_DB !== 'true') {
  */
 async function query(text, params) {
   if (process.env.MOCK_DB === 'true') {
-    return { rows: [], rowCount: 0 };
+    const queryLower = (text || '').toLowerCase();
+    let rows = [];
+    let rowCount = 0;
+
+    console.log('[db mock] received query:', text);
+
+    if (queryLower.includes('insert into tenants')) {
+      rows = [{ id: 'mock-tenant-id-123' }];
+      rowCount = 1;
+    } else if (queryLower.includes('insert into users')) {
+      rows = [{ id: 'mock-user-id-123' }];
+      rowCount = 1;
+    } else if (queryLower.includes('select id, password_hash, role, tenant_id from users')) {
+      const bcrypt = require('bcryptjs');
+      const hash = bcrypt.hashSync("SecurePassword123!", 10);
+      rows = [{
+        id: 'mock-user-id-123',
+        password_hash: hash,
+        role: 'superadmin',
+        tenant_id: 'mock-tenant-id-123'
+      }];
+      rowCount = 1;
+    } else if (queryLower.includes('select id from users where tenant_id')) {
+      rows = [];
+      rowCount = 0;
+    } else if (queryLower.includes('from tenants')) {
+      if (queryLower.includes('where subdomain')) {
+        rows = [];
+        rowCount = 0;
+      } else {
+        rows = [{
+          id: 'mock-tenant-id-123',
+          company_name: 'Mock Company',
+          subdomain: 'mock-subdomain',
+          is_active: true
+        }];
+        rowCount = 1;
+      }
+    } else if (queryLower.includes('select pgp_sym_decrypt')) {
+      rows = [{
+        secret: 'mock-api-key',
+        base_url: 'https://app.coolify.io/api/v1'
+      }];
+      rowCount = 1;
+    } else if (queryLower.includes('from connected_sites')) {
+      if (queryLower.includes('limit 1')) {
+        rows = [];
+        rowCount = 0;
+      } else {
+        rows = [
+          {
+            id: 'mock-site-1',
+            tenant_id: 'mock-tenant-id-123',
+            label: 'Storefront Portal',
+            url: 'https://store.deeps.systems',
+            last_status: 'online',
+            last_checked_at: new Date()
+          },
+          {
+            id: 'mock-site-2',
+            tenant_id: 'mock-tenant-id-123',
+            label: 'Coolify Backend',
+            url: 'https://coolify.deeps.systems',
+            last_status: 'offline',
+            last_checked_at: new Date()
+          }
+        ];
+        rowCount = 2;
+      }
+    }
+
+    return { rows, rowCount };
   }
   const start = Date.now();
   const result = await pool.query(text, params);
@@ -49,7 +120,7 @@ async function query(text, params) {
 async function getClient() {
   if (process.env.MOCK_DB === 'true') {
     return {
-      query: async () => ({ rows: [], rowCount: 0 }),
+      query: query,
       release: () => {}
     };
   }

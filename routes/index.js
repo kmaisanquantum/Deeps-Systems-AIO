@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const eventDispatcher = require('../services/eventDispatcher');
 
 const { requireTenant, requireAuth, requireRole } = require('../middleware/tenantResolver');
 
@@ -211,7 +212,10 @@ router.patch('/logistics/shipments/:id/status', requireTenant, async (req, res) 
       return res.status(404).json({ error: 'Shipment not found or not in tenant scope.' });
     }
 
-    return res.status(200).json(result.rows[0]);
+    const shipment = result.rows[0];
+    eventDispatcher.dispatchAsync('logistics.status_updated', req.tenantId, { shipment });
+
+    return res.status(200).json(shipment);
   } catch (err) {
     console.error('[routes] update shipment status failed error:', err);
     return res.status(500).json({ error: 'Failed to update shipment status.' });

@@ -286,6 +286,136 @@ System Timestamp: ${new Date().toISOString()}`;
         console.error(`[autonomous.alert] delivery failed: ${err.message}`);
       }
     });
+
+    this.on('logistics.status_updated', async (tenantId, payload) => {
+      if (typeof tenantId === 'object' && tenantId.tenantId) {
+        payload = tenantId.payload;
+        tenantId = tenantId.tenantId;
+      }
+      const db = require('../db');
+      const communicationController = require('../controllers/communicationController');
+      try {
+        const { shipment } = payload || {};
+        if (!shipment) return;
+
+        // Find recipient contact details
+        let email = null;
+        const emailMatch = (shipment.destination_address || '').match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/);
+        if (emailMatch) {
+          email = emailMatch[1];
+        }
+
+        if (!email && shipment.source_module === 'store' && shipment.source_record_id) {
+          const coResult = await db.query(
+            'SELECT email FROM store_checkouts WHERE id = $1 AND tenant_id = $2',
+            [shipment.source_record_id, tenantId]
+          );
+          if (coResult.rowCount > 0) {
+            email = coResult.rows[0].email;
+          }
+        }
+
+        if (!email) {
+          const cResult = await db.query(
+            'SELECT email FROM contacts WHERE tenant_id = $1 LIMIT 1',
+            [tenantId]
+          );
+          if (cResult.rowCount > 0) {
+            email = cResult.rows[0].email;
+          }
+        }
+
+        const targetEmail = email || 'customer@store.com';
+
+        // Send a Communications notification to the shipment's destination contact via communicationController
+        const fakeReq = {
+          tenantId,
+          body: {
+            channel: 'EMAIL',
+            to: targetEmail,
+            subject: `Shipment Status Updated: ${shipment.shipping_status}`,
+            message: `Your shipment (tracking: ${shipment.tracking_number || 'Pending'}) status is now: ${shipment.shipping_status}. Destination: ${shipment.destination_address || 'N/A'}`
+          }
+        };
+        const fakeRes = createCapturingResponse();
+        await communicationController.dispatchOutboundMessage(fakeReq, fakeRes);
+        console.log(`[eventDispatcher] [Reaction] logistics.status_updated processed. Recipient: ${targetEmail}, Status: ${fakeRes.capture.statusCode}`);
+      } catch (err) {
+        console.error('[eventDispatcher] logistics.status_updated reaction error:', err);
+      }
+    });
+
+    this.on('learning.schedule_created', async (tenantId, payload) => {
+      if (typeof tenantId === 'object' && tenantId.tenantId) {
+        payload = tenantId.payload;
+        tenantId = tenantId.tenantId;
+      }
+      const feesController = require('../controllers/feesController');
+      try {
+        const { schedule, studentUserId } = payload || {};
+        if (!schedule) return;
+
+        // Auto-create a Fees invoice (recurring operating expenses/service fee) using feesController.createFee
+        const fakeReq = {
+          tenantId,
+          body: {
+            feeName: `Tuition Fee: ${schedule.title}`,
+            provider: 'Academy Pathway',
+            category: 'OTHER',
+            amount: 150.00,
+            currency: 'PGK',
+            billingCycle: 'ONE_OFF',
+            status: 'ACTIVE',
+            notes: `Auto-generated tuition invoice for study schedule ID ${schedule.id}. Student: ${studentUserId || 'N/A'}`
+          }
+        };
+        const fakeRes = createCapturingResponse();
+        await feesController.createFee(fakeReq, fakeRes);
+        console.log(`[eventDispatcher] [Reaction] learning.schedule_created handled and created fee:`, fakeRes.capture.body);
+      } catch (err) {
+        console.error('[eventDispatcher] learning.schedule_created reaction error:', err);
+      }
+    });
+
+    this.on('hr.payroll_run', async (tenantId, payload) => {
+      if (typeof tenantId === 'object' && tenantId.tenantId) {
+        payload = tenantId.payload;
+        tenantId = tenantId.tenantId;
+      }
+      const db = require('../db');
+      const financeController = require('../controllers/financeController');
+      try {
+        const { profile } = payload || {};
+        if (!profile) return;
+
+        // Log a Finance EXPENSE ledger entry using financeController.logTransaction
+        const fakeReq = {
+          tenantId,
+          body: {
+            transactionType: 'EXPENSE',
+            amount: Number(profile.salary_amount || 0.00),
+            currency: profile.salary_currency || 'PGK',
+            description: `Payroll run salary payment for ${profile.full_name || 'Employee'}`,
+            paymentGateway: 'INTERNAL_BRIDGE'
+          }
+        };
+        const fakeRes = createCapturingResponse();
+        await financeController.logTransaction(fakeReq, fakeRes);
+
+        const createdTx = fakeRes.capture.body;
+        if (createdTx && createdTx.id) {
+          await db.query(
+            `UPDATE financial_transactions
+                SET source_module = 'hr', source_record_id = $1
+              WHERE id = $2 AND tenant_id = $3`,
+            [profile.id, createdTx.id, tenantId]
+          );
+        }
+        console.log(`[eventDispatcher] [Reaction] hr.payroll_run handled for profile ${profile.id}`);
+      } catch (err) {
+        console.error('[eventDispatcher] hr.payroll_run reaction error:', err);
+      }
+    });
   }
 
   /**

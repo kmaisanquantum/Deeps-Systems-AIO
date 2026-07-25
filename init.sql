@@ -469,6 +469,124 @@ BEFORE UPDATE ON study_schedule
 FOR EACH ROW
 EXECUTE FUNCTION trigger_set_timestamp();
 
+-- ---------------------------------------------------------------------
+-- PHASE 1: STUDY ENGINE SCHEMA EXTENSIONS
+-- ---------------------------------------------------------------------
+
+-- 1. LEARNING_GOALS Table
+CREATE TABLE IF NOT EXISTS learning_goals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    target_date DATE,
+    status VARCHAR(50) NOT NULL DEFAULT 'In Progress', -- In Progress, Achieved, Abandoned
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_learning_goals_tenant_id ON learning_goals(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_learning_goals ON learning_goals;
+CREATE TRIGGER set_timestamp_learning_goals
+BEFORE UPDATE ON learning_goals
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- 2. LEARNING_PATHWAYS Table
+CREATE TABLE IF NOT EXISTS learning_pathways (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_learning_pathways_tenant_id ON learning_pathways(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_learning_pathways ON learning_pathways;
+CREATE TRIGGER set_timestamp_learning_pathways
+BEFORE UPDATE ON learning_pathways
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- 3. COURSES Table (Child of Learning Pathways)
+CREATE TABLE IF NOT EXISTS courses (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    pathway_id UUID REFERENCES learning_pathways(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_courses_tenant_id ON courses(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_courses ON courses;
+CREATE TRIGGER set_timestamp_courses
+BEFORE UPDATE ON courses
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- 4. COURSE_MODULES Table (Child of Courses)
+CREATE TABLE IF NOT EXISTS course_modules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    sequence_order INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_course_modules_tenant_id ON course_modules(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_course_modules ON course_modules;
+CREATE TRIGGER set_timestamp_course_modules
+BEFORE UPDATE ON course_modules
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- 5. LESSONS Table (Child of Course Modules)
+CREATE TABLE IF NOT EXISTS lessons (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    module_id UUID REFERENCES course_modules(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    content TEXT,
+    sequence_order INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_lessons_tenant_id ON lessons(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_lessons ON lessons;
+CREATE TRIGGER set_timestamp_lessons
+BEFORE UPDATE ON lessons
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- 6. ALTER LEARNING_RESOURCES to add Phase 1 association columns
+ALTER TABLE learning_resources ADD COLUMN IF NOT EXISTS pathway_id UUID REFERENCES learning_pathways(id) ON DELETE SET NULL;
+ALTER TABLE learning_resources ADD COLUMN IF NOT EXISTS course_id UUID REFERENCES courses(id) ON DELETE SET NULL;
+ALTER TABLE learning_resources ADD COLUMN IF NOT EXISTS module_id UUID REFERENCES course_modules(id) ON DELETE SET NULL;
+ALTER TABLE learning_resources ADD COLUMN IF NOT EXISTS lesson_id UUID REFERENCES lessons(id) ON DELETE SET NULL;
+
+
 -- =========================================================================
 -- SEED DATA FOR LEARNING PLATFORM RESOURCES (GAP 4 / SEED DATA)
 -- =========================================================================

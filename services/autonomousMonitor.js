@@ -215,6 +215,47 @@ async function runMonitorTick() {
         } catch (sweepErr) {
           console.warn(`[autonomousMonitor] Study schedule sweep failed for tenant ${tenantId}:`, sweepErr.message);
         }
+
+        // 5.b Streak at risk warning
+        try {
+          const streakRiskRes = await db.query(
+            `SELECT s.id, s.current_streak, s.last_study_date::text,
+                    (SELECT COUNT(*)::integer FROM study_session_logs ssl WHERE ssl.tenant_id = s.tenant_id AND ssl.started_at::DATE = CURRENT_DATE) AS today_sessions
+               FROM study_streaks s
+              WHERE s.tenant_id = $1
+                AND s.last_study_date IS NOT NULL
+                AND s.last_study_date < CURRENT_DATE
+                AND (s.last_warned_date IS NULL OR s.last_warned_date < CURRENT_DATE)`,
+            [tenantId]
+          );
+
+          if (streakRiskRes.rowCount > 0) {
+            const row = streakRiskRes.rows[0];
+            const todaySessions = parseInt(row.today_sessions, 10);
+            if (todaySessions === 0) {
+              // Fetch primary admin email, default to 'kmaisan@dspng.tech'
+              const adminRes = await db.query(
+                "SELECT email FROM users WHERE tenant_id = $1 AND role = 'admin' LIMIT 1",
+                [tenantId]
+              );
+              const toAddress = adminRes.rowCount > 0 ? adminRes.rows[0].email : 'kmaisan@dspng.tech';
+
+              const subject = `🔥 Study Streak at Risk! Study Today to Keep Your Streak Alive!`;
+              const message = `Hi there,\n\nYour current study streak of ${row.current_streak} day(s) is at risk! You haven't started any study sessions today.\n\nLog in now to study and keep your streak alive!\n\nBest regards,\nDeeps Systems Learning Engine`;
+
+              await communicationController.sendEmailMessage(toAddress, subject, message);
+
+              // Mark as warned today
+              await db.query(
+                "UPDATE study_streaks SET last_warned_date = CURRENT_DATE WHERE id = $1",
+                [row.id]
+              );
+              console.log(`[autonomousMonitor] Sent streak at risk warning email to ${toAddress} for tenant ${tenantId}`);
+            }
+          }
+        } catch (streakRiskErr) {
+          console.warn(`[autonomousMonitor] Streak risk sweep failed for tenant ${tenantId}:`, streakRiskErr.message);
+        }
       }
     }
   } catch (err) {

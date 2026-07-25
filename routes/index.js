@@ -291,6 +291,22 @@ router.post('/learning/lessons', requireTenant, learningController.createLesson)
 router.patch('/learning/lessons/:id', requireTenant, learningController.updateLesson);
 router.delete('/learning/lessons/:id', requireTenant, learningController.deleteLesson);
 
+// Daily Study Engine & Sessions
+router.get('/learning/today', requireTenant, learningController.getTodaysLearning);
+router.post('/learning/sessions/start', requireTenant, learningController.startStudySession);
+router.post('/learning/sessions/:id/complete', requireTenant, learningController.completeStudySession);
+
+// Recall Entries
+router.get('/learning/recalls', requireTenant, learningController.listRecallEntries);
+router.post('/learning/recalls', requireTenant, learningController.createRecallEntry);
+
+// Practice Tasks
+router.get('/learning/practice-tasks', requireTenant, learningController.listPracticeTasks);
+router.post('/learning/practice-tasks', requireTenant, learningController.createPracticeTask);
+router.patch('/learning/practice-tasks/:id', requireTenant, learningController.updatePracticeTask);
+router.delete('/learning/practice-tasks/:id', requireTenant, learningController.deletePracticeTask);
+router.patch('/learning/practice-tasks/:id/complete', requireTenant, learningController.completePracticeTask);
+
 // -----------------------------------------------------------------
 // Service Fees Module
 // -----------------------------------------------------------------

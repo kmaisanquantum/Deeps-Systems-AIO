@@ -858,3 +858,106 @@ ALTER TABLE workspace_tasks ADD COLUMN IF NOT EXISTS source_record_id UUID;
 ALTER TABLE study_schedule ADD COLUMN IF NOT EXISTS reminder_email VARCHAR(255);
 ALTER TABLE study_schedule ADD COLUMN IF NOT EXISTS reminder_lead_minutes INTEGER DEFAULT 60;
 ALTER TABLE study_schedule ADD COLUMN IF NOT EXISTS reminded_at TIMESTAMPTZ;
+
+-- ---------------------------------------------------------------------
+-- PHASE 2: DAILY STUDY ENGINE SCHEMA EXTENSIONS
+-- ---------------------------------------------------------------------
+
+-- Alter lessons to add progress columns
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Not Started';
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS completion_pct INTEGER DEFAULT 0;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS est_minutes INTEGER;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS resource_id UUID REFERENCES learning_resources(id) ON DELETE SET NULL;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS requires_recall BOOLEAN DEFAULT true;
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS requires_practice BOOLEAN DEFAULT false;
+
+-- Table study_session_logs
+CREATE TABLE IF NOT EXISTS study_session_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    schedule_id UUID REFERENCES study_schedule(id) ON DELETE SET NULL,
+    started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    ended_at TIMESTAMPTZ,
+    actual_minutes INTEGER,
+    status VARCHAR(50) DEFAULT 'In Progress',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_study_session_logs_tenant_id ON study_session_logs(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_study_session_logs ON study_session_logs;
+CREATE TRIGGER set_timestamp_study_session_logs
+BEFORE UPDATE ON study_session_logs
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- Table recall_entries
+CREATE TABLE IF NOT EXISTS recall_entries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    session_log_id UUID NOT NULL REFERENCES study_session_logs(id) ON DELETE CASCADE,
+    content TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_recall_entries_tenant_id ON recall_entries(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_recall_entries ON recall_entries;
+CREATE TRIGGER set_timestamp_recall_entries
+BEFORE UPDATE ON recall_entries
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- Table practice_tasks
+CREATE TABLE IF NOT EXISTS practice_tasks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    instructions TEXT,
+    due_date DATE,
+    status VARCHAR(50) DEFAULT 'Pending',
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_practice_tasks_tenant_id ON practice_tasks(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_practice_tasks ON practice_tasks;
+CREATE TRIGGER set_timestamp_practice_tasks
+BEFORE UPDATE ON practice_tasks
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- Table study_streaks
+CREATE TABLE IF NOT EXISTS study_streaks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE UNIQUE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    current_streak INTEGER DEFAULT 0,
+    longest_streak INTEGER DEFAULT 0,
+    last_study_date DATE,
+    last_warned_date DATE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_study_streaks_tenant_id ON study_streaks(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_study_streaks ON study_streaks;
+CREATE TRIGGER set_timestamp_study_streaks
+BEFORE UPDATE ON study_streaks
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();

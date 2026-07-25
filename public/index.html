@@ -1535,12 +1535,15 @@
                     <button class="btn-back" onclick="routeToView('view-landing')">&larr; Back to Dashboard</button>
                 </div>
                 <div class="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-xl p-4 md:p-8 shadow-[0_4px_6px_rgba(0,0,0,0.3)]">
-                    <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-800 pb-6 gap-4">
                         <div>
                             <h2 class="text-xl md:text-2xl font-extrabold text-white">🎓 Learning Pathway & Training</h2>
-                            <p class="text-slate-300 text-sm mt-1">Organize study links, categorize research modules, and plan study schedules</p>
+                            <p class="text-slate-300 text-sm mt-1">Organize study links, master modules and practice daily</p>
                         </div>
-                        <div class="flex gap-3">
+                        <div class="flex flex-wrap gap-3">
+                            <button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition" onclick="fetchTodayMission()">
+                                Refresh Mission
+                            </button>
                             <button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-lg transition" onclick="fetchLearningResources()">
                                 Refresh Resources
                             </button>
@@ -1550,126 +1553,241 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8">
-                        <!-- Left column: Creation & Add Forms (span 4) -->
-                        <div class="lg:col-span-4 space-y-8">
-                            <!-- Create Resource Form -->
-                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-4 md:p-6">
-                                <h3 class="text-lg font-bold text-white mb-6">Add New Learning Resource</h3>
-                                <form id="form-learning-resource" onsubmit="addLearningResource(event)" class="space-y-4">
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Title</label>
-                                        <input type="text" id="resource-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Advanced PostgreSQL Tuning">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Resource URL</label>
-                                        <input type="url" id="resource-url" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="https://example.com/course">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Category</label>
-                                        <input type="text" id="resource-category" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Engineering, Finance">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Provider / Host</label>
-                                        <input type="text" id="resource-provider" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Coursera, Internal Wiki">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Description</label>
-                                        <textarea id="resource-description" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-sm" placeholder="Brief overview of resource..."></textarea>
-                                    </div>
-                                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Save Resource</button>
-                                </form>
-                            </div>
+                    <!-- Tabs for Learning Section -->
+                    <div class="flex border-b border-slate-800 mb-8 space-x-4">
+                        <button onclick="switchLearningTab('today')" id="tab-btn-learning-today" class="px-4 py-2 text-sm font-bold tracking-wider text-cyan-400 border-b-2 border-cyan-500">Today's Learning</button>
+                        <button onclick="switchLearningTab('organize')" id="tab-btn-learning-organize" class="px-4 py-2 text-sm font-bold tracking-wider text-slate-400 hover:text-white border-b-2 border-transparent">Organize & Manage</button>
+                    </div>
 
-                            <!-- Create Study Schedule Form -->
-                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-4 md:p-6">
-                                <h3 class="text-lg font-bold text-white mb-6">Schedule Study Session</h3>
-                                <form id="form-study-schedule" onsubmit="addStudySchedule(event)" class="space-y-4">
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Session Title</label>
-                                        <input type="text" id="schedule-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Team SQL Review">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Topic</label>
-                                        <input type="text" id="schedule-topic" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Indexing & Explain Analyzes">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Referenced Resource</label>
-                                        <select id="schedule-resource" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
-                                            <option value="">-- No Reference --</option>
-                                        </select>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Scheduled At</label>
-                                            <input type="datetime-local" id="schedule-date" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-xs">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Duration (Min)</label>
-                                            <input type="number" id="schedule-duration" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="60">
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Reminder Email</label>
-                                            <input type="email" id="schedule-reminder-email" value="kmaisan@dspng.tech" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-xs" placeholder="kmaisan@dspng.tech">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Remind Me (Min Before)</label>
-                                            <input type="number" id="schedule-reminder-lead-minutes" value="60" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="60">
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Notes</label>
-                                        <textarea id="schedule-notes" rows="2" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-sm" placeholder="Important preparation notes..."></textarea>
-                                    </div>
-                                    <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Create Schedule</button>
-                                </form>
+                    <!-- Tab content: Today's Learning -->
+                    <div id="learning-tab-today" class="learning-tab-content space-y-8">
+                        <!-- Streaks stats row -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6 flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Current Study Streak</p>
+                                    <h3 class="text-2xl font-extrabold text-white mt-1" id="streak-current">🔥 0 Days</h3>
+                                </div>
+                                <span class="text-3xl">🔥</span>
+                            </div>
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6 flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Longest Study Streak</p>
+                                    <h3 class="text-2xl font-extrabold text-white mt-1" id="streak-longest">🏆 0 Days</h3>
+                                </div>
+                                <span class="text-3xl">🏆</span>
+                            </div>
+                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6 flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Last Study Date</p>
+                                    <h3 class="text-lg font-bold text-white mt-1" id="streak-last-date">Never</h3>
+                                </div>
+                                <span class="text-3xl">📅</span>
                             </div>
                         </div>
 
-                        <!-- Right Column: Lists & Tables (span 8) -->
-                        <div class="lg:col-span-8 space-y-8">
-                            <!-- Resources List Card -->
-                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-4 md:p-6">
-                                <h3 class="text-lg font-bold text-white mb-6">Learning Resources</h3>
-                                <div class="overflow-x-auto rounded-lg">
-                                    <table class="min-w-full divide-y divide-slate-800 text-xs" id="resources-table">
-                                        <thead class="bg-slate-900/50">
-                                            <tr>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Title</th>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Category</th>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Provider</th>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Description</th>
-                                                <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="learning-resources-list" class="divide-y divide-slate-800 text-slate-300">
-                                            <!-- Rendered dynamically -->
-                                        </tbody>
-                                    </table>
+                        <!-- Today's Study Mission Card / Subview -->
+                        <div id="today-mission-card" class="space-y-6">
+                            <!-- Dynamically loaded -->
+                        </div>
+                    </div>
+
+                    <!-- Tab content: Organize -->
+                    <div id="learning-tab-organize" class="learning-tab-content hidden space-y-12">
+                        <!-- Builder Header -->
+                        <div class="bg-slate-950/40 border border-slate-800 rounded-lg p-6">
+                            <h3 class="text-lg font-bold text-white mb-6">🎓 Learning Pathways & Lesson Builder</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <!-- Create Pathway Form -->
+                                <div class="bg-slate-900/40 p-4 border border-slate-800 rounded-md">
+                                    <h4 class="text-sm font-bold text-cyan-400 mb-4">1. Create Pathway</h4>
+                                    <form id="form-builder-pathway" onsubmit="createBuilderPathway(event)" class="space-y-3">
+                                        <input type="text" id="builder-pathway-title" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Pathway Title">
+                                        <input type="text" id="builder-pathway-desc" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Description">
+                                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold py-2 rounded">Save Pathway</button>
+                                    </form>
+                                </div>
+
+                                <!-- Create Course Form -->
+                                <div class="bg-slate-900/40 p-4 border border-slate-800 rounded-md">
+                                    <h4 class="text-sm font-bold text-cyan-400 mb-4">2. Create Course</h4>
+                                    <form id="form-builder-course" onsubmit="createBuilderCourse(event)" class="space-y-3">
+                                        <select id="builder-course-pathway" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs">
+                                            <option value="">-- Select Pathway --</option>
+                                        </select>
+                                        <input type="text" id="builder-course-title" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Course Title">
+                                        <input type="text" id="builder-course-desc" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Description">
+                                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold py-2 rounded">Save Course</button>
+                                    </form>
+                                </div>
+
+                                <!-- Create Module Form -->
+                                <div class="bg-slate-900/40 p-4 border border-slate-800 rounded-md">
+                                    <h4 class="text-sm font-bold text-cyan-400 mb-4">3. Create Module</h4>
+                                    <form id="form-builder-module" onsubmit="createBuilderModule(event)" class="space-y-3">
+                                        <select id="builder-module-course" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs">
+                                            <option value="">-- Select Course --</option>
+                                        </select>
+                                        <input type="text" id="builder-module-title" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Module Title">
+                                        <input type="number" id="builder-module-sequence" value="0" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Sequence Order (0)">
+                                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold py-2 rounded">Save Module</button>
+                                    </form>
+                                </div>
+
+                                <!-- Create Lesson Form -->
+                                <div class="bg-slate-900/40 p-4 border border-slate-800 rounded-md">
+                                    <h4 class="text-sm font-bold text-cyan-400 mb-4">4. Create Lesson</h4>
+                                    <form id="form-builder-lesson" onsubmit="createBuilderLesson(event)" class="space-y-3">
+                                        <select id="builder-lesson-module" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs">
+                                            <option value="">-- Select Module --</option>
+                                        </select>
+                                        <input type="text" id="builder-lesson-title" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Lesson Title">
+                                        <input type="number" id="builder-lesson-est" value="30" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Est Minutes">
+                                        <select id="builder-lesson-resource" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs">
+                                            <option value="">-- Resource Link --</option>
+                                        </select>
+                                        <div class="flex items-center gap-4 text-slate-300 text-xs pt-1">
+                                            <label class="flex items-center gap-1">
+                                                <input type="checkbox" id="builder-lesson-recall" checked class="rounded border-slate-800 text-cyan-600"> Recall
+                                            </label>
+                                            <label class="flex items-center gap-1">
+                                                <input type="checkbox" id="builder-lesson-practice" class="rounded border-slate-800 text-cyan-600"> Practice
+                                            </label>
+                                        </div>
+                                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold py-2 rounded">Save Lesson</button>
+                                    </form>
                                 </div>
                             </div>
 
-                            <!-- Study Schedule List Card -->
-                            <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-4 md:p-6">
-                                <h3 class="text-lg font-bold text-white mb-6">Study & Training Schedule</h3>
-                                <div class="overflow-x-auto rounded-lg">
-                                    <table class="min-w-full divide-y divide-slate-800 text-xs" id="schedules-table">
-                                        <thead class="bg-slate-900/50">
-                                            <tr>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Session</th>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Topic</th>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Resource</th>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Scheduled At</th>
-                                                <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Status</th>
-                                                <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="study-schedule-list" class="divide-y divide-slate-800 text-slate-300">
-                                            <!-- Rendered dynamically -->
-                                        </tbody>
-                                    </table>
+                            <!-- Builder Visual Tree -->
+                            <div class="mt-8 border-t border-slate-800 pt-6">
+                                <h4 class="text-sm font-bold text-slate-400 mb-4">Pathways Hierarchy Viewer & Progress</h4>
+                                <div id="builder-visual-tree" class="space-y-4 max-h-[400px] overflow-y-auto pr-2 text-xs">
+                                    <p class="text-slate-500 italic text-xs">Loading pathways tree...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Existing Resource and Schedule list layouts -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8">
+                            <!-- Left Column: Resource Form (span 4) -->
+                            <div class="lg:col-span-4 space-y-8">
+                                <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-4 md:p-6">
+                                    <h3 class="text-lg font-bold text-white mb-6">Add New Learning Resource</h3>
+                                    <form id="form-learning-resource" onsubmit="addLearningResource(event)" class="space-y-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Title</label>
+                                            <input type="text" id="resource-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Advanced PostgreSQL Tuning">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Resource URL</label>
+                                            <input type="url" id="resource-url" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="https://example.com/course">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Category</label>
+                                            <input type="text" id="resource-category" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Engineering, Finance">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Provider / Host</label>
+                                            <input type="text" id="resource-provider" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Coursera, Internal Wiki">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Description</label>
+                                            <textarea id="resource-description" rows="3" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-sm" placeholder="Brief overview of resource..."></textarea>
+                                        </div>
+                                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Save Resource</button>
+                                    </form>
+                                </div>
+
+                                <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-4 md:p-6">
+                                    <h3 class="text-lg font-bold text-white mb-6">Schedule Study Session</h3>
+                                    <form id="form-study-schedule" onsubmit="addStudySchedule(event)" class="space-y-4">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Session Title</label>
+                                            <input type="text" id="schedule-title" required class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Team SQL Review">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Topic</label>
+                                            <input type="text" id="schedule-topic" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="e.g. Indexing & Explain Analyzes">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Referenced Resource</label>
+                                            <select id="schedule-resource" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200">
+                                                <option value="">-- No Reference --</option>
+                                            </select>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Scheduled At</label>
+                                                <input type="datetime-local" id="schedule-date" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-xs">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Duration (Min)</label>
+                                                <input type="number" id="schedule-duration" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="60">
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Reminder Email</label>
+                                                <input type="email" id="schedule-reminder-email" value="kmaisan@dspng.tech" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-xs" placeholder="kmaisan@dspng.tech">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Remind Me (Min Before)</label>
+                                                <input type="number" id="schedule-reminder-lead-minutes" value="60" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200" placeholder="60">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Notes</label>
+                                            <textarea id="schedule-notes" rows="2" class="w-full bg-slate-900 border border-slate-800 rounded-md p-3 text-slate-100 focus:outline-none focus:border-cyan-500 transition-all duration-200 text-sm" placeholder="Important preparation notes..."></textarea>
+                                        </div>
+                                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 rounded-md tracking-wider transition-all duration-200">Create Schedule</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Right Column: Lists & Tables (span 8) -->
+                            <div class="lg:col-span-8 space-y-8">
+                                <!-- Resources List Card -->
+                                <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-4 md:p-6">
+                                    <h3 class="text-lg font-bold text-white mb-6">Learning Resources</h3>
+                                    <div class="overflow-x-auto rounded-lg">
+                                        <table class="min-w-full divide-y divide-slate-800 text-xs" id="resources-table">
+                                            <thead class="bg-slate-900/50">
+                                                <tr>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Title</th>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Category</th>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Provider</th>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Description</th>
+                                                    <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="learning-resources-list" class="divide-y divide-slate-800 text-slate-300">
+                                                <!-- Rendered dynamically -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Study Schedule List Card -->
+                                <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-4 md:p-6">
+                                    <h3 class="text-lg font-bold text-white mb-6">Study & Training Schedule</h3>
+                                    <div class="overflow-x-auto rounded-lg">
+                                        <table class="min-w-full divide-y divide-slate-800 text-xs" id="schedules-table">
+                                            <thead class="bg-slate-900/50">
+                                                <tr>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Session</th>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Topic</th>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Resource</th>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Scheduled At</th>
+                                                    <th class="px-3 py-3 text-left font-bold uppercase text-xxs text-slate-400 tracking-wider">Status</th>
+                                                    <th class="px-3 py-3 text-center font-bold uppercase text-xxs text-slate-400 tracking-wider">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="study-schedule-list" class="divide-y divide-slate-800 text-slate-300">
+                                                <!-- Rendered dynamically -->
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2018,8 +2136,7 @@
                     fetchCoolifyProjects();
                 }
                 if (moduleId === 'learning') {
-                    fetchLearningResources();
-                    fetchStudySchedules();
+                    switchLearningTab('today');
                 }
                 if (moduleId === 'superadmin') {
                     fetchSuperadminTenants();
@@ -4205,6 +4322,792 @@
             } catch (err) {
                 console.error(err);
                 showToast('Failed to delete service fee.', 'error');
+            }
+        }
+
+        // LEARNING PATHWAY OPERATIONS
+        let activeSession = null; // { logId, lessonId, estMinutes, timerInterval, secondsLeft, isPaused }
+
+        function switchLearningTab(tabId) {
+            document.querySelectorAll('.learning-tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`learning-tab-${tabId}`).classList.remove('hidden');
+
+            const tabs = ['today', 'organize'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-btn-learning-${t}`);
+                if (btn) {
+                    if (t === tabId) {
+                        btn.className = 'px-4 py-2 text-sm font-bold tracking-wider text-cyan-400 border-b-2 border-cyan-500';
+                    } else {
+                        btn.className = 'px-4 py-2 text-sm font-bold tracking-wider text-slate-400 hover:text-white border-b-2 border-transparent';
+                    }
+                }
+            });
+
+            if (tabId === 'today') {
+                fetchTodayMission();
+            } else if (tabId === 'organize') {
+                fetchLearningResources();
+                fetchStudySchedules();
+                fetchBuilderDropdowns();
+                renderBuilderVisualTree();
+            }
+        }
+
+        async function fetchTodayMission() {
+            try {
+                const response = await fetch('/learning/today', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to fetch daily mission.', 'error');
+                    return;
+                }
+
+                // Update streaks
+                document.getElementById('streak-current').textContent = `🔥 ${data.current_streak || 0} Day(s)`;
+                document.getElementById('streak-longest').textContent = `🏆 ${data.longest_streak || 0} Day(s)`;
+                document.getElementById('streak-last-date').textContent = data.last_study_date ? new Date(data.last_study_date).toLocaleDateString() : 'Never';
+
+                renderTodayMissionCard(data.today_mission);
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to load daily mission.', 'error');
+            }
+        }
+
+        function renderTodayMissionCard(mission) {
+            const container = document.getElementById('today-mission-card');
+            container.innerHTML = '';
+
+            if (activeSession) {
+                renderActiveSessionView(container);
+                return;
+            }
+
+            if (!mission) {
+                container.innerHTML = `
+                    <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-8 text-center space-y-4">
+                        <h4 class="text-lg font-bold text-white">✨ You're All Caught Up!</h4>
+                        <p class="text-slate-400 text-sm max-w-md mx-auto">No study mission is currently set up, or you have completed all lessons. Create a pathway, courses, modules, and lessons under the Organize tab to start studying daily!</p>
+                        <button onclick="switchLearningTab('organize')" class="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded transition uppercase tracking-wider">
+                            Go to Builder &rarr;
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const pct = mission.completion_pct || 0;
+            const est = mission.est_minutes || 30;
+
+            container.innerHTML = `
+                <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-6 space-y-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="px-2 py-0.5 bg-cyan-950 text-cyan-400 font-mono text-xxs rounded uppercase tracking-wider">Current Study Mission</span>
+                            <h4 class="text-xl font-extrabold text-white mt-2">${mission.lesson_title}</h4>
+                            <p class="text-xs text-slate-400 mt-1">${mission.course_title} &bull; ${mission.module_title}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs font-bold text-slate-400">Estimated Duration</span>
+                            <p class="text-sm font-extrabold text-cyan-400 mt-1">⏳ ${est} mins</p>
+                        </div>
+                    </div>
+
+                    ${mission.lesson_content ? `
+                    <div class="bg-slate-900/40 border border-slate-800 p-4 rounded text-slate-300 text-xs leading-relaxed max-h-40 overflow-y-auto">
+                        <strong class="text-slate-200">Content Overview:</strong><br>
+                        ${mission.lesson_content}
+                    </div>
+                    ` : ''}
+
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs font-bold">
+                            <span class="text-slate-400">Lesson Progress</span>
+                            <span class="text-cyan-400">${pct}%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-cyan-500 to-emerald-500 h-2 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-4 pt-2">
+                        <button onclick="startActiveSession('${mission.lesson_id}', ${est}, '${escapeJS(mission.lesson_title)}', '${escapeJS(mission.resource_url || '')}', ${mission.requires_recall}, ${mission.requires_practice})" class="flex-1 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs rounded transition uppercase tracking-wider shadow-lg shadow-cyan-900/20">
+                            ⚡ Start Study Session
+                        </button>
+                        ${mission.resource_url ? `
+                        <a href="${mission.resource_url}" target="_blank" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded transition text-center uppercase tracking-wider">
+                            🌐 Open Resource Link
+                        </a>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function escapeJS(str) {
+            if (!str) return '';
+            return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+
+        async function startActiveSession(lessonId, estMinutes, lessonTitle, resourceUrl, requiresRecall, requiresPractice) {
+            try {
+                // Post to backend to log session start
+                const response = await fetch('/learning/sessions/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ lessonId })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to start study session.', 'error');
+                    return;
+                }
+
+                // Initialize client-side session state
+                activeSession = {
+                    logId: data.log_id,
+                    lessonId,
+                    lessonTitle,
+                    resourceUrl,
+                    estMinutes,
+                    requiresRecall,
+                    requiresPractice,
+                    secondsLeft: estMinutes * 60,
+                    isPaused: true,
+                    timerInterval: null,
+                    recalled: false,
+                    practiceTasks: []
+                };
+
+                showToast('Study session started! Use the controls to manage your timer.', 'success');
+                fetchTodayMission(); // This will render the active session view
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to start study session on server.', 'error');
+            }
+        }
+
+        function renderActiveSessionView(container) {
+            const minutes = Math.floor(activeSession.secondsLeft / 60);
+            const seconds = activeSession.secondsLeft % 60;
+            const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            container.innerHTML = `
+                <div class="bg-slate-950/80 border-2 border-cyan-500/50 rounded-lg p-6 space-y-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-4 gap-4">
+                        <div>
+                            <span class="px-2 py-0.5 bg-cyan-950 text-cyan-400 font-mono text-xxs rounded uppercase tracking-wider animate-pulse">Session Active</span>
+                            <h4 class="text-xl font-extrabold text-white mt-1">${activeSession.lessonTitle}</h4>
+                        </div>
+                        ${activeSession.resourceUrl ? `
+                        <a href="${activeSession.resourceUrl}" target="_blank" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 text-xs font-bold rounded transition">
+                            🌐 Open Course Resource ↗
+                        </a>
+                        ` : ''}
+                    </div>
+
+                    <!-- Visual Timer Display -->
+                    <div class="flex flex-col items-center justify-center py-6">
+                        <div class="text-6xl md:text-8xl font-black text-cyan-400 font-mono tracking-wider drop-shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+                            ${formattedTime}
+                        </div>
+                        <div class="flex flex-wrap justify-center gap-4 mt-8">
+                            <button onclick="toggleTimer()" class="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded transition uppercase tracking-wider">
+                                ${activeSession.timerInterval ? 'Pause' : 'Start / Resume'}
+                            </button>
+                            <button onclick="restartTimer()" class="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded transition uppercase tracking-wider">
+                                Restart
+                            </button>
+                            <button onclick="finishSessionFlow()" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded transition uppercase tracking-wider">
+                                Complete Session
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Post-Timer Tasks Area (hidden until Completed clicked) -->
+                    <div id="session-post-tasks" class="hidden border-t border-slate-800 pt-6 space-y-6">
+                        <h4 class="text-lg font-bold text-white">📝 Required Study Activities</h4>
+                        <p class="text-xs text-slate-400">Complete the following tasks to finalize the lesson. Once completed, your study streak will update!</p>
+
+                        ${activeSession.requiresRecall ? `
+                        <div class="space-y-2 bg-slate-900/40 p-4 border border-slate-800 rounded">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400">1. Active Recall Entry (Required)</label>
+                            <p class="text-xxs text-slate-400">Summarize what you learned from memory in your own words. Minimum 10 characters.</p>
+                            <textarea id="session-recall-input" rows="3" class="w-full bg-slate-950 border border-slate-800 rounded p-3 text-slate-200 focus:outline-none focus:border-cyan-500 text-sm mt-2" placeholder="Write your active recall summary here..."></textarea>
+                            <button onclick="submitSessionRecall()" id="btn-session-recall" class="mt-2 px-4 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xxs rounded transition uppercase tracking-wider">
+                                Save Recall Entry
+                            </button>
+                        </div>
+                        ` : ''}
+
+                        ${activeSession.requiresPractice ? `
+                        <div class="space-y-3 bg-slate-900/40 p-4 border border-slate-800 rounded">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400">2. Practice Tasks (Required)</label>
+                            <p class="text-xxs text-slate-400">Mark all associated practice tasks for this lesson as completed.</p>
+                            <div id="session-practice-list" class="space-y-2 mt-2">
+                                <p class="text-slate-500 italic text-xxs">Loading practice tasks...</p>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <button onclick="finalizeStudySessionOnServer()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded transition uppercase tracking-wider shadow-lg shadow-emerald-900/20">
+                            🏁 Finalize Lesson & Update Streak
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            if (activeSession.requiresPractice && activeSession.practiceTasks.length === 0) {
+                loadSessionPracticeTasks();
+            }
+        }
+
+        function toggleTimer() {
+            if (activeSession.timerInterval) {
+                // Pause
+                clearInterval(activeSession.timerInterval);
+                activeSession.timerInterval = null;
+                showToast('Timer paused.', 'info');
+            } else {
+                // Start / Resume
+                activeSession.timerInterval = setInterval(() => {
+                    if (activeSession.secondsLeft > 0) {
+                        activeSession.secondsLeft--;
+                        fetchTodayMission(); // Refresh UI
+                    } else {
+                        clearInterval(activeSession.timerInterval);
+                        activeSession.timerInterval = null;
+                        showToast('Study time completed! Please enter your active recall and complete tasks.', 'success');
+                        finishSessionFlow();
+                    }
+                }, 1000);
+            }
+            fetchTodayMission();
+        }
+
+        function restartTimer() {
+            if (activeSession.timerInterval) {
+                clearInterval(activeSession.timerInterval);
+                activeSession.timerInterval = null;
+            }
+            activeSession.secondsLeft = activeSession.estMinutes * 60;
+            showToast('Timer restarted.', 'info');
+            fetchTodayMission();
+        }
+
+        function finishSessionFlow() {
+            if (activeSession.timerInterval) {
+                clearInterval(activeSession.timerInterval);
+                activeSession.timerInterval = null;
+            }
+            const postTasks = document.getElementById('session-post-tasks');
+            if (postTasks) {
+                postTasks.classList.remove('hidden');
+                postTasks.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        async function submitSessionRecall() {
+            const content = document.getElementById('session-recall-input').value.trim();
+            if (content.length < 10) {
+                showToast('Recall entry must be at least 10 characters long.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/learning/recalls', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        lessonId: activeSession.lessonId,
+                        sessionLogId: activeSession.logId,
+                        content
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to save recall entry.', 'error');
+                    return;
+                }
+
+                activeSession.recalled = true;
+                showToast('Active recall entry saved successfully!', 'success');
+                const btn = document.getElementById('btn-session-recall');
+                if (btn) {
+                    btn.textContent = 'Saved ✓';
+                    btn.disabled = true;
+                    btn.className = 'mt-2 px-4 py-1.5 bg-emerald-600 text-white font-bold text-xxs rounded cursor-not-allowed';
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to active recall API.', 'error');
+            }
+        }
+
+        async function loadSessionPracticeTasks() {
+            try {
+                const response = await fetch(`/learning/practice-tasks?lessonId=${activeSession.lessonId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const tasks = await response.json();
+                if (!response.ok) return;
+
+                activeSession.practiceTasks = tasks;
+                renderSessionPracticeList();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderSessionPracticeList() {
+            const list = document.getElementById('session-practice-list');
+            if (!list) return;
+
+            if (activeSession.practiceTasks.length === 0) {
+                list.innerHTML = `
+                    <div class="text-slate-400 text-xxs italic">No practice tasks configured for this lesson.</div>
+                `;
+                return;
+            }
+
+            list.innerHTML = '';
+            activeSession.practiceTasks.forEach(task => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between text-slate-300 text-xxs bg-slate-950 p-2 rounded border border-slate-800';
+                div.innerHTML = `
+                    <div>
+                        <strong class="text-white">${task.title}</strong>
+                        ${task.instructions ? `<p class="text-slate-400 mt-0.5">${task.instructions}</p>` : ''}
+                    </div>
+                    <button onclick="toggleSessionPracticeTask('${task.id}', '${task.status}')" class="px-3 py-1 ${task.status === 'Completed' ? 'bg-emerald-600/80 text-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'} font-bold rounded transition">
+                        ${task.status === 'Completed' ? 'Completed ✓' : 'Mark Done'}
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function toggleSessionPracticeTask(taskId, currentStatus) {
+            if (currentStatus === 'Completed') return; // Already completed
+
+            try {
+                const response = await fetch(`/learning/practice-tasks/${taskId}/complete`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (response.ok) {
+                    showToast('Practice task completed!', 'success');
+                    loadSessionPracticeTasks();
+                } else {
+                    showToast('Failed to complete practice task.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to practice task completion API.', 'error');
+            }
+        }
+
+        async function finalizeStudySessionOnServer() {
+            if (activeSession.requiresRecall && !activeSession.recalled) {
+                showToast('Please submit your active recall entry first.', 'error');
+                return;
+            }
+
+            if (activeSession.requiresPractice) {
+                const pending = activeSession.practiceTasks.filter(t => t.status !== 'Completed');
+                if (pending.length > 0) {
+                    showToast(`Please complete all associated practice tasks (${pending.length} remaining).`, 'error');
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch(`/learning/sessions/${activeSession.logId}/complete`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to complete study session on server.', 'error');
+                    return;
+                }
+
+                showToast('🎉 Session completed and streak updated!', 'success');
+                activeSession = null;
+                fetchTodayMission();
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to complete study session.', 'error');
+            }
+        }
+
+        async function fetchBuilderDropdowns() {
+            try {
+                // Populate resources in lesson builder select
+                const rDropdown = document.getElementById('builder-lesson-resource');
+                if (rDropdown) {
+                    rDropdown.innerHTML = '<option value="">-- No Resource Reference --</option>';
+                    cachedResources.forEach(r => {
+                        const opt = document.createElement('option');
+                        opt.value = r.id;
+                        opt.textContent = r.title;
+                        rDropdown.appendChild(opt);
+                    });
+                }
+
+                // Fetch pathways
+                const pathwaysRes = await fetch('/learning/pathways', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const pathways = await pathwaysRes.json();
+                const pDropdown = document.getElementById('builder-course-pathway');
+                if (pDropdown) {
+                    pDropdown.innerHTML = '<option value="">-- Select Pathway --</option>';
+                    if (Array.isArray(pathways)) {
+                        pathways.forEach(p => {
+                            const opt = document.createElement('option');
+                            opt.value = p.id;
+                            opt.textContent = p.title;
+                            pDropdown.appendChild(opt);
+                        });
+                    }
+                }
+
+                // Fetch courses
+                const coursesRes = await fetch('/learning/courses', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const courses = await coursesRes.json();
+                const cDropdown = document.getElementById('builder-module-course');
+                if (cDropdown) {
+                    cDropdown.innerHTML = '<option value="">-- Select Course --</option>';
+                    if (Array.isArray(courses)) {
+                        courses.forEach(c => {
+                            const opt = document.createElement('option');
+                            opt.value = c.id;
+                            opt.textContent = c.title;
+                            cDropdown.appendChild(opt);
+                        });
+                    }
+                }
+
+                // Fetch modules
+                const modulesRes = await fetch('/learning/modules', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const modules = await modulesRes.json();
+                const mDropdown = document.getElementById('builder-lesson-module');
+                if (mDropdown) {
+                    mDropdown.innerHTML = '<option value="">-- Select Module --</option>';
+                    if (Array.isArray(modules)) {
+                        modules.forEach(m => {
+                            const opt = document.createElement('option');
+                            opt.value = m.id;
+                            opt.textContent = m.title;
+                            mDropdown.appendChild(opt);
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function createBuilderPathway(event) {
+            event.preventDefault();
+            const title = document.getElementById('builder-pathway-title').value.trim();
+            const description = document.getElementById('builder-pathway-desc').value.trim();
+
+            try {
+                const response = await fetch('/learning/pathways', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ title, description })
+                });
+                if (response.ok) {
+                    showToast('Pathway created successfully!', 'success');
+                    document.getElementById('builder-pathway-title').value = '';
+                    document.getElementById('builder-pathway-desc').value = '';
+                    fetchBuilderDropdowns();
+                    renderBuilderVisualTree();
+                } else {
+                    const data = await response.json();
+                    showToast(data.error || 'Failed to create pathway.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to Pathway API.', 'error');
+            }
+        }
+
+        async function createBuilderCourse(event) {
+            event.preventDefault();
+            const pathwayId = document.getElementById('builder-course-pathway').value;
+            const title = document.getElementById('builder-course-title').value.trim();
+            const description = document.getElementById('builder-course-desc').value.trim();
+
+            try {
+                const response = await fetch('/learning/courses', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ title, description, pathwayId })
+                });
+                if (response.ok) {
+                    showToast('Course created successfully!', 'success');
+                    document.getElementById('builder-course-title').value = '';
+                    document.getElementById('builder-course-desc').value = '';
+                    fetchBuilderDropdowns();
+                    renderBuilderVisualTree();
+                } else {
+                    const data = await response.json();
+                    showToast(data.error || 'Failed to create course.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to Course API.', 'error');
+            }
+        }
+
+        async function createBuilderModule(event) {
+            event.preventDefault();
+            const courseId = document.getElementById('builder-module-course').value;
+            const title = document.getElementById('builder-module-title').value.trim();
+            const sequenceOrder = parseInt(document.getElementById('builder-module-sequence').value || '0', 10);
+
+            try {
+                const response = await fetch('/learning/modules', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ title, courseId, sequenceOrder })
+                });
+                if (response.ok) {
+                    showToast('Module created successfully!', 'success');
+                    document.getElementById('builder-module-title').value = '';
+                    document.getElementById('builder-module-sequence').value = '0';
+                    fetchBuilderDropdowns();
+                    renderBuilderVisualTree();
+                } else {
+                    const data = await response.json();
+                    showToast(data.error || 'Failed to create module.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to Module API.', 'error');
+            }
+        }
+
+        async function createBuilderLesson(event) {
+            event.preventDefault();
+            const moduleId = document.getElementById('builder-lesson-module').value;
+            const title = document.getElementById('builder-lesson-title').value.trim();
+            const estMinutes = parseInt(document.getElementById('builder-lesson-est').value || '30', 10);
+            const resourceId = document.getElementById('builder-lesson-resource').value || null;
+            const requiresRecall = document.getElementById('builder-lesson-recall').checked;
+            const requiresPractice = document.getElementById('builder-lesson-practice').checked;
+
+            try {
+                const response = await fetch('/learning/lessons', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        title,
+                        moduleId,
+                        estMinutes,
+                        resourceId,
+                        requiresRecall,
+                        requiresPractice
+                    })
+                });
+                if (response.ok) {
+                    showToast('Lesson created successfully!', 'success');
+                    document.getElementById('builder-lesson-title').value = '';
+                    document.getElementById('builder-lesson-est').value = '30';
+                    document.getElementById('builder-lesson-recall').checked = true;
+                    document.getElementById('builder-lesson-practice').checked = false;
+                    renderBuilderVisualTree();
+                } else {
+                    const data = await response.json();
+                    showToast(data.error || 'Failed to create lesson.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to Lesson API.', 'error');
+            }
+        }
+
+        async function renderBuilderVisualTree() {
+            const treeContainer = document.getElementById('builder-visual-tree');
+            if (!treeContainer) return;
+
+            try {
+                // Fetch all hierarchy pieces
+                const [pRes, cRes, mRes, lRes] = await Promise.all([
+                    fetch('/learning/pathways', { headers: { 'Authorization': `Bearer ${authToken}` } }),
+                    fetch('/learning/courses', { headers: { 'Authorization': `Bearer ${authToken}` } }),
+                    fetch('/learning/modules', { headers: { 'Authorization': `Bearer ${authToken}` } }),
+                    fetch('/learning/lessons', { headers: { 'Authorization': `Bearer ${authToken}` } })
+                ]);
+
+                const pathways = await pRes.json();
+                const courses = await cRes.json();
+                const modules = await mRes.json();
+                const lessons = await lRes.json();
+
+                if (!pRes.ok || !cRes.ok || !mRes.ok || !lRes.ok) {
+                    treeContainer.innerHTML = '<p class="text-red-400 italic">Failed to load pathways data.</p>';
+                    return;
+                }
+
+                if (pathways.length === 0) {
+                    treeContainer.innerHTML = '<p class="text-slate-500 italic">No pathways created yet. Build one above to start!</p>';
+                    return;
+                }
+
+                let html = '';
+
+                pathways.forEach(p => {
+                    html += `
+                        <div class="bg-slate-900/60 border border-slate-800 rounded-md p-4 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="font-extrabold text-white text-sm">🌐 Pathway: ${p.title}</span>
+                                <button onclick="deleteBuilderEntity('pathways', '${p.id}')" class="text-red-400 hover:text-red-300 text-xxs">Delete</button>
+                            </div>
+                            <div class="pl-4 border-l border-slate-800 space-y-3">
+                    `;
+
+                    // Courses under this pathway
+                    const pCourses = courses.filter(c => c.pathway_id === p.id);
+                    if (pCourses.length === 0) {
+                        html += '<p class="text-slate-600 italic text-xxs">No courses in this pathway.</p>';
+                    } else {
+                        pCourses.forEach(c => {
+                            // Find all lessons for progress calculation
+                            const cModules = modules.filter(m => m.course_id === c.id);
+                            const cModuleIds = cModules.map(m => m.id);
+                            const cLessons = lessons.filter(l => cModuleIds.includes(l.module_id));
+                            const completedCount = cLessons.filter(l => l.status === 'Completed').length;
+                            const totalCount = cLessons.length;
+                            const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+                            html += `
+                                <div class="bg-slate-950/40 p-3 rounded border border-slate-800/80 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-bold text-cyan-400 text-xs">📖 Course: ${c.title}</span>
+                                        <button onclick="deleteBuilderEntity('courses', '${c.id}')" class="text-red-400/80 hover:text-red-300 text-xxs">Delete</button>
+                                    </div>
+                                    <!-- Progress Bar -->
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-1 bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                            <div class="bg-gradient-to-r from-cyan-500 to-emerald-500 h-full" style="width: ${progressPct}%"></div>
+                                        </div>
+                                        <span class="text-xxs text-slate-400 font-mono">${progressPct}% (${completedCount}/${totalCount})</span>
+                                    </div>
+                                    <div class="pl-4 border-l border-slate-800/80 space-y-2 mt-2">
+                            `;
+
+                            // Modules under this course
+                            if (cModules.length === 0) {
+                                html += '<p class="text-slate-600 italic text-xxs">No modules in this course.</p>';
+                            } else {
+                                cModules.forEach(m => {
+                                    html += `
+                                        <div class="space-y-1">
+                                            <div class="flex items-center justify-between text-xxs font-bold text-slate-300">
+                                                <span>📦 Module: ${m.title} <span class="text-slate-500">(seq: ${m.sequence_order})</span></span>
+                                                <button onclick="deleteBuilderEntity('modules', '${m.id}')" class="text-red-400/60 hover:text-red-300 text-xxs">Delete</button>
+                                            </div>
+                                            <div class="pl-3 border-l border-slate-800/60 space-y-1 text-slate-400 text-xxs">
+                                    `;
+
+                                    // Lessons under this module
+                                    const mLessons = lessons.filter(l => l.module_id === m.id);
+                                    if (mLessons.length === 0) {
+                                        html += '<p class="text-slate-600 italic text-xxs">No lessons in this module.</p>';
+                                    } else {
+                                        mLessons.forEach(l => {
+                                            let statusIcon = '⚪';
+                                            if (l.status === 'Completed') statusIcon = '🟢';
+                                            else if (l.status === 'In Progress') statusIcon = '🟡';
+
+                                            html += `
+                                                <div class="flex items-center justify-between p-1 hover:bg-slate-900/40 rounded transition">
+                                                    <span>${statusIcon} ${l.title} <span class="text-slate-500">(${l.est_minutes || 30}m ${l.requires_recall ? 'R' : ''}${l.requires_practice ? 'P' : ''})</span></span>
+                                                    <button onclick="deleteBuilderEntity('lessons', '${l.id}')" class="text-red-400/40 hover:text-red-300 text-xxs">Delete</button>
+                                                </div>
+                                            `;
+                                        });
+                                    }
+
+                                    html += `
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                            }
+
+                            html += `
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+
+                treeContainer.innerHTML = html;
+            } catch (err) {
+                console.error(err);
+                treeContainer.innerHTML = '<p class="text-red-400 italic">Error rendering builder visual tree.</p>';
+            }
+        }
+
+        async function deleteBuilderEntity(type, id) {
+            if (!confirm(`Are you sure you want to delete this ${type.slice(0, -1)}? All dependent entities will be deleted too!`)) return;
+
+            try {
+                const response = await fetch(`/learning/${type}/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (response.ok) {
+                    showToast('Deleted successfully!', 'success');
+                    fetchBuilderDropdowns();
+                    renderBuilderVisualTree();
+                } else {
+                    const data = await response.json();
+                    showToast(data.error || 'Failed to delete entity.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to delete API.', 'error');
             }
         }
 

@@ -44,19 +44,22 @@ async function query(text, params) {
     } else if (queryLower.includes('insert into users')) {
       rows = [{ id: 'mock-user-id-123' }];
       rowCount = 1;
-    } else if (queryLower.includes('select id, password_hash, role, tenant_id from users')) {
+    } else if (queryLower.includes('select id from users where tenant_id')) {
+      rows = [];
+      rowCount = 0;
+    } else if (queryLower.includes('from users')) {
       const bcrypt = require('bcryptjs');
       const hash = bcrypt.hashSync("SecurePassword123!", 10);
       rows = [{
         id: 'mock-user-id-123',
         password_hash: hash,
-        role: 'superadmin',
-        tenant_id: 'mock-tenant-id-123'
+        role: 'admin',
+        tenant_id: 'mock-tenant-id-123',
+        full_name: 'Kmaisan',
+        email: 'kmaisan@dspng.tech',
+        is_active: true
       }];
       rowCount = 1;
-    } else if (queryLower.includes('select id from users where tenant_id')) {
-      rows = [];
-      rowCount = 0;
     } else if (queryLower.includes('from tenants')) {
       if (queryLower.includes('where subdomain')) {
         rows = [];

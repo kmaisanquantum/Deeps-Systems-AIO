@@ -725,17 +725,50 @@ async function listLessons(req, res) {
  */
 async function createLesson(req, res) {
   const tenantId = req.tenantId;
-  const { title, content, moduleId, sequenceOrder = 0, branchId } = req.body || {};
+  const {
+    title,
+    content,
+    moduleId,
+    sequenceOrder = 0,
+    branchId,
+    estMinutes,
+    resourceId,
+    requiresRecall,
+    requiresPractice,
+    status = 'Not Started',
+    completionPct = 0
+  } = req.body || {};
 
   if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
   if (!title) return res.status(400).json({ error: 'title is required.' });
 
+  const est = estMinutes !== undefined && estMinutes !== '' ? parseInt(estMinutes, 10) : null;
+  const pct = completionPct !== undefined && completionPct !== '' ? parseInt(completionPct, 10) : 0;
+  const reqRecall = requiresRecall !== undefined ? (requiresRecall === true || requiresRecall === 'true') : true;
+  const reqPractice = requiresPractice !== undefined ? (requiresPractice === true || requiresPractice === 'true') : false;
+
   try {
     const result = await db.query(
-      `INSERT INTO lessons (tenant_id, branch_id, module_id, title, content, sequence_order)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO lessons (
+         tenant_id, branch_id, module_id, title, content, sequence_order,
+         est_minutes, resource_id, requires_recall, requires_practice, status, completion_pct
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
-      [tenantId, branchId || null, moduleId || null, title, content || null, sequenceOrder]
+      [
+        tenantId,
+        branchId || null,
+        moduleId || null,
+        title,
+        content || null,
+        sequenceOrder,
+        est,
+        resourceId || null,
+        reqRecall,
+        reqPractice,
+        status,
+        pct
+      ]
     );
     return res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -750,9 +783,26 @@ async function createLesson(req, res) {
 async function updateLesson(req, res) {
   const tenantId = req.tenantId;
   const { id } = req.params;
-  const { title, content, moduleId, sequenceOrder, branchId } = req.body || {};
+  const {
+    title,
+    content,
+    moduleId,
+    sequenceOrder,
+    branchId,
+    estMinutes,
+    resourceId,
+    requiresRecall,
+    requiresPractice,
+    status,
+    completionPct
+  } = req.body || {};
 
   if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  const est = estMinutes !== undefined ? (estMinutes === '' ? null : parseInt(estMinutes, 10)) : undefined;
+  const pct = completionPct !== undefined ? (completionPct === '' ? null : parseInt(completionPct, 10)) : undefined;
+  const reqRecall = requiresRecall !== undefined ? (requiresRecall === true || requiresRecall === 'true') : undefined;
+  const reqPractice = requiresPractice !== undefined ? (requiresPractice === true || requiresPractice === 'true') : undefined;
 
   try {
     const result = await db.query(
@@ -762,10 +812,30 @@ async function updateLesson(req, res) {
               module_id = COALESCE($3, module_id),
               sequence_order = COALESCE($4, sequence_order),
               branch_id = COALESCE($5, branch_id),
+              est_minutes = COALESCE($6, est_minutes),
+              resource_id = COALESCE($7, resource_id),
+              requires_recall = COALESCE($8, requires_recall),
+              requires_practice = COALESCE($9, requires_practice),
+              status = COALESCE($10, status),
+              completion_pct = COALESCE($11, completion_pct),
               updated_at = NOW()
-        WHERE id = $6 AND tenant_id = $7
+        WHERE id = $12 AND tenant_id = $13
         RETURNING *`,
-      [title, content, moduleId, sequenceOrder, branchId, id, tenantId]
+      [
+        title !== undefined ? title : null,
+        content !== undefined ? content : null,
+        moduleId !== undefined ? moduleId : null,
+        sequenceOrder !== undefined ? sequenceOrder : null,
+        branchId !== undefined ? branchId : null,
+        est,
+        resourceId !== undefined ? resourceId : null,
+        reqRecall,
+        reqPractice,
+        status !== undefined ? status : null,
+        pct,
+        id,
+        tenantId
+      ]
     );
 
     if (result.rowCount === 0) {
@@ -805,7 +875,452 @@ async function deleteLesson(req, res) {
   }
 }
 
+/**
+ * GET /learning/today
+ * Compute next lesson and fetch streak.
+ */
+async function getTodaysLearning(req, res) {
+  const tenantId = req.tenantId;
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    // 1. Get streak
+    const streakRes = await db.query(
+      'SELECT current_streak, longest_streak, last_study_date::text FROM study_streaks WHERE tenant_id = $1',
+      [tenantId]
+    );
+    const streak = streakRes.rows[0] || { current_streak: 0, longest_streak: 0, last_study_date: null };
+
+    // 2. Walk pathway -> courses -> modules -> next uncompleted lesson
+    const missionRes = await db.query(
+      `SELECT l.id AS lesson_id,
+              l.title AS lesson_title,
+              l.content AS lesson_content,
+              l.status AS lesson_status,
+              l.completion_pct,
+              l.est_minutes,
+              l.requires_recall,
+              l.requires_practice,
+              m.title AS module_title,
+              c.title AS course_title,
+              p.title AS pathway_title,
+              r.url AS resource_url
+         FROM learning_pathways p
+         JOIN courses c ON c.pathway_id = p.id
+         JOIN course_modules m ON m.course_id = c.id
+         JOIN lessons l ON l.module_id = m.id
+         LEFT JOIN learning_resources r ON l.resource_id = r.id
+        WHERE p.tenant_id = $1
+          AND l.status != 'Completed'
+        ORDER BY p.created_at ASC,
+                 c.created_at ASC,
+                 m.sequence_order ASC, m.created_at ASC,
+                 l.sequence_order ASC, l.created_at ASC
+        LIMIT 1`,
+      [tenantId]
+    );
+
+    const mission = missionRes.rows[0] || null;
+
+    return res.status(200).json({
+      current_streak: streak.current_streak,
+      longest_streak: streak.longest_streak,
+      last_study_date: streak.last_study_date,
+      today_mission: mission
+    });
+  } catch (err) {
+    console.error('[learningController] getTodaysLearning failed', err);
+    return res.status(500).json({ error: 'Failed to retrieve today\'s learning mission.' });
+  }
+}
+
+/**
+ * POST /learning/sessions/start
+ * body: { lessonId, scheduleId }
+ */
+async function startStudySession(req, res) {
+  const tenantId = req.tenantId;
+  const { lessonId, scheduleId } = req.body || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+  if (!lessonId) return res.status(400).json({ error: 'lessonId is required.' });
+
+  try {
+    // 1. Set lesson to 'In Progress'
+    await db.query(
+      `UPDATE lessons SET status = 'In Progress', updated_at = NOW() WHERE id = $1 AND tenant_id = $2`,
+      [lessonId, tenantId]
+    );
+
+    // 2. Insert session log
+    const result = await db.query(
+      `INSERT INTO study_session_logs (tenant_id, lesson_id, schedule_id, started_at, status)
+       VALUES ($1, $2, $3, NOW(), 'In Progress')
+       RETURNING id`,
+      [tenantId, lessonId, scheduleId || null]
+    );
+
+    return res.status(201).json({ log_id: result.rows[0].id });
+  } catch (err) {
+    console.error('[learningController] startStudySession failed', err);
+    return res.status(500).json({ error: 'Failed to start study session.' });
+  }
+}
+
+/**
+ * POST /learning/sessions/:id/complete
+ */
+async function completeStudySession(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    // 1. Fetch session
+    const sessionRes = await db.query(
+      'SELECT * FROM study_session_logs WHERE id = $1 AND tenant_id = $2',
+      [id, tenantId]
+    );
+    if (sessionRes.rowCount === 0) {
+      return res.status(404).json({ error: 'Study session not found.' });
+    }
+
+    const session = sessionRes.rows[0];
+    const lessonId = session.lesson_id;
+
+    // 2. Compute actual minutes
+    const startedAt = new Date(session.started_at);
+    const endedAt = new Date();
+    const actualMinutes = Math.max(1, Math.round((endedAt - startedAt) / 60000));
+
+    // 3. Update session log
+    await db.query(
+      `UPDATE study_session_logs
+          SET ended_at = NOW(),
+              actual_minutes = $1,
+              status = 'Completed',
+              updated_at = NOW()
+        WHERE id = $2 AND tenant_id = $3`,
+      [actualMinutes, id, tenantId]
+    );
+
+    // 4. Fetch lesson details
+    const lessonRes = await db.query(
+      'SELECT * FROM lessons WHERE id = $1 AND tenant_id = $2',
+      [lessonId, tenantId]
+    );
+    if (lessonRes.rowCount === 0) {
+      return res.status(404).json({ error: 'Lesson not found.' });
+    }
+    const lesson = lessonRes.rows[0];
+
+    // 5. Check if required activities are satisfied
+    let satisfied = true;
+
+    if (lesson.requires_recall) {
+      const recallCheck = await db.query(
+        'SELECT COUNT(*)::integer AS count FROM recall_entries WHERE lesson_id = $1 AND session_log_id = $2 AND tenant_id = $3',
+        [lessonId, id, tenantId]
+      );
+      if (recallCheck.rows[0].count === 0) {
+        satisfied = false;
+      }
+    }
+
+    if (lesson.requires_practice) {
+      const practiceCheck = await db.query(
+        `SELECT COUNT(*)::integer AS count FROM practice_tasks
+          WHERE lesson_id = $1 AND status != 'Completed' AND tenant_id = $2`,
+        [lessonId, tenantId]
+      );
+      if (practiceCheck.rows[0].count > 0) {
+        satisfied = false;
+      }
+    }
+
+    // 6. Update lesson status if satisfied
+    if (satisfied) {
+      await db.query(
+        `UPDATE lessons SET status = 'Completed', completion_pct = 100, updated_at = NOW() WHERE id = $1 AND tenant_id = $2`,
+        [lessonId, tenantId]
+      );
+    }
+
+    // 7. Update streaks
+    const streakRes = await db.query(
+      `SELECT current_streak, longest_streak, last_study_date::text AS last_study_date,
+              CURRENT_DATE::text AS today,
+              (CURRENT_DATE - INTERVAL '1 day')::date::text AS yesterday
+         FROM study_streaks WHERE tenant_id = $1`,
+      [tenantId]
+    );
+
+    if (streakRes.rowCount === 0) {
+      await db.query(
+        `INSERT INTO study_streaks (tenant_id, current_streak, longest_streak, last_study_date)
+         VALUES ($1, 1, 1, CURRENT_DATE)
+         ON CONFLICT (tenant_id) DO UPDATE
+         SET current_streak = 1,
+             longest_streak = GREATEST(study_streaks.longest_streak, 1),
+             last_study_date = CURRENT_DATE`,
+        [tenantId]
+      );
+    } else {
+      const { current_streak, longest_streak, last_study_date, today, yesterday } = streakRes.rows[0];
+      let newStreak = current_streak;
+      let newLongest = longest_streak;
+
+      if (last_study_date === today) {
+        // no-op
+      } else if (last_study_date === yesterday) {
+        newStreak = current_streak + 1;
+        newLongest = Math.max(longest_streak, newStreak);
+        await db.query(
+          `UPDATE study_streaks
+              SET current_streak = $1, longest_streak = $2, last_study_date = CURRENT_DATE, updated_at = NOW()
+            WHERE tenant_id = $3`,
+          [newStreak, newLongest, tenantId]
+        );
+      } else {
+        newStreak = 1;
+        newLongest = Math.max(longest_streak, 1);
+        await db.query(
+          `UPDATE study_streaks
+              SET current_streak = $1, longest_streak = $2, last_study_date = CURRENT_DATE, updated_at = NOW()
+            WHERE tenant_id = $3`,
+          [newStreak, newLongest, tenantId]
+        );
+      }
+    }
+
+    return res.status(200).json({
+      message: 'Study session completed successfully.',
+      actual_minutes,
+      satisfied,
+      lesson_status: satisfied ? 'Completed' : 'In Progress'
+    });
+  } catch (err) {
+    console.error('[learningController] completeStudySession failed', err);
+    return res.status(500).json({ error: 'Failed to complete study session.' });
+  }
+}
+
+/**
+ * GET /learning/recalls
+ */
+async function listRecallEntries(req, res) {
+  const tenantId = req.tenantId;
+  const { lessonId, sessionLogId } = req.query || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    let sql = 'SELECT * FROM recall_entries WHERE tenant_id = $1';
+    const params = [tenantId];
+
+    if (lessonId) {
+      params.push(lessonId);
+      sql += ` AND lesson_id = $${params.length}`;
+    }
+    if (sessionLogId) {
+      params.push(sessionLogId);
+      sql += ` AND session_log_id = $${params.length}`;
+    }
+
+    sql += ' ORDER BY created_at DESC';
+
+    const result = await db.query(sql, params);
+    return res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('[learningController] listRecallEntries failed', err);
+    return res.status(500).json({ error: 'Failed to list recall entries.' });
+  }
+}
+
+/**
+ * POST /learning/recalls
+ */
+async function createRecallEntry(req, res) {
+  const tenantId = req.tenantId;
+  const { lessonId, sessionLogId, content, branchId } = req.body || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+  if (!lessonId || !sessionLogId || !content) {
+    return res.status(400).json({ error: 'lessonId, sessionLogId, and content are required.' });
+  }
+
+  try {
+    const result = await db.query(
+      `INSERT INTO recall_entries (tenant_id, branch_id, lesson_id, session_log_id, content)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [tenantId, branchId || null, lessonId, sessionLogId, content]
+    );
+    return res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('[learningController] createRecallEntry failed', err);
+    return res.status(500).json({ error: 'Failed to create recall entry.' });
+  }
+}
+
+/**
+ * GET /learning/practice-tasks
+ */
+async function listPracticeTasks(req, res) {
+  const tenantId = req.tenantId;
+  const { lessonId } = req.query || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    let sql = 'SELECT * FROM practice_tasks WHERE tenant_id = $1';
+    const params = [tenantId];
+
+    if (lessonId) {
+      params.push(lessonId);
+      sql += ` AND lesson_id = $${params.length}`;
+    }
+
+    sql += ' ORDER BY created_at DESC';
+
+    const result = await db.query(sql, params);
+    return res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('[learningController] listPracticeTasks failed', err);
+    return res.status(500).json({ error: 'Failed to list practice tasks.' });
+  }
+}
+
+/**
+ * POST /learning/practice-tasks
+ */
+async function createPracticeTask(req, res) {
+  const tenantId = req.tenantId;
+  const { lessonId, title, description, instructions, dueDate, notes, branchId } = req.body || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+  if (!lessonId || !title) {
+    return res.status(400).json({ error: 'lessonId and title are required.' });
+  }
+
+  try {
+    const result = await db.query(
+      `INSERT INTO practice_tasks (tenant_id, branch_id, lesson_id, title, description, instructions, due_date, status, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'Pending', $8)
+       RETURNING *`,
+      [tenantId, branchId || null, lessonId, title, description || null, instructions || null, dueDate || null, notes || null]
+    );
+    return res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('[learningController] createPracticeTask failed', err);
+    return res.status(500).json({ error: 'Failed to create practice task.' });
+  }
+}
+
+/**
+ * PATCH /learning/practice-tasks/:id
+ */
+async function updatePracticeTask(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+  const { title, description, instructions, dueDate, status, notes, branchId } = req.body || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const result = await db.query(
+      `UPDATE practice_tasks
+          SET title = COALESCE($1, title),
+              description = COALESCE($2, description),
+              instructions = COALESCE($3, instructions),
+              due_date = COALESCE($4, due_date),
+              status = COALESCE($5, status),
+              notes = COALESCE($6, notes),
+              branch_id = COALESCE($7, branch_id),
+              updated_at = NOW()
+        WHERE id = $8 AND tenant_id = $9
+        RETURNING *`,
+      [title, description, instructions, dueDate, status, notes, branchId, id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Practice task not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error('[learningController] updatePracticeTask failed', err);
+    return res.status(500).json({ error: 'Failed to update practice task.' });
+  }
+}
+
+/**
+ * DELETE /learning/practice-tasks/:id
+ */
+async function deletePracticeTask(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const result = await db.query(
+      'DELETE FROM practice_tasks WHERE id = $1 AND tenant_id = $2 RETURNING id',
+      [id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Practice task not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json({ message: 'Practice task deleted successfully.' });
+  } catch (err) {
+    console.error('[learningController] deletePracticeTask failed', err);
+    return res.status(500).json({ error: 'Failed to delete practice task.' });
+  }
+}
+
+/**
+ * PATCH /learning/practice-tasks/:id/complete
+ */
+async function completePracticeTask(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const result = await db.query(
+      `UPDATE practice_tasks
+          SET status = 'Completed', updated_at = NOW()
+        WHERE id = $1 AND tenant_id = $2
+        RETURNING *`,
+      [id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Practice task not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error('[learningController] completePracticeTask failed', err);
+    return res.status(500).json({ error: 'Failed to mark practice task as completed.' });
+  }
+}
+
 module.exports = {
+  getTodaysLearning,
+  startStudySession,
+  completeStudySession,
+  listRecallEntries,
+  createRecallEntry,
+  listPracticeTasks,
+  createPracticeTask,
+  updatePracticeTask,
+  deletePracticeTask,
+  completePracticeTask,
   listResources,
   createResource,
   updateResource,

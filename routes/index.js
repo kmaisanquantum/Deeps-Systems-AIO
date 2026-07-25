@@ -261,6 +261,36 @@ router.post('/learning/schedules', requireTenant, learningController.createSched
 router.patch('/learning/schedules/:id', requireTenant, learningController.updateSchedule);
 router.delete('/learning/schedules/:id', requireTenant, learningController.deleteSchedule);
 
+// Goals
+router.get('/learning/goals', requireTenant, learningController.listGoals);
+router.post('/learning/goals', requireTenant, learningController.createGoal);
+router.patch('/learning/goals/:id', requireTenant, learningController.updateGoal);
+router.delete('/learning/goals/:id', requireTenant, learningController.deleteGoal);
+
+// Pathways
+router.get('/learning/pathways', requireTenant, learningController.listPathways);
+router.post('/learning/pathways', requireTenant, learningController.createPathway);
+router.patch('/learning/pathways/:id', requireTenant, learningController.updatePathway);
+router.delete('/learning/pathways/:id', requireTenant, learningController.deletePathway);
+
+// Courses
+router.get('/learning/courses', requireTenant, learningController.listCourses);
+router.post('/learning/courses', requireTenant, learningController.createCourse);
+router.patch('/learning/courses/:id', requireTenant, learningController.updateCourse);
+router.delete('/learning/courses/:id', requireTenant, learningController.deleteCourse);
+
+// Modules
+router.get('/learning/modules', requireTenant, learningController.listModules);
+router.post('/learning/modules', requireTenant, learningController.createModule);
+router.patch('/learning/modules/:id', requireTenant, learningController.updateModule);
+router.delete('/learning/modules/:id', requireTenant, learningController.deleteModule);
+
+// Lessons
+router.get('/learning/lessons', requireTenant, learningController.listLessons);
+router.post('/learning/lessons', requireTenant, learningController.createLesson);
+router.patch('/learning/lessons/:id', requireTenant, learningController.updateLesson);
+router.delete('/learning/lessons/:id', requireTenant, learningController.deleteLesson);
+
 // -----------------------------------------------------------------
 // Service Fees Module
 // -----------------------------------------------------------------

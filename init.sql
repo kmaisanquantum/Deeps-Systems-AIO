@@ -961,3 +961,80 @@ CREATE TRIGGER set_timestamp_study_streaks
 BEFORE UPDATE ON study_streaks
 FOR EACH ROW
 EXECUTE FUNCTION trigger_set_timestamp();
+
+-- ---------------------------------------------------------------------
+-- PHASE 3: ASSESSMENT SCHEMA EXTENSIONS
+-- ---------------------------------------------------------------------
+
+-- Alter lessons to add requires_quiz column
+ALTER TABLE lessons ADD COLUMN IF NOT EXISTS requires_quiz BOOLEAN DEFAULT false;
+
+-- Table quizzes
+CREATE TABLE IF NOT EXISTS quizzes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    passing_score INTEGER DEFAULT 70,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_quizzes_tenant_id ON quizzes(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_quizzes ON quizzes;
+CREATE TRIGGER set_timestamp_quizzes
+BEFORE UPDATE ON quizzes
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- Table quiz_questions
+CREATE TABLE IF NOT EXISTS quiz_questions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+    question_text TEXT NOT NULL,
+    question_type VARCHAR(50) NOT NULL, -- 'multiple_choice'|'true_false'|'short_answer'
+    choices JSONB,
+    correct_answer TEXT,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_quiz_questions_tenant_id ON quiz_questions(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_quiz_questions ON quiz_questions;
+CREATE TRIGGER set_timestamp_quiz_questions
+BEFORE UPDATE ON quiz_questions
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- Table quiz_attempts
+CREATE TABLE IF NOT EXISTS quiz_attempts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    quiz_id UUID NOT NULL REFERENCES quizzes(id) ON DELETE CASCADE,
+    score INTEGER,
+    total_questions INTEGER,
+    correct_answers INTEGER,
+    incorrect_answers INTEGER,
+    passed BOOLEAN,
+    attempted_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_quiz_attempts_tenant_id ON quiz_attempts(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_quiz_attempts ON quiz_attempts;
+CREATE TRIGGER set_timestamp_quiz_attempts
+BEFORE UPDATE ON quiz_attempts
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();

@@ -291,6 +291,22 @@ router.post('/learning/lessons', requireTenant, learningController.createLesson)
 router.patch('/learning/lessons/:id', requireTenant, learningController.updateLesson);
 router.delete('/learning/lessons/:id', requireTenant, learningController.deleteLesson);
 
+// Quizzes
+router.get('/learning/quizzes', requireTenant, learningController.listQuizzes);
+router.post('/learning/quizzes', requireTenant, learningController.createQuiz);
+router.patch('/learning/quizzes/:id', requireTenant, learningController.updateQuiz);
+router.delete('/learning/quizzes/:id', requireTenant, learningController.deleteQuiz);
+
+// Quiz Questions
+router.get('/learning/quiz-questions', requireTenant, learningController.listQuizQuestions);
+router.post('/learning/quiz-questions', requireTenant, learningController.createQuizQuestion);
+router.patch('/learning/quiz-questions/:id', requireTenant, learningController.updateQuizQuestion);
+router.delete('/learning/quiz-questions/:id', requireTenant, learningController.deleteQuizQuestion);
+
+// Quiz Attempts
+router.post('/learning/quizzes/:id/attempt', requireTenant, learningController.submitQuizAttempt);
+router.get('/learning/quiz-attempts', requireTenant, learningController.listQuizAttempts);
+
 // Daily Study Engine & Sessions
 router.get('/learning/today', requireTenant, learningController.getTodaysLearning);
 router.post('/learning/sessions/start', requireTenant, learningController.startStudySession);

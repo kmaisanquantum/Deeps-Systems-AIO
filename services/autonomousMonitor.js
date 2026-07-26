@@ -256,6 +256,73 @@ async function runMonitorTick() {
         } catch (streakRiskErr) {
           console.warn(`[autonomousMonitor] Streak risk sweep failed for tenant ${tenantId}:`, streakRiskErr.message);
         }
+
+        // 5.c Spaced Repetition Reviews Due
+        try {
+          const dueReviewsRes = await db.query(
+            `SELECT COUNT(*)::integer AS count
+               FROM review_schedules
+              WHERE tenant_id = $1
+                AND due_at <= NOW()
+                AND completed_at IS NULL`,
+            [tenantId]
+          );
+
+          const dueCount = dueReviewsRes.rows[0].count;
+          if (dueCount > 0) {
+            const adminRes = await db.query(
+              "SELECT email FROM users WHERE tenant_id = $1 AND role = 'admin' LIMIT 1",
+              [tenantId]
+            );
+            const toAddress = adminRes.rowCount > 0 ? adminRes.rows[0].email : 'kmaisan@dspng.tech';
+
+            const subject = `📚 Spaced Repetition: You Have ${dueCount} Review(s) Due Today!`;
+            const message = `Hi there,\n\nYou have ${dueCount} active study review(s) due today to maximize your retention.\n\nLog in now to your Learning Pathway dashboard to complete your reviews and boost your long-term memory!\n\nBest regards,\nDeeps Systems Learning Engine`;
+
+            await communicationController.sendEmailMessage(toAddress, subject, message);
+            console.log(`[autonomousMonitor] Sent reviews due today email to ${toAddress} with ${dueCount} reviews for tenant ${tenantId}`);
+          }
+        } catch (reviewsDueErr) {
+          console.warn(`[autonomousMonitor] Reviews due sweep failed for tenant ${tenantId}:`, reviewsDueErr.message);
+        }
+
+        // 5.d Congratulate Earned Achievements
+        try {
+          const unnotifiedAchievementsRes = await db.query(
+            `SELECT ua.id, a.title, a.description, a.icon, ua.earned_at
+               FROM user_achievements ua
+               JOIN achievements a ON ua.achievement_id = a.id
+              WHERE ua.tenant_id = $1
+                AND ua.notified_at IS NULL`,
+            [tenantId]
+          );
+
+          for (const row of unnotifiedAchievementsRes.rows) {
+            try {
+              const adminRes = await db.query(
+                "SELECT email FROM users WHERE tenant_id = $1 AND role = 'admin' LIMIT 1",
+                [tenantId]
+              );
+              const toAddress = adminRes.rowCount > 0 ? adminRes.rows[0].email : 'kmaisan@dspng.tech';
+
+              const subject = `🏆 Achievement Unlocked: ${row.icon} ${row.title}!`;
+              const message = `Congratulations!\n\nYou have unlocked a new achievement in your Learning Pathway:\n\nAchievement: ${row.icon} ${row.title}\nDescription: ${row.description || 'N/A'}\nEarned At: ${row.earned_at}\n\nKeep up the spectacular work and continue expanding your knowledge!\n\nBest regards,\nDeeps Systems Learning Engine`;
+
+              await communicationController.sendEmailMessage(toAddress, subject, message);
+
+              // Mark as notified
+              await db.query(
+                'UPDATE user_achievements SET notified_at = NOW() WHERE id = $1',
+                [row.id]
+              );
+              console.log(`[autonomousMonitor] Sent congratulatory email for achievement ${row.title} to ${toAddress} for tenant ${tenantId}`);
+            } catch (notifErr) {
+              console.warn(`[autonomousMonitor] Failed to send congratulations for achievement ${row.id}:`, notifErr.message);
+            }
+          }
+        } catch (achievementsNotifErr) {
+          console.warn(`[autonomousMonitor] Achievements sweep failed for tenant ${tenantId}:`, achievementsNotifErr.message);
+        }
       }
     }
   } catch (err) {

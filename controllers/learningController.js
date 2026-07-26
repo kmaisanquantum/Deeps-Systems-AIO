@@ -975,6 +975,27 @@ async function startStudySession(req, res) {
 }
 
 /**
+ * Seeds the initial spaced repetition review schedule for a lesson upon completion.
+ */
+async function seedReviewSchedule(tenantId, branchId, lessonId) {
+  try {
+    const existing = await db.query(
+      'SELECT id FROM review_schedules WHERE tenant_id = $1 AND lesson_id = $2 LIMIT 1',
+      [tenantId, lessonId]
+    );
+    if (existing.rowCount === 0) {
+      await db.query(
+        `INSERT INTO review_schedules (tenant_id, branch_id, lesson_id, due_at, interval_stage)
+         VALUES ($1, $2, $3, NOW() + INTERVAL '1 day', 0)`,
+        [tenantId, branchId || null, lessonId]
+      );
+    }
+  } catch (err) {
+    console.error('[learningController] seedReviewSchedule failed:', err);
+  }
+}
+
+/**
  * POST /learning/sessions/:id/complete
  */
 async function completeStudySession(req, res) {
@@ -1064,6 +1085,7 @@ async function completeStudySession(req, res) {
         `UPDATE lessons SET status = 'Completed', completion_pct = 100, updated_at = NOW() WHERE id = $1 AND tenant_id = $2`,
         [lessonId, tenantId]
       );
+      await seedReviewSchedule(tenantId, lesson.branch_id, lessonId);
     }
 
     // 7. Update streaks
@@ -1113,11 +1135,14 @@ async function completeStudySession(req, res) {
       }
     }
 
+    const newlyEarned = await evaluateAchievements(tenantId);
+
     return res.status(200).json({
       message: 'Study session completed successfully.',
-      actual_minutes,
+      actual_minutes: actualMinutes,
       satisfied,
-      lesson_status: satisfied ? 'Completed' : 'In Progress'
+      lesson_status: satisfied ? 'Completed' : 'In Progress',
+      newly_earned: newlyEarned
     });
   } catch (err) {
     console.error('[learningController] completeStudySession failed', err);
@@ -1703,15 +1728,19 @@ async function submitQuizAttempt(req, res) {
             `UPDATE lessons SET status = 'Completed', completion_pct = 100, updated_at = NOW() WHERE id = $1 AND tenant_id = $2`,
             [lessonId, tenantId]
           );
+          await seedReviewSchedule(tenantId, lesson.branch_id, lessonId);
         }
       }
     }
+
+    const newlyEarned = await evaluateAchievements(tenantId);
 
     return res.status(200).json({
       attempt,
       graded_questions: gradedQuestions,
       score,
-      passed
+      passed,
+      newly_earned: newlyEarned
     });
   } catch (err) {
     console.error('[learningController] submitQuizAttempt failed', err);
@@ -1757,7 +1786,208 @@ async function listQuizAttempts(req, res) {
   }
 }
 
+/**
+ * GET /learning/reviews/due
+ */
+async function getReviewsDue(req, res) {
+  const tenantId = req.tenantId;
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const query = `
+      SELECT rs.*, l.title AS lesson_title
+        FROM review_schedules rs
+        JOIN lessons l ON rs.lesson_id = l.id
+       WHERE rs.tenant_id = $1
+         AND rs.due_at <= NOW()
+         AND rs.completed_at IS NULL
+       ORDER BY rs.due_at ASC
+    `;
+    const result = await db.query(query, [tenantId]);
+    return res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('[learningController] getReviewsDue failed', err);
+    return res.status(500).json({ error: 'Failed to retrieve due reviews.' });
+  }
+}
+
+/**
+ * POST /learning/reviews/:id/complete
+ */
+async function completeReview(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+  const { difficultyRating } = req.body || {}; // 'Easy', 'Medium', 'Hard'
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    // 1. Fetch current review
+    const reviewRes = await db.query(
+      'SELECT * FROM review_schedules WHERE id = $1 AND tenant_id = $2 AND completed_at IS NULL',
+      [id, tenantId]
+    );
+    if (reviewRes.rowCount === 0) {
+      return res.status(404).json({ error: 'Review schedule not found or already completed.' });
+    }
+
+    const review = reviewRes.rows[0];
+    const currentStage = review.interval_stage || 0;
+
+    // 2. Compute next stage
+    let nextStage = currentStage;
+    if (difficultyRating === 'Easy') {
+      nextStage = Math.min(4, currentStage + 1);
+    } else if (difficultyRating === 'Hard') {
+      nextStage = 0;
+    } else {
+      nextStage = currentStage; // 'Medium' or others
+    }
+
+    // 3. Get interval in days
+    let days = 1;
+    if (nextStage === 1) days = 3;
+    else if (nextStage === 2) days = 7;
+    else if (nextStage === 3) days = 16;
+    else if (nextStage === 4) days = 30;
+
+    // 4. Update the completed review
+    await db.query(
+      `UPDATE review_schedules
+          SET completed_at = NOW(),
+              difficulty_rating = $1,
+              updated_at = NOW()
+        WHERE id = $2 AND tenant_id = $3`,
+      [difficultyRating || 'Medium', id, tenantId]
+    );
+
+    // 5. Create the next review schedule
+    const intervalStr = `${days} days`;
+    await db.query(
+      `INSERT INTO review_schedules (tenant_id, branch_id, lesson_id, due_at, interval_stage, created_at, updated_at)
+       VALUES ($1, $2, $3, NOW() + $4::interval, $5, NOW(), NOW())`,
+      [tenantId, review.branch_id, review.lesson_id, intervalStr, nextStage]
+    );
+
+    return res.status(200).json({
+      message: 'Review completed and next session scheduled.',
+      difficultyRating,
+      nextStage,
+      daysUntilNextReview: days
+    });
+  } catch (err) {
+    console.error('[learningController] completeReview failed', err);
+    return res.status(500).json({ error: 'Failed to complete review.' });
+  }
+}
+
+/**
+ * GET /learning/achievements
+ */
+async function listAchievements(req, res) {
+  const tenantId = req.tenantId;
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const query = `
+      SELECT a.*,
+             (ua.id IS NOT NULL) AS earned,
+             ua.earned_at
+        FROM achievements a
+        LEFT JOIN user_achievements ua ON a.id = ua.achievement_id AND ua.tenant_id = $1
+       WHERE a.tenant_id = $1
+       ORDER BY a.criteria_type, a.threshold ASC
+    `;
+    const result = await db.query(query, [tenantId]);
+    return res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('[learningController] listAchievements failed', err);
+    return res.status(500).json({ error: 'Failed to retrieve achievements.' });
+  }
+}
+
+/**
+ * Helper to evaluate achievements for a tenant
+ */
+async function evaluateAchievements(tenantId) {
+  if (!tenantId) return [];
+
+  try {
+    // 1. Get current streak
+    const streakRes = await db.query(
+      'SELECT COALESCE(current_streak, 0) AS current_streak FROM study_streaks WHERE tenant_id = $1',
+      [tenantId]
+    );
+    const currentStreak = streakRes.rowCount > 0 ? streakRes.rows[0].current_streak : 0;
+
+    // 2. Get completed lessons count
+    const completedLessonsRes = await db.query(
+      "SELECT COUNT(*)::integer AS count FROM lessons WHERE tenant_id = $1 AND status = 'Completed'",
+      [tenantId]
+    );
+    const completedLessons = completedLessonsRes.rows[0].count;
+
+    // 3. Get passed quizzes count
+    const passedQuizzesRes = await db.query(
+      "SELECT COUNT(*)::integer AS count FROM quiz_attempts WHERE tenant_id = $1 AND passed = true",
+      [tenantId]
+    );
+    const passedQuizzes = passedQuizzesRes.rows[0].count;
+
+    // 4. Fetch all achievements for the tenant
+    const achievementsRes = await db.query(
+      'SELECT * FROM achievements WHERE tenant_id = $1',
+      [tenantId]
+    );
+    const achievements = achievementsRes.rows;
+
+    const newlyEarned = [];
+
+    // 5. Evaluate each achievement
+    for (const a of achievements) {
+      let thresholdMet = false;
+      if (a.criteria_type === 'streak') {
+        thresholdMet = currentStreak >= a.threshold;
+      } else if (a.criteria_type === 'lessons_completed') {
+        thresholdMet = completedLessons >= a.threshold;
+      } else if (a.criteria_type === 'quizzes_passed') {
+        thresholdMet = passedQuizzes >= a.threshold;
+      }
+
+      if (thresholdMet) {
+        // Try to insert user_achievement idempotently
+        const insertRes = await db.query(
+          `INSERT INTO user_achievements (tenant_id, branch_id, achievement_id, earned_at)
+           VALUES ($1, $2, $3, NOW())
+           ON CONFLICT (tenant_id, achievement_id) DO NOTHING
+           RETURNING *`,
+          [tenantId, a.branch_id, a.id]
+        );
+
+        if (insertRes.rowCount > 0) {
+          newlyEarned.push({
+            id: a.id,
+            code: a.code,
+            title: a.title,
+            description: a.description,
+            icon: a.icon
+          });
+        }
+      }
+    }
+
+    return newlyEarned;
+  } catch (err) {
+    console.error('[learningController] evaluateAchievements failed', err);
+    return [];
+  }
+}
+
 module.exports = {
+  listAchievements,
+  evaluateAchievements,
+  getReviewsDue,
+  completeReview,
   submitQuizAttempt,
   listQuizAttempts,
   listQuizQuestions,

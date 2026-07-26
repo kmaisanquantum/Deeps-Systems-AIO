@@ -312,6 +312,13 @@ router.get('/learning/today', requireTenant, learningController.getTodaysLearnin
 router.post('/learning/sessions/start', requireTenant, learningController.startStudySession);
 router.post('/learning/sessions/:id/complete', requireTenant, learningController.completeStudySession);
 
+// Spaced Repetition Reviews
+router.get('/learning/reviews/due', requireTenant, learningController.getReviewsDue);
+router.post('/learning/reviews/:id/complete', requireTenant, learningController.completeReview);
+
+// Achievements
+router.get('/learning/achievements', requireTenant, learningController.listAchievements);
+
 // Recall Entries
 router.get('/learning/recalls', requireTenant, learningController.listRecallEntries);
 router.post('/learning/recalls', requireTenant, learningController.createRecallEntry);

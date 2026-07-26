@@ -1659,6 +1659,42 @@
                                 </div>
                             </div>
 
+                            <!-- Quizzes & Questions Forms Row -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 border-t border-slate-800 pt-6">
+                                <!-- Create Quiz Form -->
+                                <div class="bg-slate-900/40 p-4 border border-slate-800 rounded-md">
+                                    <h4 class="text-sm font-bold text-cyan-400 mb-4">5. Create Quiz</h4>
+                                    <form id="form-builder-quiz" onsubmit="createBuilderQuiz(event)" class="space-y-3">
+                                        <select id="builder-quiz-lesson" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs">
+                                            <option value="">-- Select Lesson --</option>
+                                        </select>
+                                        <input type="text" id="builder-quiz-title" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Quiz Title">
+                                        <input type="text" id="builder-quiz-desc" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Description">
+                                        <input type="number" id="builder-quiz-passing" value="70" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Passing Score (e.g. 70)">
+                                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold py-2 rounded">Save Quiz</button>
+                                    </form>
+                                </div>
+
+                                <!-- Create Quiz Question Form -->
+                                <div class="bg-slate-900/40 p-4 border border-slate-800 rounded-md">
+                                    <h4 class="text-sm font-bold text-cyan-400 mb-4">6. Create Quiz Question</h4>
+                                    <form id="form-builder-question" onsubmit="createBuilderQuizQuestion(event)" class="space-y-3">
+                                        <select id="builder-question-quiz" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs">
+                                            <option value="">-- Select Quiz --</option>
+                                        </select>
+                                        <textarea id="builder-question-text" required rows="2" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Question Text"></textarea>
+                                        <select id="builder-question-type" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" onchange="toggleBuilderQuestionChoices()">
+                                            <option value="multiple_choice">Multiple Choice</option>
+                                            <option value="true_false">True / False</option>
+                                            <option value="short_answer">Short Answer</option>
+                                        </select>
+                                        <input type="text" id="builder-question-choices" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Choices (comma-separated, e.g. Option A, Option B)">
+                                        <input type="text" id="builder-question-correct" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-100 focus:outline-none focus:border-cyan-500 text-xs" placeholder="Correct Answer (e.g. true, false, or Option text)">
+                                        <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold py-2 rounded">Save Question</button>
+                                    </form>
+                                </div>
+                            </div>
+
                             <!-- Builder Visual Tree -->
                             <div class="mt-8 border-t border-slate-800 pt-6">
                                 <h4 class="text-sm font-bold text-slate-400 mb-4">Pathways Hierarchy Viewer & Progress</h4>
@@ -4436,7 +4472,7 @@
                     </div>
 
                     <div class="flex flex-col sm:flex-row gap-4 pt-2">
-                        <button onclick="startActiveSession('${mission.lesson_id}', ${est}, '${escapeJS(mission.lesson_title)}', '${escapeJS(mission.resource_url || '')}', ${mission.requires_recall}, ${mission.requires_practice})" class="flex-1 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs rounded transition uppercase tracking-wider shadow-lg shadow-cyan-900/20">
+                        <button onclick="startActiveSession('${mission.lesson_id}', ${est}, '${escapeJS(mission.lesson_title)}', '${escapeJS(mission.resource_url || '')}', ${mission.requires_recall}, ${mission.requires_practice}, ${mission.requires_quiz})" class="flex-1 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs rounded transition uppercase tracking-wider shadow-lg shadow-cyan-900/20">
                             ⚡ Start Study Session
                         </button>
                         ${mission.resource_url ? `
@@ -4454,7 +4490,7 @@
             return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
         }
 
-        async function startActiveSession(lessonId, estMinutes, lessonTitle, resourceUrl, requiresRecall, requiresPractice) {
+        async function startActiveSession(lessonId, estMinutes, lessonTitle, resourceUrl, requiresRecall, requiresPractice, requiresQuiz) {
             try {
                 // Post to backend to log session start
                 const response = await fetch('/learning/sessions/start', {
@@ -4480,11 +4516,15 @@
                     estMinutes,
                     requiresRecall,
                     requiresPractice,
+                    requiresQuiz: requiresQuiz === true || requiresQuiz === 'true',
                     secondsLeft: estMinutes * 60,
                     isPaused: true,
                     timerInterval: null,
                     recalled: false,
-                    practiceTasks: []
+                    practiceTasks: [],
+                    quizId: null,
+                    quizPassed: false,
+                    quizQuestions: []
                 };
 
                 showToast('Study session started! Use the controls to manage your timer.', 'success');
@@ -4558,6 +4598,20 @@
                         </div>
                         ` : ''}
 
+                        ${activeSession.requiresQuiz ? `
+                        <div class="space-y-3 bg-slate-900/40 p-4 border border-slate-800 rounded">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400">3. Quiz / Self-Assessment (Required)</label>
+                            <p class="text-xxs text-slate-400">Complete the assessment questions below. Score 70% or more to pass.</p>
+                            <div id="session-quiz-questions-list" class="space-y-4 mt-2">
+                                <p class="text-slate-500 italic text-xxs">Loading quiz questions...</p>
+                            </div>
+                            <button onclick="submitSessionQuiz()" id="btn-session-quiz-submit" class="mt-4 px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded transition uppercase tracking-wider">
+                                Submit Quiz Answers
+                            </button>
+                            <div id="session-quiz-result" class="hidden p-3 mt-3 rounded text-xxs font-bold"></div>
+                        </div>
+                        ` : ''}
+
                         <button onclick="finalizeStudySessionOnServer()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded transition uppercase tracking-wider shadow-lg shadow-emerald-900/20">
                             🏁 Finalize Lesson & Update Streak
                         </button>
@@ -4567,6 +4621,10 @@
 
             if (activeSession.requiresPractice && activeSession.practiceTasks.length === 0) {
                 loadSessionPracticeTasks();
+            }
+
+            if (activeSession.requiresQuiz && activeSession.quizQuestions.length === 0) {
+                loadSessionQuiz();
             }
         }
 
@@ -4719,6 +4777,150 @@
             }
         }
 
+        async function loadSessionQuiz() {
+            try {
+                // Fetch quizzes for this lesson
+                const response = await fetch(`/learning/quizzes?lessonId=${activeSession.lessonId}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const quizzes = await response.json();
+                if (!response.ok || quizzes.length === 0) {
+                    const list = document.getElementById('session-quiz-questions-list');
+                    if (list) {
+                        list.innerHTML = `<p class="text-slate-500 italic text-xxs">No quiz configured for this lesson. Contact your administrator to add a quiz.</p>`;
+                    }
+                    return;
+                }
+
+                const quiz = quizzes[0];
+                activeSession.quizId = quiz.id;
+
+                // Fetch questions
+                const qRes = await fetch(`/learning/quiz-questions?quizId=${quiz.id}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const questions = await qRes.json();
+                if (!qRes.ok) return;
+
+                activeSession.quizQuestions = questions;
+                renderSessionQuizQuestions();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderSessionQuizQuestions() {
+            const list = document.getElementById('session-quiz-questions-list');
+            if (!list) return;
+
+            if (activeSession.quizQuestions.length === 0) {
+                list.innerHTML = `<p class="text-slate-500 italic text-xxs">No quiz questions have been added to this quiz yet.</p>`;
+                return;
+            }
+
+            list.innerHTML = '';
+            activeSession.quizQuestions.forEach((q, idx) => {
+                const div = document.createElement('div');
+                div.className = 'space-y-2 p-3 bg-slate-950 border border-slate-800 rounded';
+
+                let inputHtml = '';
+                if (q.question_type === 'multiple_choice') {
+                    let choices = [];
+                    try {
+                        choices = typeof q.choices === 'string' ? JSON.parse(q.choices) : q.choices;
+                    } catch (e) {
+                        console.error('Failed to parse choices', e);
+                    }
+                    if (!Array.isArray(choices)) choices = [];
+
+                    inputHtml = `<div class="space-y-1.5 mt-2">`;
+                    choices.forEach(choice => {
+                        inputHtml += `
+                            <label class="flex items-center gap-2 text-slate-300 text-xxs cursor-pointer">
+                                <input type="radio" name="quiz-q-${q.id}" value="${choice}" class="text-cyan-600 focus:ring-0">
+                                <span>${choice}</span>
+                            </label>
+                        `;
+                    });
+                    inputHtml += `</div>`;
+                } else if (q.question_type === 'true_false') {
+                    inputHtml = `
+                        <div class="flex gap-4 mt-2">
+                            <label class="flex items-center gap-1.5 text-slate-300 text-xxs cursor-pointer">
+                                <input type="radio" name="quiz-q-${q.id}" value="true" class="text-cyan-600 focus:ring-0">
+                                <span>True</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 text-slate-300 text-xxs cursor-pointer">
+                                <input type="radio" name="quiz-q-${q.id}" value="false" class="text-cyan-600 focus:ring-0">
+                                <span>False</span>
+                            </label>
+                        </div>
+                    `;
+                } else {
+                    inputHtml = `
+                        <input type="text" id="quiz-q-input-${q.id}" class="w-full bg-slate-900 border border-slate-800 rounded p-2 text-slate-100 text-xxs focus:outline-none focus:border-cyan-500 mt-2" placeholder="Type your answer...">
+                    `;
+                }
+
+                div.innerHTML = `
+                    <div class="text-xxs font-bold text-slate-300">${idx + 1}. ${q.question_text} <span class="text-slate-500">(${q.question_type.replace('_', ' ')})</span></div>
+                    ${inputHtml}
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function submitSessionQuiz() {
+            if (!activeSession || !activeSession.quizId) return;
+
+            const answers = {};
+            activeSession.quizQuestions.forEach(q => {
+                if (q.question_type === 'short_answer') {
+                    const input = document.getElementById(`quiz-q-input-${q.id}`);
+                    answers[q.id] = input ? input.value.trim() : '';
+                } else {
+                    const radio = document.querySelector(`input[name="quiz-q-${q.id}"]:checked`);
+                    answers[q.id] = radio ? radio.value : '';
+                }
+            });
+
+            try {
+                const response = await fetch(`/learning/quizzes/${activeSession.quizId}/attempt`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ answers })
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    showToast(data.error || 'Failed to submit quiz.', 'error');
+                    return;
+                }
+
+                activeSession.quizPassed = data.passed;
+
+                const resultDiv = document.getElementById('session-quiz-result');
+                if (resultDiv) {
+                    resultDiv.classList.remove('hidden');
+                    if (data.passed) {
+                        resultDiv.className = 'p-4 mt-3 rounded text-xs font-bold bg-emerald-950/60 border border-emerald-800 text-emerald-400';
+                        resultDiv.innerHTML = `🎉 PASS! Score: ${data.score}% (${data.attempt.correct_answers}/${data.attempt.total_questions})`;
+                        showToast('Quiz passed! You can now finalize your study session.', 'success');
+                    } else {
+                        resultDiv.className = 'p-4 mt-3 rounded text-xs font-bold bg-red-950/60 border border-red-800 text-red-400';
+                        resultDiv.innerHTML = `❌ FAILED. Score: ${data.score}% (${data.attempt.correct_answers}/${data.attempt.total_questions}). Passing score is 70%. Try again!`;
+                        showToast('Quiz failed. Please try again to achieve a passing score.', 'error');
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to submit quiz attempt.', 'error');
+            }
+        }
+
         async function finalizeStudySessionOnServer() {
             if (activeSession.requiresRecall && !activeSession.recalled) {
                 showToast('Please submit your active recall entry first.', 'error');
@@ -4731,6 +4933,11 @@
                     showToast(`Please complete all associated practice tasks (${pending.length} remaining).`, 'error');
                     return;
                 }
+            }
+
+            if (activeSession.requiresQuiz && !activeSession.quizPassed) {
+                showToast('Please complete and achieve a passing score on the quiz first.', 'error');
+                return;
             }
 
             try {
@@ -4817,6 +5024,42 @@
                             opt.value = m.id;
                             opt.textContent = m.title;
                             mDropdown.appendChild(opt);
+                        });
+                    }
+                }
+
+                // Fetch lessons for quiz builder
+                const lessonsRes = await fetch('/learning/lessons', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const lessons = await lessonsRes.json();
+                const lDropdown = document.getElementById('builder-quiz-lesson');
+                if (lDropdown) {
+                    lDropdown.innerHTML = '<option value="">-- Select Lesson --</option>';
+                    if (Array.isArray(lessons)) {
+                        lessons.forEach(l => {
+                            const opt = document.createElement('option');
+                            opt.value = l.id;
+                            opt.textContent = l.title;
+                            lDropdown.appendChild(opt);
+                        });
+                    }
+                }
+
+                // Fetch quizzes for quiz question builder
+                const quizzesRes = await fetch('/learning/quizzes', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const quizzes = await quizzesRes.json();
+                const qDropdown = document.getElementById('builder-question-quiz');
+                if (qDropdown) {
+                    qDropdown.innerHTML = '<option value="">-- Select Quiz --</option>';
+                    if (Array.isArray(quizzes)) {
+                        quizzes.forEach(q => {
+                            const opt = document.createElement('option');
+                            opt.value = q.id;
+                            opt.textContent = q.title;
+                            qDropdown.appendChild(opt);
                         });
                     }
                 }
@@ -4948,6 +5191,7 @@
                     document.getElementById('builder-lesson-est').value = '30';
                     document.getElementById('builder-lesson-recall').checked = true;
                     document.getElementById('builder-lesson-practice').checked = false;
+                    fetchBuilderDropdowns();
                     renderBuilderVisualTree();
                 } else {
                     const data = await response.json();
@@ -4959,25 +5203,115 @@
             }
         }
 
+        async function createBuilderQuiz(event) {
+            event.preventDefault();
+            const lessonId = document.getElementById('builder-quiz-lesson').value;
+            const title = document.getElementById('builder-quiz-title').value.trim();
+            const description = document.getElementById('builder-quiz-desc').value.trim();
+            const passingScore = parseInt(document.getElementById('builder-quiz-passing').value || '70', 10);
+
+            try {
+                const response = await fetch('/learning/quizzes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ lessonId, title, description, passingScore })
+                });
+                if (response.ok) {
+                    showToast('Quiz created successfully!', 'success');
+                    document.getElementById('builder-quiz-title').value = '';
+                    document.getElementById('builder-quiz-desc').value = '';
+                    document.getElementById('builder-quiz-passing').value = '70';
+                    fetchBuilderDropdowns();
+                    renderBuilderVisualTree();
+                } else {
+                    const data = await response.json();
+                    showToast(data.error || 'Failed to create quiz.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to Quiz API.', 'error');
+            }
+        }
+
+        async function createBuilderQuizQuestion(event) {
+            event.preventDefault();
+            const quizId = document.getElementById('builder-question-quiz').value;
+            const questionText = document.getElementById('builder-question-text').value.trim();
+            const questionType = document.getElementById('builder-question-type').value;
+            const choicesStr = document.getElementById('builder-question-choices').value.trim();
+            const correctAnswer = document.getElementById('builder-question-correct').value.trim();
+
+            let choices = null;
+            if (questionType === 'multiple_choice' && choicesStr) {
+                choices = choicesStr.split(',').map(s => s.trim()).filter(Boolean);
+            }
+
+            try {
+                const response = await fetch('/learning/quiz-questions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ quizId, questionText, questionType, choices, correctAnswer })
+                });
+                if (response.ok) {
+                    showToast('Quiz question created successfully!', 'success');
+                    document.getElementById('builder-question-text').value = '';
+                    document.getElementById('builder-question-choices').value = '';
+                    document.getElementById('builder-question-correct').value = '';
+                    renderBuilderVisualTree();
+                } else {
+                    const data = await response.json();
+                    showToast(data.error || 'Failed to create quiz question.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to connect to Quiz Question API.', 'error');
+            }
+        }
+
+        function toggleBuilderQuestionChoices() {
+            const type = document.getElementById('builder-question-type').value;
+            const input = document.getElementById('builder-question-choices');
+            if (input) {
+                if (type === 'multiple_choice') {
+                    input.classList.remove('hidden');
+                    input.required = true;
+                } else {
+                    input.classList.add('hidden');
+                    input.required = false;
+                    input.value = '';
+                }
+            }
+        }
+
         async function renderBuilderVisualTree() {
             const treeContainer = document.getElementById('builder-visual-tree');
             if (!treeContainer) return;
 
             try {
                 // Fetch all hierarchy pieces
-                const [pRes, cRes, mRes, lRes] = await Promise.all([
+                const [pRes, cRes, mRes, lRes, qRes, qqRes] = await Promise.all([
                     fetch('/learning/pathways', { headers: { 'Authorization': `Bearer ${authToken}` } }),
                     fetch('/learning/courses', { headers: { 'Authorization': `Bearer ${authToken}` } }),
                     fetch('/learning/modules', { headers: { 'Authorization': `Bearer ${authToken}` } }),
-                    fetch('/learning/lessons', { headers: { 'Authorization': `Bearer ${authToken}` } })
+                    fetch('/learning/lessons', { headers: { 'Authorization': `Bearer ${authToken}` } }),
+                    fetch('/learning/quizzes', { headers: { 'Authorization': `Bearer ${authToken}` } }),
+                    fetch('/learning/quiz-questions', { headers: { 'Authorization': `Bearer ${authToken}` } })
                 ]);
 
                 const pathways = await pRes.json();
                 const courses = await cRes.json();
                 const modules = await mRes.json();
                 const lessons = await lRes.json();
+                const quizzes = await qRes.json();
+                const quizQuestions = await qqRes.json();
 
-                if (!pRes.ok || !cRes.ok || !mRes.ok || !lRes.ok) {
+                if (!pRes.ok || !cRes.ok || !mRes.ok || !lRes.ok || !qRes.ok || !qqRes.ok) {
                     treeContainer.innerHTML = '<p class="text-red-400 italic">Failed to load pathways data.</p>';
                     return;
                 }
@@ -5054,11 +5388,45 @@
                                             else if (l.status === 'In Progress') statusIcon = '🟡';
 
                                             html += `
-                                                <div class="flex items-center justify-between p-1 hover:bg-slate-900/40 rounded transition">
-                                                    <span>${statusIcon} ${l.title} <span class="text-slate-500">(${l.est_minutes || 30}m ${l.requires_recall ? 'R' : ''}${l.requires_practice ? 'P' : ''})</span></span>
-                                                    <button onclick="deleteBuilderEntity('lessons', '${l.id}')" class="text-red-400/40 hover:text-red-300 text-xxs">Delete</button>
-                                                </div>
+                                                <div class="space-y-1 bg-slate-900/30 p-2 rounded border border-slate-800/40 my-1">
+                                                    <div class="flex items-center justify-between">
+                                                        <span>${statusIcon} <strong class="text-slate-200">${l.title}</strong> <span class="text-slate-500">(${l.est_minutes || 30}m ${l.requires_recall ? 'R' : ''}${l.requires_practice ? 'P' : ''}${l.requires_quiz ? 'Q' : ''})</span></span>
+                                                        <button onclick="deleteBuilderEntity('lessons', '${l.id}')" class="text-red-400/40 hover:text-red-300 text-xxs">Delete</button>
+                                                    </div>
                                             `;
+
+                                            // Render Quiz under Lesson if any
+                                            const lQuizzes = Array.isArray(quizzes) ? quizzes.filter(q => q.lesson_id === l.id) : [];
+                                            if (lQuizzes.length > 0) {
+                                                lQuizzes.forEach(quiz => {
+                                                    html += `
+                                                        <div class="pl-4 mt-1.5 border-l border-slate-700 space-y-1 text-xxs">
+                                                            <div class="flex items-center justify-between text-cyan-400 font-bold">
+                                                                <span>📝 Quiz: ${quiz.title} (Passing: ${quiz.passing_score}%)</span>
+                                                                <button onclick="deleteBuilderEntity('quizzes', '${quiz.id}')" class="text-red-400/40 hover:text-red-300 text-xxs">Delete</button>
+                                                            </div>
+                                                    `;
+
+                                                    // Questions under this Quiz
+                                                    const qQuestions = Array.isArray(quizQuestions) ? quizQuestions.filter(qq => qq.quiz_id === quiz.id) : [];
+                                                    if (qQuestions.length > 0) {
+                                                        qQuestions.forEach((qq, qidx) => {
+                                                            html += `
+                                                                <div class="pl-3 mt-1 flex items-center justify-between text-slate-400 italic">
+                                                                    <span>❓ Q${qidx+1}: ${qq.question_text} <span class="text-slate-500">(${qq.question_type})</span></span>
+                                                                    <button onclick="deleteBuilderEntity('quiz-questions', '${qq.id}')" class="text-red-400/30 hover:text-red-300 text-xxs">Delete</button>
+                                                                </div>
+                                                            `;
+                                                        });
+                                                    } else {
+                                                        html += `<div class="pl-3 text-slate-500 italic">No questions added.</div>`;
+                                                    }
+
+                                                    html += `</div>`;
+                                                });
+                                            }
+
+                                            html += `</div>`;
                                         });
                                     }
 

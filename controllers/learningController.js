@@ -736,7 +736,8 @@ async function createLesson(req, res) {
     requiresRecall,
     requiresPractice,
     status = 'Not Started',
-    completionPct = 0
+    completionPct = 0,
+    requiresQuiz
   } = req.body || {};
 
   if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
@@ -746,14 +747,15 @@ async function createLesson(req, res) {
   const pct = completionPct !== undefined && completionPct !== '' ? parseInt(completionPct, 10) : 0;
   const reqRecall = requiresRecall !== undefined ? (requiresRecall === true || requiresRecall === 'true') : true;
   const reqPractice = requiresPractice !== undefined ? (requiresPractice === true || requiresPractice === 'true') : false;
+  const reqQuiz = requiresQuiz !== undefined ? (requiresQuiz === true || requiresQuiz === 'true') : false;
 
   try {
     const result = await db.query(
       `INSERT INTO lessons (
          tenant_id, branch_id, module_id, title, content, sequence_order,
-         est_minutes, resource_id, requires_recall, requires_practice, status, completion_pct
+         est_minutes, resource_id, requires_recall, requires_practice, status, completion_pct, requires_quiz
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING *`,
       [
         tenantId,
@@ -767,7 +769,8 @@ async function createLesson(req, res) {
         reqRecall,
         reqPractice,
         status,
-        pct
+        pct,
+        reqQuiz
       ]
     );
     return res.status(201).json(result.rows[0]);
@@ -794,7 +797,8 @@ async function updateLesson(req, res) {
     requiresRecall,
     requiresPractice,
     status,
-    completionPct
+    completionPct,
+    requiresQuiz
   } = req.body || {};
 
   if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
@@ -803,6 +807,7 @@ async function updateLesson(req, res) {
   const pct = completionPct !== undefined ? (completionPct === '' ? null : parseInt(completionPct, 10)) : undefined;
   const reqRecall = requiresRecall !== undefined ? (requiresRecall === true || requiresRecall === 'true') : undefined;
   const reqPractice = requiresPractice !== undefined ? (requiresPractice === true || requiresPractice === 'true') : undefined;
+  const reqQuiz = requiresQuiz !== undefined ? (requiresQuiz === true || requiresQuiz === 'true') : undefined;
 
   try {
     const result = await db.query(
@@ -818,8 +823,9 @@ async function updateLesson(req, res) {
               requires_practice = COALESCE($9, requires_practice),
               status = COALESCE($10, status),
               completion_pct = COALESCE($11, completion_pct),
+              requires_quiz = COALESCE($12, requires_quiz),
               updated_at = NOW()
-        WHERE id = $12 AND tenant_id = $13
+        WHERE id = $13 AND tenant_id = $14
         RETURNING *`,
       [
         title !== undefined ? title : null,
@@ -833,6 +839,7 @@ async function updateLesson(req, res) {
         reqPractice,
         status !== undefined ? status : null,
         pct,
+        reqQuiz,
         id,
         tenantId
       ]
@@ -1035,6 +1042,18 @@ async function completeStudySession(req, res) {
         [lessonId, tenantId]
       );
       if (practiceCheck.rows[0].count > 0) {
+        satisfied = false;
+      }
+    }
+
+    if (lesson.requires_quiz) {
+      const quizCheck = await db.query(
+        `SELECT COUNT(*)::integer AS count FROM quiz_attempts qa
+           JOIN quizzes q ON qa.quiz_id = q.id
+          WHERE q.lesson_id = $1 AND qa.passed = true AND qa.tenant_id = $2`,
+        [lessonId, tenantId]
+      );
+      if (quizCheck.rows[0].count === 0) {
         satisfied = false;
       }
     }
@@ -1310,7 +1329,445 @@ async function completePracticeTask(req, res) {
   }
 }
 
+/**
+ * GET /learning/quizzes
+ */
+async function listQuizzes(req, res) {
+  const tenantId = req.tenantId;
+  const { lessonId } = req.query || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    let sql = 'SELECT * FROM quizzes WHERE tenant_id = $1';
+    const params = [tenantId];
+
+    if (lessonId) {
+      params.push(lessonId);
+      sql += ` AND lesson_id = $${params.length}`;
+    }
+
+    sql += ' ORDER BY created_at DESC';
+
+    const result = await db.query(sql, params);
+    return res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('[learningController] listQuizzes failed', err);
+    return res.status(500).json({ error: 'Failed to list quizzes.' });
+  }
+}
+
+/**
+ * POST /learning/quizzes
+ */
+async function createQuiz(req, res) {
+  const tenantId = req.tenantId;
+  const { lessonId, title, description, passingScore = 70, branchId } = req.body || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+  if (!lessonId || !title) {
+    return res.status(400).json({ error: 'lessonId and title are required.' });
+  }
+
+  try {
+    const result = await db.query(
+      `INSERT INTO quizzes (tenant_id, branch_id, lesson_id, title, description, passing_score)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [tenantId, branchId || null, lessonId, title, description || null, passingScore]
+    );
+    return res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('[learningController] createQuiz failed', err);
+    return res.status(500).json({ error: 'Failed to create quiz.' });
+  }
+}
+
+/**
+ * PATCH /learning/quizzes/:id
+ */
+async function updateQuiz(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+  const { title, description, passingScore, branchId } = req.body || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const result = await db.query(
+      `UPDATE quizzes
+          SET title = COALESCE($1, title),
+              description = COALESCE($2, description),
+              passing_score = COALESCE($3, passing_score),
+              branch_id = COALESCE($4, branch_id),
+              updated_at = NOW()
+        WHERE id = $5 AND tenant_id = $6
+        RETURNING *`,
+      [title, description, passingScore, branchId, id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Quiz not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error('[learningController] updateQuiz failed', err);
+    return res.status(500).json({ error: 'Failed to update quiz.' });
+  }
+}
+
+/**
+ * DELETE /learning/quizzes/:id
+ */
+async function deleteQuiz(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const result = await db.query(
+      'DELETE FROM quizzes WHERE id = $1 AND tenant_id = $2 RETURNING id',
+      [id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Quiz not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json({ message: 'Quiz deleted successfully.' });
+  } catch (err) {
+    console.error('[learningController] deleteQuiz failed', err);
+    return res.status(500).json({ error: 'Failed to delete quiz.' });
+  }
+}
+
+/**
+ * GET /learning/quiz-questions
+ */
+async function listQuizQuestions(req, res) {
+  const tenantId = req.tenantId;
+  const { quizId } = req.query || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    let sql = 'SELECT * FROM quiz_questions WHERE tenant_id = $1';
+    const params = [tenantId];
+
+    if (quizId) {
+      params.push(quizId);
+      sql += ` AND quiz_id = $${params.length}`;
+    }
+
+    sql += ' ORDER BY sort_order ASC, created_at ASC';
+
+    const result = await db.query(sql, params);
+    return res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('[learningController] listQuizQuestions failed', err);
+    return res.status(500).json({ error: 'Failed to list quiz questions.' });
+  }
+}
+
+/**
+ * POST /learning/quiz-questions
+ */
+async function createQuizQuestion(req, res) {
+  const tenantId = req.tenantId;
+  const { quizId, questionText, questionType, choices, correctAnswer, sortOrder = 0, branchId } = req.body || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+  if (!quizId || !questionText || !questionType) {
+    return res.status(400).json({ error: 'quizId, questionText, and questionType are required.' });
+  }
+
+  try {
+    const result = await db.query(
+      `INSERT INTO quiz_questions (tenant_id, branch_id, quiz_id, question_text, question_type, choices, correct_answer, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        tenantId,
+        branchId || null,
+        quizId,
+        questionText,
+        questionType,
+        choices ? (typeof choices === 'string' ? choices : JSON.stringify(choices)) : null,
+        correctAnswer || null,
+        sortOrder
+      ]
+    );
+    return res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('[learningController] createQuizQuestion failed', err);
+    return res.status(500).json({ error: 'Failed to create quiz question.' });
+  }
+}
+
+/**
+ * PATCH /learning/quiz-questions/:id
+ */
+async function updateQuizQuestion(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+  const { questionText, questionType, choices, correctAnswer, sortOrder, branchId } = req.body || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const result = await db.query(
+      `UPDATE quiz_questions
+          SET question_text = COALESCE($1, question_text),
+              question_type = COALESCE($2, question_type),
+              choices = COALESCE($3, choices),
+              correct_answer = COALESCE($4, correct_answer),
+              sort_order = COALESCE($5, sort_order),
+              branch_id = COALESCE($6, branch_id),
+              updated_at = NOW()
+        WHERE id = $7 AND tenant_id = $8
+        RETURNING *`,
+      [
+        questionText,
+        questionType,
+        choices ? (typeof choices === 'string' ? choices : JSON.stringify(choices)) : null,
+        correctAnswer,
+        sortOrder,
+        branchId,
+        id,
+        tenantId
+      ]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Quiz question not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error('[learningController] updateQuizQuestion failed', err);
+    return res.status(500).json({ error: 'Failed to update quiz question.' });
+  }
+}
+
+/**
+ * DELETE /learning/quiz-questions/:id
+ */
+async function deleteQuizQuestion(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params;
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    const result = await db.query(
+      'DELETE FROM quiz_questions WHERE id = $1 AND tenant_id = $2 RETURNING id',
+      [id, tenantId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Quiz question not found or not in tenant scope.' });
+    }
+
+    return res.status(200).json({ message: 'Quiz question deleted successfully.' });
+  } catch (err) {
+    console.error('[learningController] deleteQuizQuestion failed', err);
+    return res.status(500).json({ error: 'Failed to delete quiz question.' });
+  }
+}
+
+/**
+ * POST /learning/quizzes/:id/attempt
+ * Grade the quiz and save an attempt.
+ */
+async function submitQuizAttempt(req, res) {
+  const tenantId = req.tenantId;
+  const { id } = req.params; // quizId
+  const { answers = {} } = req.body || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    // 1. Fetch quiz
+    const quizRes = await db.query(
+      'SELECT * FROM quizzes WHERE id = $1 AND tenant_id = $2',
+      [id, tenantId]
+    );
+    if (quizRes.rowCount === 0) {
+      return res.status(404).json({ error: 'Quiz not found.' });
+    }
+    const quiz = quizRes.rows[0];
+    const lessonId = quiz.lesson_id;
+
+    // 2. Fetch questions
+    const questionsRes = await db.query(
+      'SELECT * FROM quiz_questions WHERE quiz_id = $1 AND tenant_id = $2 ORDER BY sort_order ASC, created_at ASC',
+      [id, tenantId]
+    );
+    const questions = questionsRes.rows;
+    const totalQuestions = questions.length;
+
+    if (totalQuestions === 0) {
+      return res.status(400).json({ error: 'Quiz has no questions.' });
+    }
+
+    let correctAnswers = 0;
+    let incorrectAnswers = 0;
+    const gradedQuestions = [];
+
+    // 3. Grade questions
+    for (const q of questions) {
+      const userAnswer = (answers[q.id] || '').toString().trim();
+      const correctAnswerText = (q.correct_answer || '').toString().trim();
+      let isCorrect = false;
+      let status = 'Graded';
+
+      if (q.question_type === 'short_answer') {
+        // Deterministic check if correct_answer exists, otherwise mark for self-review
+        if (correctAnswerText) {
+          isCorrect = correctAnswerText.toLowerCase() === userAnswer.toLowerCase();
+        } else {
+          isCorrect = true; // Count as correct/completed for now, but mark for self-review
+          status = 'Self-Review';
+        }
+      } else {
+        // multiple_choice / true_false
+        isCorrect = correctAnswerText.toLowerCase() === userAnswer.toLowerCase();
+      }
+
+      if (isCorrect) {
+        correctAnswers++;
+      } else {
+        incorrectAnswers++;
+      }
+
+      gradedQuestions.push({
+        question_id: q.id,
+        question_text: q.question_text,
+        question_type: q.question_type,
+        user_answer: userAnswer,
+        correct_answer: correctAnswerText,
+        is_correct: isCorrect,
+        status
+      });
+    }
+
+    const score = Math.round((correctAnswers / totalQuestions) * 100);
+    const passed = score >= quiz.passing_score;
+
+    // 4. Save attempt
+    const attemptInsert = await db.query(
+      `INSERT INTO quiz_attempts (tenant_id, quiz_id, score, total_questions, correct_answers, incorrect_answers, passed)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [tenantId, id, score, totalQuestions, correctAnswers, incorrectAnswers, passed]
+    );
+    const attempt = attemptInsert.rows[0];
+
+    // 5. Update lesson status if quiz is passed and requires_quiz is true
+    const lessonRes = await db.query(
+      'SELECT * FROM lessons WHERE id = $1 AND tenant_id = $2',
+      [lessonId, tenantId]
+    );
+    if (lessonRes.rowCount > 0) {
+      const lesson = lessonRes.rows[0];
+
+      if (passed && lesson.requires_quiz) {
+        // Respect Phase 2 required-activity logic
+        let satisfied = true;
+
+        if (lesson.requires_recall) {
+          const recallCheck = await db.query(
+            'SELECT COUNT(*)::integer AS count FROM recall_entries WHERE lesson_id = $1 AND tenant_id = $2',
+            [lessonId, tenantId]
+          );
+          if (recallCheck.rows[0].count === 0) {
+            satisfied = false;
+          }
+        }
+
+        if (lesson.requires_practice) {
+          const practiceCheck = await db.query(
+            `SELECT COUNT(*)::integer AS count FROM practice_tasks
+              WHERE lesson_id = $1 AND status != 'Completed' AND tenant_id = $2`,
+            [lessonId, tenantId]
+          );
+          if (practiceCheck.rows[0].count > 0) {
+            satisfied = false;
+          }
+        }
+
+        if (satisfied) {
+          await db.query(
+            `UPDATE lessons SET status = 'Completed', completion_pct = 100, updated_at = NOW() WHERE id = $1 AND tenant_id = $2`,
+            [lessonId, tenantId]
+          );
+        }
+      }
+    }
+
+    return res.status(200).json({
+      attempt,
+      graded_questions: gradedQuestions,
+      score,
+      passed
+    });
+  } catch (err) {
+    console.error('[learningController] submitQuizAttempt failed', err);
+    return res.status(500).json({ error: 'Failed to submit quiz attempt.' });
+  }
+}
+
+/**
+ * GET /learning/quiz-attempts
+ */
+async function listQuizAttempts(req, res) {
+  const tenantId = req.tenantId;
+  const { quizId, lessonId } = req.query || {};
+
+  if (!tenantId) return res.status(400).json({ error: 'Tenant context is required.' });
+
+  try {
+    let sql = `
+      SELECT qa.*, q.title AS quiz_title, l.title AS lesson_title
+        FROM quiz_attempts qa
+        JOIN quizzes q ON qa.quiz_id = q.id
+        JOIN lessons l ON q.lesson_id = l.id
+       WHERE qa.tenant_id = $1
+    `;
+    const params = [tenantId];
+
+    if (quizId) {
+      params.push(quizId);
+      sql += ` AND qa.quiz_id = $${params.length}`;
+    }
+    if (lessonId) {
+      params.push(lessonId);
+      sql += ` AND q.lesson_id = $${params.length}`;
+    }
+
+    sql += ' ORDER BY qa.attempted_at DESC';
+
+    const result = await db.query(sql, params);
+    return res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('[learningController] listQuizAttempts failed', err);
+    return res.status(500).json({ error: 'Failed to list quiz attempts.' });
+  }
+}
+
 module.exports = {
+  submitQuizAttempt,
+  listQuizAttempts,
+  listQuizQuestions,
+  createQuizQuestion,
+  updateQuizQuestion,
+  deleteQuizQuestion,
+  listQuizzes,
+  createQuiz,
+  updateQuiz,
+  deleteQuiz,
   getTodaysLearning,
   startStudySession,
   completeStudySession,

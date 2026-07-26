@@ -1038,3 +1038,138 @@ CREATE TRIGGER set_timestamp_quiz_attempts
 BEFORE UPDATE ON quiz_attempts
 FOR EACH ROW
 EXECUTE FUNCTION trigger_set_timestamp();
+
+-- ---------------------------------------------------------------------
+-- PHASE 4: RETENTION (SPACED REPETITION) SCHEMA EXTENSIONS
+-- ---------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS review_schedules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    lesson_id UUID NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
+    due_at TIMESTAMPTZ,
+    interval_stage INTEGER DEFAULT 0,
+    difficulty_rating VARCHAR(50),
+    completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_review_schedules_tenant_id ON review_schedules(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_review_schedules ON review_schedules;
+CREATE TRIGGER set_timestamp_review_schedules
+BEFORE UPDATE ON review_schedules
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+-- ---------------------------------------------------------------------
+-- PHASE 5: MOTIVATION (ACHIEVEMENTS) SCHEMA EXTENSIONS
+-- ---------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS achievements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    code VARCHAR(100) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    icon VARCHAR(100),
+    criteria_type VARCHAR(50) NOT NULL, -- 'streak' | 'lessons_completed' | 'quizzes_passed'
+    threshold INTEGER NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (tenant_id, code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_achievements_tenant_id ON achievements(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_achievements ON achievements;
+CREATE TRIGGER set_timestamp_achievements
+BEFORE UPDATE ON achievements
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+CREATE TABLE IF NOT EXISTS user_achievements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    branch_id UUID REFERENCES branches(id) ON DELETE SET NULL,
+    achievement_id UUID NOT NULL REFERENCES achievements(id) ON DELETE CASCADE,
+    earned_at TIMESTAMPTZ DEFAULT NOW(),
+    notified_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (tenant_id, achievement_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_achievements_tenant_id ON user_achievements(tenant_id);
+
+DROP TRIGGER IF EXISTS set_timestamp_user_achievements ON user_achievements;
+CREATE TRIGGER set_timestamp_user_achievements
+BEFORE UPDATE ON user_achievements
+FOR EACH ROW
+EXECUTE FUNCTION trigger_set_timestamp();
+
+
+-- Seed default achievements for all existing tenants
+INSERT INTO achievements (tenant_id, code, title, description, icon, criteria_type, threshold)
+SELECT
+    t.id,
+    'streak_3',
+    '3-Day Streak Warrior',
+    'Keep your study streak alive for 3 consecutive days!',
+    '🔥',
+    'streak',
+    3
+FROM tenants t
+ON CONFLICT (tenant_id, code) DO NOTHING;
+
+INSERT INTO achievements (tenant_id, code, title, description, icon, criteria_type, threshold)
+SELECT
+    t.id,
+    'streak_7',
+    '7-Day Streak Master',
+    'Keep your study streak alive for 7 consecutive days!',
+    '🏆',
+    'streak',
+    7
+FROM tenants t
+ON CONFLICT (tenant_id, code) DO NOTHING;
+
+INSERT INTO achievements (tenant_id, code, title, description, icon, criteria_type, threshold)
+SELECT
+    t.id,
+    'streak_30',
+    '30-Day Streak Legend',
+    'Keep your study streak alive for 30 consecutive days!',
+    '👑',
+    'streak',
+    30
+FROM tenants t
+ON CONFLICT (tenant_id, code) DO NOTHING;
+
+INSERT INTO achievements (tenant_id, code, title, description, icon, criteria_type, threshold)
+SELECT
+    t.id,
+    'lessons_10',
+    'Knowledge Seeker',
+    'Complete a total of 10 study lessons!',
+    '📚',
+    'lessons_completed',
+    10
+FROM tenants t
+ON CONFLICT (tenant_id, code) DO NOTHING;
+
+INSERT INTO achievements (tenant_id, code, title, description, icon, criteria_type, threshold)
+SELECT
+    t.id,
+    'quizzes_5',
+    'Quiz Scholar',
+    'Successfully pass a total of 5 quizzes!',
+    '🎓',
+    'quizzes_passed',
+    5
+FROM tenants t
+ON CONFLICT (tenant_id, code) DO NOTHING;

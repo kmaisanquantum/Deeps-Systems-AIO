@@ -2,7 +2,7 @@
 // public/sw.js — Service Worker for Deeps Systems AIO
 // =====================================================================
 
-const CACHE_NAME = 'deeps-aio-v8';
+const CACHE_NAME = 'deeps-aio-v9';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html'

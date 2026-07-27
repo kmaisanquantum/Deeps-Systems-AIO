@@ -14,33 +14,33 @@ async function generateIcons() {
       fs.mkdirSync(iconsDir, { recursive: true });
     }
 
-    const svgPath = path.join(iconsDir, 'icon.svg');
-    if (!fs.existsSync(svgPath)) {
-      throw new Error(`Source SVG not found at: ${svgPath}`);
+    const logoPath = path.join(iconsDir, 'logo.png');
+    if (!fs.existsSync(logoPath)) {
+      throw new Error(`Source logo not found at: ${logoPath}`);
     }
 
-    console.log('[generate_icons] starting icon rasterization from SVG...');
+    console.log('[generate_icons] starting icon rasterization from PNG logo...');
 
-    // Read the SVG content into a buffer
-    const svgBuffer = fs.readFileSync(svgPath);
+    // Read the PNG content into a buffer
+    const logoBuffer = fs.readFileSync(logoPath);
 
     // 1. Generate icon-192.png (192x192)
-    await sharp(svgBuffer)
-      .resize(192, 192)
+    await sharp(logoBuffer)
+      .resize(192, 192, { fit: 'contain', background: '#020617' })
       .png()
       .toFile(path.join(iconsDir, 'icon-192.png'));
     console.log('[generate_icons] generated icon-192.png (192x192)');
 
     // 2. Generate icon-512.png (512x512)
-    await sharp(svgBuffer)
-      .resize(512, 512)
+    await sharp(logoBuffer)
+      .resize(512, 512, { fit: 'contain', background: '#020617' })
       .png()
       .toFile(path.join(iconsDir, 'icon-512.png'));
     console.log('[generate_icons] generated icon-512.png (512x512)');
 
     // 3. Generate apple-touch-icon.png (180x180, flattened onto solid #020617, no alpha)
-    await sharp(svgBuffer)
-      .resize(180, 180)
+    await sharp(logoBuffer)
+      .resize(180, 180, { fit: 'contain', background: '#020617' })
       .flatten({ background: '#020617' })
       .png({ progressive: true })
       .toFile(path.join(iconsDir, 'apple-touch-icon.png'));

@@ -12,7 +12,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install all dependencies (including devDependencies)
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # Copy the rest of the application code
 COPY . .
@@ -21,7 +21,7 @@ COPY . .
 RUN npm run build:icons
 
 # Prune dev dependencies to keep production image light
-RUN npm prune --omit=dev
+RUN npm prune --omit=dev --ignore-scripts
 
 # ==========================================
 # Step 2: Runner stage

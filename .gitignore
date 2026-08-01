@@ -2,3 +2,6 @@ node_modules/
 *.log
 .env
 public/icons/*.png
+!public/icons/icon-192.png
+!public/icons/icon-512.png
+!public/icons/apple-touch-icon.png

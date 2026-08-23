@@ -29,7 +29,6 @@ const feesController = require('../controllers/feesController');
 // -----------------------------------------------------------------
 // Authentication
 // -----------------------------------------------------------------
-router.post('/api/auth/register', authController.register);
 router.post('/api/auth/login', authController.login);
 router.get('/api/auth/me', authController.getMe);
 
